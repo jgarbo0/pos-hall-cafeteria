@@ -20,3 +20,23 @@ export interface Category {
 }
 
 export type OrderType = 'Dine In' | 'Take Away';
+
+export interface Order {
+  id: string;
+  items: CartItem[];
+  orderType: OrderType;
+  tableNumber?: number | null;
+  orderNumber: string;
+  subtotal: number;
+  tax: number;
+  total: number;
+  status: 'processing' | 'completed' | 'cancelled';
+  timestamp: string;
+}
+
+export interface TableItem {
+  id: number;
+  name: string;
+  seats: number;
+  status: 'available' | 'occupied';
+}

@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Pencil, Trash2, Receipt } from 'lucide-react';
 import { CartItem, OrderType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface CartPanelProps {
   items: CartItem[];
@@ -25,6 +26,16 @@ const CartPanel: React.FC<CartPanelProps> = ({
   tableNumber,
 }) => {
   const [orderType, setOrderType] = useState<OrderType>('Dine In');
+  const [selectedTable, setSelectedTable] = useState<number | null>(null);
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Check if there's a selected table in localStorage
+    const storedTable = localStorage.getItem('selectedTable');
+    if (storedTable) {
+      setSelectedTable(parseInt(storedTable));
+    }
+  }, []);
   
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const tax = subtotal * 0.05; // 5% tax
@@ -36,8 +47,51 @@ const CartPanel: React.FC<CartPanelProps> = ({
       return;
     }
     
+    if (orderType === 'Dine In' && !selectedTable) {
+      toast.error('Please select a table first');
+      navigate('/hall');
+      return;
+    }
+    
+    if (orderType === 'Take Away') {
+      // Process the take away order directly
+      processOrder();
+    } else {
+      // Process the dine in order with the selected table
+      processOrder();
+    }
+  };
+  
+  const processOrder = () => {
+    const orderDetails = {
+      items,
+      orderType,
+      tableNumber: selectedTable || tableNumber,
+      orderNumber,
+      subtotal,
+      tax,
+      total,
+      timestamp: new Date().toISOString()
+    };
+    
+    // In a real app, you would send this to a backend
+    console.log('Order placed:', orderDetails);
+    
+    // Show success message
+    if (orderType === 'Dine In') {
+      toast.success(`Order placed for Table ${selectedTable || tableNumber}`);
+    } else {
+      toast.success('Take Away order placed successfully!');
+    }
+    
+    // Clear cart and reset selected table
     onPlaceOrder();
-    toast.success('Order placed successfully!');
+    localStorage.removeItem('selectedTable');
+    setSelectedTable(null);
+  };
+
+  const handleSelectTable = () => {
+    navigate('/hall');
   };
 
   return (
@@ -50,7 +104,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
           </div>
           <div>
             <h3 className="text-right text-gray-500">No.Table</h3>
-            <p className="text-2xl font-bold">{tableNumber}</p>
+            <p className="text-2xl font-bold">{selectedTable || tableNumber}</p>
           </div>
         </div>
       </div>
@@ -70,6 +124,19 @@ const CartPanel: React.FC<CartPanelProps> = ({
             Take Away
           </button>
         </div>
+        
+        {orderType === 'Dine In' && (
+          <div className="mt-3">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full"
+              onClick={handleSelectTable}
+            >
+              {selectedTable ? `Table ${selectedTable} Selected` : 'Select a Table'}
+            </Button>
+          </div>
+        )}
       </div>
       
       <div className="flex-1 overflow-y-auto p-4">
@@ -139,12 +206,24 @@ const CartPanel: React.FC<CartPanelProps> = ({
           </div>
         </div>
         
-        <Button 
-          className="w-full py-6 rounded-lg text-white bg-primary hover:bg-primary/90 font-medium"
-          onClick={handlePlaceOrder}
-        >
-          Place Order
-        </Button>
+        <div className="space-y-2">
+          <Button 
+            className="w-full py-6 rounded-lg text-white bg-primary hover:bg-primary/90 font-medium"
+            onClick={handlePlaceOrder}
+          >
+            {orderType === 'Take Away' ? 'Process Payment' : 'Place Order'}
+          </Button>
+          
+          {items.length > 0 && (
+            <Button 
+              variant="outline"
+              className="w-full py-6 rounded-lg font-medium"
+              onClick={onClearCart}
+            >
+              Clear Cart
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
