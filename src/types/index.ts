@@ -65,3 +65,22 @@ export interface HallBooking {
   notes?: string;
   totalAmount: number;
 }
+
+export interface FinancialTransaction {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  type: 'income' | 'expense';
+  category: string;
+  paymentMethod?: string;
+  reference?: string;
+}
+
+export interface Product extends MenuItem {
+  description?: string;
+  cost?: number;
+  barcode?: string;
+  sku?: string;
+}
+

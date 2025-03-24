@@ -4,10 +4,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutGrid, 
   Clock, 
-  FileText, 
   Settings, 
   ShoppingCart,
-  Calendar
+  Calendar,
+  Package,
+  Wallet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -21,9 +22,9 @@ const SidebarNavigation = () => {
   const navItems = [
     { icon: LayoutGrid, path: '/', label: 'Menu' },
     { icon: ShoppingCart, path: '/orders', label: 'Orders' },
-    { icon: Clock, path: '/history', label: 'History' },
+    { icon: Package, path: '/products', label: 'Products' },
     { icon: Calendar, path: '/hall', label: 'Hall Booking' },
-    { icon: FileText, path: '/reports', label: 'Reports' },
+    { icon: Wallet, path: '/finance', label: 'Finance' },
     { icon: Settings, path: '/settings', label: 'Settings' },
   ];
 
@@ -31,7 +32,7 @@ const SidebarNavigation = () => {
     <div className="w-[70px] bg-white h-screen border-r flex flex-col items-center pt-4 animate-fadeIn">
       <div className="p-3 mb-6">
         <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-lg">A</span>
+          <span className="text-white font-bold text-lg">S</span>
         </div>
       </div>
       

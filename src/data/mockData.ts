@@ -2,110 +2,110 @@
 export const menuItems = [
   {
     id: "1",
-    title: "Fresh Basil Salad",
-    available: 18,
-    price: 1.57,
-    image: "/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png",
-    category: "salad"
-  },
-  {
-    id: "2",
-    title: "Salad with Berries",
-    available: 18,
-    price: 2.00,
-    image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "salad"
-  },
-  {
-    id: "3",
-    title: "Green Linguine Noodles",
-    available: 18,
-    price: 2.82,
-    image: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "noodles"
-  },
-  {
-    id: "4",
-    title: "Lumpiang Sariwa",
-    available: 18,
-    price: 2.65,
-    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "appetizers"
-  },
-  {
-    id: "5",
-    title: "Curry Garlic Noodles",
-    available: 18,
-    price: 3.62,
-    image: "https://images.unsplash.com/photo-1563379926898-05f4575a45d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "noodles"
-  },
-  {
-    id: "6",
-    title: "Sunrise Sirloin Special",
-    available: 18,
-    price: 3.20,
-    image: "https://images.unsplash.com/photo-1529694177890-8b1b3e319ab6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
+    title: "Somali Beef Suqaar",
+    available: 12,
+    price: 9.99,
+    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
     category: "main"
   },
   {
-    id: "7",
-    title: "Chocolate Cake",
-    available: 10,
-    price: 4.50,
-    image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "cake"
+    id: "2",
+    title: "Somali Rice (Bariis)",
+    available: 20,
+    price: 5.50,
+    image: "https://images.unsplash.com/photo-1516684732162-798a0062be99?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
+    category: "main"
   },
   {
-    id: "8",
-    title: "Strawberry Dessert",
-    available: 12,
-    price: 3.75,
-    image: "https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
+    id: "3",
+    title: "Sambusa",
+    available: 15,
+    price: 2.99,
+    image: "https://images.unsplash.com/photo-1512058564366-18510be2db19?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
+    category: "appetizers"
+  },
+  {
+    id: "4",
+    title: "Malawah (Sweet Pancake)",
+    available: 18,
+    price: 3.50,
+    image: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
     category: "dessert"
   },
   {
+    id: "5",
+    title: "Shaah (Somali Tea)",
+    available: 25,
+    price: 2.00,
+    image: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
+    category: "beverages"
+  },
+  {
+    id: "6",
+    title: "Halwa",
+    available: 14,
+    price: 4.25,
+    image: "https://images.unsplash.com/photo-1558326567-98166332163b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
+    category: "dessert"
+  },
+  {
+    id: "7",
+    title: "Muufo (Somali Bread)",
+    available: 22,
+    price: 3.00,
+    image: "https://images.unsplash.com/photo-1586444248879-9a345322d7f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
+    category: "sides"
+  },
+  {
+    id: "8",
+    title: "Hilib Ari (Goat Meat)",
+    available: 10,
+    price: 12.99,
+    image: "https://images.unsplash.com/photo-1583964342120-49299f9ab7f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
+    category: "main"
+  },
+  {
     id: "9",
-    title: "Mango Smoothie",
-    available: 15,
-    price: 2.25,
+    title: "Mango Juice",
+    available: 18,
+    price: 3.25,
     image: "https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
     category: "beverages"
   },
   {
     id: "10",
-    title: "Chicken Curry",
-    available: 8,
-    price: 4.99,
-    image: "https://images.unsplash.com/photo-1604152135912-04a022e23696?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "main"
+    title: "Somali Coffee",
+    available: 20,
+    price: 2.50,
+    image: "https://images.unsplash.com/photo-1497636577773-f1231844b336?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
+    category: "beverages"
   },
   {
     id: "11",
-    title: "Vegetable Stir Fry",
-    available: 14,
-    price: 3.49,
-    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "main"
+    title: "Canjeero (Sourdough Pancake)",
+    available: 15,
+    price: 2.99,
+    image: "https://images.unsplash.com/photo-1506084868230-bb9d95c24759?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
+    category: "sides"
   },
   {
     id: "12",
-    title: "Iced Coffee",
-    available: 20,
-    price: 1.99,
-    image: "https://images.unsplash.com/photo-1578314675249-a6910f90493a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "beverages"
+    title: "Somali Cake",
+    available: 8,
+    price: 5.99,
+    image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
+    category: "cake"
   }
 ];
 
 export const categories = [
-  { id: "salad", name: "Salads" },
+  { id: "all", name: "All Menu" },
+  { id: "main", name: "Main Dishes" },
   { id: "appetizers", name: "Appetizers" },
-  { id: "main", name: "Main Courses" },
-  { id: "noodles", name: "Noodles" },
+  { id: "sides", name: "Side Dishes" },
   { id: "beverages", name: "Beverages" },
-  { id: "cake", name: "Cake" },
-  { id: "dessert", name: "Dessert" }
+  { id: "cake", name: "Cakes" },
+  { id: "dessert", name: "Desserts" }
 ];
 
 export const generateOrderNumber = () => {
@@ -115,3 +115,4 @@ export const generateOrderNumber = () => {
 export const generateTableNumber = () => {
   return Math.floor(1 + Math.random() * 50);
 };
+
