@@ -40,3 +40,28 @@ export interface TableItem {
   seats: number;
   status: 'available' | 'occupied';
 }
+
+export interface ServicePackage {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  items: string[];
+}
+
+export interface HallBooking {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  purpose: string;
+  attendees: number;
+  tableId?: number;
+  packageId?: string;
+  additionalServices: string[];
+  status: 'pending' | 'confirmed' | 'cancelled';
+  notes?: string;
+  totalAmount: number;
+}
