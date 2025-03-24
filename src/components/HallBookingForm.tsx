@@ -317,7 +317,7 @@ const HallBookingForm = ({ tables, packages, onSubmit }: HallBookingFormProps) =
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">No table needed</SelectItem>
+                      <SelectItem key="no-table" value="no-table">No table needed</SelectItem>
                       {tables
                         .filter(table => table.status === 'available')
                         .map((table) => (
