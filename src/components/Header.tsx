@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, Bell } from 'lucide-react';
+import { Search, Filter, Bell, Menu } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,16 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
         </div>
         
         <div className="flex items-center ml-4 space-x-4">
+          <Button variant="primary" size="sm" className="gap-2 rounded-full h-10 px-4 bg-blue-600 text-white">
+            <Menu className="h-4 w-4" />
+            <span>All Menu</span>
+          </Button>
+          
+          <Button variant="primary" size="sm" className="gap-2 rounded-full h-10 px-4 bg-blue-600 text-white">
+            <Menu className="h-4 w-4" />
+            <span>All Menu</span>
+          </Button>
+          
           <Button variant="outline" size="icon" className="rounded-full relative">
             <Bell className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
