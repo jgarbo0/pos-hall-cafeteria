@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -12,23 +13,12 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Calendar, Download, User, DollarSign, CreditCard, AlertCircle, Check, X } from 'lucide-react';
+import { ArrowLeft, Calendar, Download, User, DollarSign, CreditCard, AlertCircle, Check, X, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-
-interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  totalOrders: number;
-  totalSpent: number;
-  createdAt?: string;
-  address?: string;
-  pendingAmount?: number;
-  status?: 'active' | 'inactive';
-}
+import { getCustomerById, getOrders } from '@/services/SupabaseService';
+import { Customer, Order } from '@/types';
 
 interface Payment {
   id: string;
@@ -54,128 +44,118 @@ interface Invoice {
   }[];
 }
 
-interface Order {
-  id: string;
-  date: string;
-  items: number;
-  total: number;
-  status: 'completed' | 'processing' | 'cancelled';
-}
-
 const CustomerDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('orders');
+  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [customerOrders, setCustomerOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
   
-  const customers: Record<string, Customer> = {
-    c1: { 
-      id: 'c1', 
-      name: 'Ahmed Mohamed', 
-      email: 'ahmed@example.com', 
-      phone: '+971 55 123 4567', 
-      totalOrders: 24, 
-      totalSpent: 845.50, 
-      createdAt: '2023-01-15', 
-      address: 'Building 5, Apartment 204, Dubai Marina, Dubai, UAE',
-      pendingAmount: 45.75,
-      status: 'active'
-    },
-    c2: { 
-      id: 'c2', 
-      name: 'Fatima Hussein', 
-      email: 'fatima@example.com', 
-      phone: '+971 50 987 6543', 
-      totalOrders: 18, 
-      totalSpent: 620.75, 
-      createdAt: '2023-03-22', 
-      address: 'Villa 12, Street 14, Jumeirah, Dubai, UAE',
-      status: 'active'
-    },
-    c3: { 
-      id: 'c3', 
-      name: 'Omar Jama', 
-      email: 'omar@example.com', 
-      phone: '+971 54 456 7890', 
-      totalOrders: 9, 
-      totalSpent: 312.25, 
-      createdAt: '2023-05-08', 
-      address: 'Apartment 503, Tower A, Sheikh Zayed Road, Dubai, UAE',
-      pendingAmount: 28.50,
-      status: 'active'
-    },
-    c4: { 
-      id: 'c4', 
-      name: 'Amina Abdi', 
-      email: 'amina@example.com', 
-      phone: '+971 56 789 0123', 
-      totalOrders: 15, 
-      totalSpent: 490.00, 
-      createdAt: '2023-02-17', 
-      address: 'Unit 7, Al Wasl Road, Dubai, UAE',
-      status: 'inactive'
-    },
-  };
+  // Fetch customer data
+  useEffect(() => {
+    const fetchCustomerData = async () => {
+      try {
+        if (!id) return;
+        setLoading(true);
+        const customerData = await getCustomerById(id);
+        setCustomer(customerData);
+      } catch (error) {
+        console.error('Error fetching customer:', error);
+        toast.error('Failed to load customer details');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCustomerData();
+  }, [id]);
+
+  // Fetch customer orders
+  useEffect(() => {
+    const fetchCustomerOrders = async () => {
+      if (!customer) return;
+      
+      try {
+        setLoadingOrders(true);
+        const allOrders = await getOrders();
+        // Filter orders by customer name
+        const filteredOrders = allOrders.filter(
+          order => order.customerName && order.customerName === customer.name
+        );
+        setCustomerOrders(filteredOrders);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        setLoadingOrders(false);
+      }
+    };
+    
+    fetchCustomerOrders();
+  }, [customer]);
   
-  const customer = id ? customers[id] : null;
+  const payments: Payment[] = customerOrders.map(order => ({
+    id: `p-${order.id}`,
+    date: order.timestamp.split('T')[0],
+    amount: order.total,
+    status: order.paymentStatus === 'paid' ? 'paid' : 'pending',
+    method: 'Credit Card', // Placeholder since we don't have this info
+    description: `Order #${order.orderNumber}`,
+    invoiceNumber: `INV-${order.orderNumber}`
+  }));
   
-  const payments: Payment[] = [
-    { id: 'p1', date: '2023-09-15', amount: 45.75, status: 'paid', method: 'Credit Card', description: 'Order #12458', invoiceNumber: 'INV-2023-001' },
-    { id: 'p2', date: '2023-08-22', amount: 125.00, status: 'paid', method: 'PayPal', description: 'Order #12356', invoiceNumber: 'INV-2023-002' },
-    { id: 'p3', date: '2023-07-30', amount: 28.50, status: 'pending', method: 'Bank Transfer', description: 'Order #12301', invoiceNumber: 'INV-2023-003', dueDate: '2023-08-30' },
-    { id: 'p4', date: '2023-07-18', amount: 76.25, status: 'paid', method: 'Credit Card', description: 'Order #12278', invoiceNumber: 'INV-2023-004' },
-    { id: 'p5', date: '2023-06-05', amount: 32.15, status: 'failed', method: 'Credit Card', description: 'Order #12189', invoiceNumber: 'INV-2023-005' },
-    { id: 'p6', date: '2023-06-01', amount: 32.15, status: 'paid', method: 'Cash', description: 'Order #12188', invoiceNumber: 'INV-2023-006' },
-  ];
+  const invoices = customerOrders.map(order => ({
+    id: `INV-${order.orderNumber}`,
+    date: order.timestamp.split('T')[0],
+    dueDate: order.paymentStatus === 'pending' ? 
+      new Date(new Date(order.timestamp).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
+      order.timestamp.split('T')[0],
+    amount: order.total,
+    status: order.paymentStatus === 'paid' ? 'paid' : 'pending',
+    items: order.items.map(item => ({
+      description: item.title,
+      quantity: item.quantity,
+      price: item.price
+    }))
+  }));
   
-  const invoices: Invoice[] = [
-    { 
-      id: 'INV-2023-001', 
-      date: '2023-09-01', 
-      dueDate: '2023-09-15', 
-      amount: 45.75, 
-      status: 'paid',
-      items: [
-        { description: 'Main course meal', quantity: 3, price: 12.99 },
-        { description: 'Dessert', quantity: 1, price: 6.78 }
-      ]
-    },
-    { 
-      id: 'INV-2023-003', 
-      date: '2023-07-15', 
-      dueDate: '2023-08-30', 
-      amount: 28.50, 
-      status: 'pending',
-      items: [
-        { description: 'Appetizer', quantity: 2, price: 8.75 },
-        { description: 'Beverage', quantity: 2, price: 5.50 }
-      ]
-    },
-    { 
-      id: 'INV-2023-007', 
-      date: '2023-05-20', 
-      dueDate: '2023-06-20', 
-      amount: 65.30, 
-      status: 'overdue',
-      items: [
-        { description: 'Special event catering', quantity: 1, price: 65.30 }
-      ]
-    }
-  ];
-  
-  const orders: Order[] = [
-    { id: 'ord-12458', date: '2023-09-15', items: 3, total: 45.75, status: 'completed' },
-    { id: 'ord-12356', date: '2023-08-22', items: 7, total: 125.00, status: 'completed' },
-    { id: 'ord-12301', date: '2023-07-30', items: 2, total: 28.50, status: 'processing' },
-    { id: 'ord-12278', date: '2023-07-18', items: 4, total: 76.25, status: 'completed' },
-    { id: 'ord-12189', date: '2023-06-05', items: 1, total: 32.15, status: 'cancelled' },
-    { id: 'ord-12188', date: '2023-06-01', items: 1, total: 32.15, status: 'completed' },
-  ];
-  
-  const pendingInvoices = invoices.filter(invoice => invoice.status === 'pending' || invoice.status === 'overdue');
+  const pendingInvoices = invoices.filter(invoice => invoice.status === 'pending');
   
   const handleMarkAsPaid = (invoiceId: string) => {
     toast.success(`Invoice ${invoiceId} marked as paid.`);
   };
+  
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
+        <SidebarNavigation />
+        
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header onSearch={() => {}} />
+          
+          <div className="flex-1 p-6 overflow-auto">
+            <div className="flex items-center gap-4 mb-6">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate(-1)}
+                className="dark:text-gray-300 dark:border-gray-600"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            </div>
+            
+            <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+              <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+              <p className="text-gray-600 dark:text-gray-400">Loading customer data...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   if (!customer) {
     return (
@@ -231,13 +211,9 @@ const CustomerDetails: React.FC = () => {
             </Button>
             <h1 className="text-2xl font-semibold dark:text-white">{customer.name}</h1>
             <Badge 
-              className={
-                customer.status === 'active' 
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' 
-                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-              }
+              className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
             >
-              {customer.status === 'active' ? 'Active' : 'Inactive'}
+              Active
             </Badge>
           </div>
           
@@ -257,7 +233,7 @@ const CustomerDetails: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Email</p>
-                    <p className="dark:text-white">{customer.email}</p>
+                    <p className="dark:text-white">{customer.email || 'Not provided'}</p>
                   </div>
                   {customer.phone && (
                     <div>
@@ -271,12 +247,6 @@ const CustomerDetails: React.FC = () => {
                       <p className="dark:text-white">{customer.address}</p>
                     </div>
                   )}
-                  {customer.createdAt && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Customer Since</p>
-                      <p className="dark:text-white">{customer.createdAt}</p>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
               
@@ -287,22 +257,28 @@ const CustomerDetails: React.FC = () => {
                 <CardContent className="space-y-4">
                   <div className="flex justify-between">
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Orders</p>
-                    <p className="font-medium dark:text-white">{customer.totalOrders}</p>
+                    <p className="font-medium dark:text-white">{customerOrders.length || customer.totalOrders || 0}</p>
                   </div>
                   <div className="flex justify-between">
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Spent</p>
-                    <p className="font-medium dark:text-white">${customer.totalSpent.toFixed(2)}</p>
+                    <p className="font-medium dark:text-white">
+                      ${customerOrders.reduce((total, order) => total + order.total, 0).toFixed(2) || (customer.totalSpent || 0).toFixed(2)}
+                    </p>
                   </div>
                   <div className="flex justify-between">
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Average Order Value</p>
                     <p className="font-medium dark:text-white">
-                      ${(customer.totalSpent / (customer.totalOrders || 1)).toFixed(2)}
+                      ${customerOrders.length ? 
+                        (customerOrders.reduce((total, order) => total + order.total, 0) / customerOrders.length).toFixed(2) : 
+                        ((customer.totalSpent || 0) / (customer.totalOrders || 1)).toFixed(2)}
                     </p>
                   </div>
-                  {customer.pendingAmount && customer.pendingAmount > 0 && (
+                  {pendingInvoices.length > 0 && (
                     <div className="flex justify-between pt-3 border-t dark:border-gray-700">
                       <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">Pending Amount</p>
-                      <p className="font-medium text-yellow-600 dark:text-yellow-400">${customer.pendingAmount.toFixed(2)}</p>
+                      <p className="font-medium text-yellow-600 dark:text-yellow-400">
+                        ${pendingInvoices.reduce((total, invoice) => total + invoice.amount, 0).toFixed(2)}
+                      </p>
                     </div>
                   )}
                 </CardContent>
@@ -321,12 +297,8 @@ const CustomerDetails: React.FC = () => {
                       <div key={invoice.id} className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md">
                         <div className="flex justify-between mb-1">
                           <span className="text-sm font-medium dark:text-gray-300">{invoice.id}</span>
-                          <Badge className={
-                            invoice.status === 'overdue' 
-                              ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' 
-                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
-                          }>
-                            {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                            Pending
                           </Badge>
                         </div>
                         <div className="flex justify-between mb-2">
@@ -372,21 +344,27 @@ const CustomerDetails: React.FC = () => {
                       </Button>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {orders.length === 0 ? (
-                          <p className="text-center text-gray-500 dark:text-gray-400 py-8">No orders found</p>
-                        ) : (
-                          orders.map((order) => (
+                      {loadingOrders ? (
+                        <div className="flex justify-center items-center py-8">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                      ) : customerOrders.length === 0 ? (
+                        <p className="text-center text-gray-500 dark:text-gray-400 py-8">No orders found</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {customerOrders.map((order) => (
                             <div 
                               key={order.id} 
                               className="p-4 rounded-lg border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                             >
                               <div className="flex justify-between items-start">
                                 <div>
-                                  <h4 className="font-medium dark:text-white">{order.id}</h4>
+                                  <h4 className="font-medium dark:text-white">{order.orderNumber}</h4>
                                   <div className="flex items-center mt-1">
                                     <Calendar className="h-3 w-3 text-gray-500 dark:text-gray-400 mr-1" />
-                                    <span className="text-sm text-gray-500 dark:text-gray-400">{order.date}</span>
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                                      {new Date(order.timestamp).toLocaleDateString()}
+                                    </span>
                                   </div>
                                 </div>
                                 <Badge 
@@ -402,7 +380,7 @@ const CustomerDetails: React.FC = () => {
                               <div className="mt-3 pt-3 border-t dark:border-gray-700 grid grid-cols-2 gap-2">
                                 <div>
                                   <p className="text-xs text-gray-500 dark:text-gray-400">Items</p>
-                                  <p className="dark:text-white">{order.items}</p>
+                                  <p className="dark:text-white">{order.items.length}</p>
                                 </div>
                                 <div>
                                   <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
@@ -410,9 +388,9 @@ const CustomerDetails: React.FC = () => {
                                 </div>
                               </div>
                             </div>
-                          ))
-                        )}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -432,11 +410,15 @@ const CustomerDetails: React.FC = () => {
                       </Button>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {payments.length === 0 ? (
-                          <p className="text-center text-gray-500 dark:text-gray-400 py-8">No payments found</p>
-                        ) : (
-                          payments.map((payment) => (
+                      {loadingOrders ? (
+                        <div className="flex justify-center items-center py-8">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                      ) : payments.length === 0 ? (
+                        <p className="text-center text-gray-500 dark:text-gray-400 py-8">No payments found</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {payments.map((payment) => (
                             <div 
                               key={payment.id} 
                               className="p-4 rounded-lg border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
@@ -491,9 +473,9 @@ const CustomerDetails: React.FC = () => {
                                 </div>
                               )}
                             </div>
-                          ))
-                        )}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -513,11 +495,15 @@ const CustomerDetails: React.FC = () => {
                       </Button>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-6">
-                        {invoices.length === 0 ? (
-                          <p className="text-center text-gray-500 dark:text-gray-400 py-8">No invoices found</p>
-                        ) : (
-                          invoices.map((invoice) => (
+                      {loadingOrders ? (
+                        <div className="flex justify-center items-center py-8">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                      ) : invoices.length === 0 ? (
+                        <p className="text-center text-gray-500 dark:text-gray-400 py-8">No invoices found</p>
+                      ) : (
+                        <div className="space-y-6">
+                          {invoices.map((invoice) => (
                             <div 
                               key={invoice.id} 
                               className="rounded-lg border dark:border-gray-700 overflow-hidden"
@@ -598,9 +584,9 @@ const CustomerDetails: React.FC = () => {
                                 </Button>
                               </div>
                             </div>
-                          ))
-                        )}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -614,4 +600,3 @@ const CustomerDetails: React.FC = () => {
 };
 
 export default CustomerDetails;
-
