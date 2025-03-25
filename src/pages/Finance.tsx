@@ -9,7 +9,7 @@ import {
   TrendingUp, TrendingDown, PieChart,
   LucideIcon
 } from 'lucide-react';
-import { format, subDays, eachDayOfInterval } from 'date-fns';
+import { format, subDays, eachDayOfInterval, isToday, isThisWeek, isThisMonth } from 'date-fns';
 import { toast } from 'sonner';
 
 import FinanceHeader from '@/components/finance/FinanceHeader';
@@ -22,7 +22,8 @@ import HallBookingIncomesList from '@/components/finance/HallBookingIncomesList'
 
 import { formatCurrency } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { Transaction, ExpenseCategory, SavingGoal, Subscription } from '@/types/finance';
+import { Transaction, ExpenseCategory, SavingGoal, Subscription, HallBookingIncome } from '@/types/finance';
+import { getTransactions, addTransaction, getHallBookingIncomes } from '@/services/FinanceService';
 
 const COLORS = {
   purple: '#9b87f5',
@@ -47,180 +48,8 @@ interface SubscriptionWithIcon extends Subscription {
   icon: LucideIcon;
 }
 
-const dummyTransactions: Transaction[] = [
-  {
-    id: '1',
-    date: '2023-06-10',
-    description: 'Daily Sales',
-    amount: 1250.99,
-    type: 'income',
-    category: 'Sales'
-  },
-  {
-    id: '2',
-    date: '2023-06-09',
-    description: 'Cleaning Materials',
-    amount: 258.20,
-    type: 'expense',
-    category: 'Grocery'
-  },
-  {
-    id: '3',
-    date: '2023-06-08',
-    description: 'Doob Venue Booking',
-    amount: 850.00,
-    type: 'income',
-    category: 'Services'
-  },
-  {
-    id: '4',
-    date: '2023-06-07',
-    description: 'Restaurant Supplies',
-    amount: 758.20,
-    type: 'expense',
-    category: 'Shopping'
-  },
-  {
-    id: '5',
-    date: '2023-06-06',
-    description: 'Dhaweeye Transportation',
-    amount: 758.20,
-    type: 'expense',
-    category: 'Transportation'
-  },
-  {
-    id: '6',
-    date: '2023-06-05',
-    description: 'Staff Meals',
-    amount: 758.20,
-    type: 'expense',
-    category: 'Food & Drink'
-  }
-];
-
-const expenseCategories: ExpenseCategoryWithIcon[] = [
-  { name: 'Grocery', value: 48, color: COLORS.purple, icon: PieChart },
-  { name: 'Food & Drink', value: 32, color: COLORS.green, icon: PieChart },
-  { name: 'Shopping', value: 13, color: COLORS.pink, icon: PieChart },
-  { name: 'Dhaweeye', value: 7, color: COLORS.orange, icon: PieChart },
-];
-
-const savingGoals: SavingGoalWithIcon[] = [
-  { id: '1', name: 'Net Income', currentAmount: 1052.98, targetAmount: 1200, color: COLORS.green, icon: PiggyBank },
-  { id: '2', name: 'Least Selling Item', currentAmount: 17567, targetAmount: 83000, color: COLORS.purple, icon: Car },
-  { id: '3', name: 'Most Recurring Expense', currentAmount: 12367, targetAmount: 325000, color: COLORS.orange, icon: Home },
-  { id: '4', name: 'Favorite Item', currentAmount: 11567, targetAmount: 325000, color: COLORS.pink, icon: Laptop },
-  { id: '5', name: 'Dhaweeye', currentAmount: 12367, targetAmount: 25000, color: COLORS.blue, icon: Navigation },
-];
-
-const subscriptions: SubscriptionWithIcon[] = [
-  { id: '1', name: 'Most Sales Item', amount: 5.99, date: 'Apr 03, 2024', icon: Music, color: '#1DB954' },
-  { id: '2', name: 'Most Rented Hall', amount: 13.99, date: 'Apr 03, 2024', icon: Youtube, color: '#FF0000' },
-];
-
-const generateDailyExpenseData = () => {
-  const today = new Date();
-  const startDate = subDays(today, 6);
-  
-  const dateRange = eachDayOfInterval({
-    start: startDate,
-    end: today
-  });
-  
-  return dateRange.map(date => {
-    const formattedDate = format(date, 'dd');
-    const dayName = format(date, 'EEE');
-    
-    return {
-      name: formattedDate,
-      day: dayName,
-      'Food & Drink': Math.floor(Math.random() * 100) + 50,
-      'Grocery': Math.floor(Math.random() * 80) + 40,
-      'Shopping': Math.floor(Math.random() * 60) + 30,
-      'Dhaweeye': Math.floor(Math.random() * 40) + 20,
-    };
-  });
-};
-
-const generateWeeklyData = () => {
-  const today = new Date();
-  const startDate = subDays(today, 6);
-  
-  const dateRange = eachDayOfInterval({
-    start: startDate,
-    end: today
-  });
-  
-  return dateRange.map(date => {
-    const formattedDate = format(date, 'dd');
-    const dayName = format(date, 'EEE');
-    
-    return {
-      name: formattedDate,
-      day: dayName,
-      income: Math.floor(Math.random() * 300) + 150,
-      expense: Math.floor(Math.random() * 200) + 100,
-    };
-  });
-};
-
-const fetchHallBookings = async () => {
-  const { data, error } = await supabase
-    .from('hall_bookings')
-    .select('*')
-    .order('date', { ascending: false })
-    .limit(50);
-
-  if (error) {
-    console.error('Error fetching hall bookings:', error);
-    throw error;
-  }
-
-  return data || [];
-};
-
-const generateHallBookingFinanceData = (bookings: any[]) => {
-  const today = new Date();
-  const startDate = subDays(today, 6);
-  
-  const dateRange = eachDayOfInterval({
-    start: startDate,
-    end: today
-  });
-  
-  return dateRange.map(date => {
-    const formattedDate = format(date, 'dd MMM');
-    const dateStr = format(date, 'yyyy-MM-dd');
-    
-    const dayBookings = bookings.filter(booking => 
-      booking.date.substring(0, 10) === dateStr
-    );
-    
-    const income = dayBookings.reduce((sum, booking) => sum + parseFloat(booking.total_amount || 0), 0);
-    
-    const expense = income * (Math.random() * 0.4 + 0.1);
-    
-    return {
-      name: formattedDate,
-      income: parseFloat(income.toFixed(2)),
-      expense: parseFloat(expense.toFixed(2))
-    };
-  });
-};
-
-const formatBookingsForIncomeList = (bookings: any[]) => {
-  return bookings.map(booking => ({
-    id: booking.id,
-    date: booking.date,
-    customerName: booking.customer_name,
-    purpose: booking.purpose,
-    attendees: booking.attendees,
-    amount: parseFloat(booking.total_amount || 0)
-  }));
-};
-
 const Finance = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>(dummyTransactions);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [transactionType, setTransactionType] = useState<'all' | 'income' | 'expense'>('all');
   const [dateRange, setDateRange] = useState<'day' | 'week' | 'month'>('week');
@@ -243,13 +72,202 @@ const Finance = () => {
   const [detailTitle, setDetailTitle] = useState('');
   const [hallBookings, setHallBookings] = useState<any[]>([]);
   const [hallBookingFinanceData, setHallBookingFinanceData] = useState<any[]>([]);
-  const [hallBookingIncomes, setHallBookingIncomes] = useState<any[]>([]);
+  const [hallBookingIncomes, setHallBookingIncomes] = useState<HallBookingIncome[]>([]);
   const [hallDetailModalOpen, setHallDetailModalOpen] = useState(false);
   const [selectedHallBooking, setSelectedHallBooking] = useState<string | null>(null);
   const [isLoadingHallData, setIsLoadingHallData] = useState(true);
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
+  const [expenseCategories, setExpenseCategories] = useState<ExpenseCategoryWithIcon[]>([]);
 
-  const dailyExpenseData = generateDailyExpenseData();
-  const weeklyChartData = generateWeeklyData();
+  const generateDailyExpenseData = (transactionsData: Transaction[]) => {
+    const today = new Date();
+    const startDate = subDays(today, 6);
+    
+    const dateRange = eachDayOfInterval({
+      start: startDate,
+      end: today
+    });
+    
+    const categories = [...new Set(transactionsData
+      .filter(t => t.type === 'expense')
+      .map(t => t.category))];
+    
+    return dateRange.map(date => {
+      const formattedDate = format(date, 'dd');
+      const dayName = format(date, 'EEE');
+      const dateStr = format(date, 'yyyy-MM-dd');
+      
+      const dayTransactions = transactionsData.filter(
+        t => t.date === dateStr && t.type === 'expense'
+      );
+      
+      const result: any = {
+        name: formattedDate,
+        day: dayName,
+      };
+      
+      categories.forEach(category => {
+        const amount = dayTransactions
+          .filter(t => t.category === category)
+          .reduce((sum, t) => sum + t.amount, 0);
+        
+        result[category] = amount;
+      });
+      
+      return result;
+    });
+  };
+
+  const generateWeeklyData = (transactionsData: Transaction[]) => {
+    const today = new Date();
+    const startDate = subDays(today, 6);
+    
+    const dateRange = eachDayOfInterval({
+      start: startDate,
+      end: today
+    });
+    
+    return dateRange.map(date => {
+      const formattedDate = format(date, 'dd');
+      const dayName = format(date, 'EEE');
+      const dateStr = format(date, 'yyyy-MM-dd');
+      
+      const income = transactionsData
+        .filter(t => t.date === dateStr && t.type === 'income')
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      const expense = transactionsData
+        .filter(t => t.date === dateStr && t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      return {
+        name: formattedDate,
+        day: dayName,
+        income,
+        expense,
+      };
+    });
+  };
+
+  const generateHallBookingFinanceData = (bookings: HallBookingIncome[]) => {
+    const today = new Date();
+    const startDate = subDays(today, 6);
+    
+    const dateRange = eachDayOfInterval({
+      start: startDate,
+      end: today
+    });
+    
+    return dateRange.map(date => {
+      const formattedDate = format(date, 'dd MMM');
+      const dateStr = format(date, 'yyyy-MM-dd');
+      
+      const dayBookings = bookings.filter(booking => 
+        booking.date.toString().substring(0, 10) === dateStr
+      );
+      
+      const income = dayBookings.reduce((sum, booking) => sum + Number(booking.amount), 0);
+      
+      const expense = income * 0.3;
+      
+      return {
+        name: formattedDate,
+        income: parseFloat(income.toFixed(2)),
+        expense: parseFloat(expense.toFixed(2))
+      };
+    });
+  };
+
+  const calculateExpenseCategories = (transactionsData: Transaction[]) => {
+    const categories = [...new Set(transactionsData
+      .filter(t => t.type === 'expense')
+      .map(t => t.category))];
+    
+    const iconMap: Record<string, LucideIcon> = {
+      'Grocery': PieChart,
+      'Food & Drink': PieChart,
+      'Shopping': PieChart,
+      'Dhaweeye': PieChart,
+      'Transportation': PieChart,
+      'Utilities': PieChart,
+      'Rent': PieChart,
+      'Entertainment': PieChart,
+      'Other': PieChart,
+    };
+
+    const colorIndex = (index: number) => {
+      const colors = [COLORS.purple, COLORS.green, COLORS.pink, COLORS.orange, COLORS.blue, COLORS.yellow, COLORS.red, COLORS.teal];
+      return colors[index % colors.length];
+    };
+    
+    return categories.map((category, index) => {
+      const total = transactionsData
+        .filter(t => t.type === 'expense' && t.category === category)
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      return {
+        name: category,
+        value: total,
+        color: colorIndex(index),
+        icon: iconMap[category] || PieChart,
+      };
+    }).sort((a, b) => b.value - a.value);
+  };
+
+  const fetchTransactions = async () => {
+    setIsLoadingTransactions(true);
+    try {
+      const transactionsData = await getTransactions();
+      setTransactions(transactionsData);
+      
+      const categories = calculateExpenseCategories(transactionsData);
+      setExpenseCategories(categories);
+      
+      setIsLoadingTransactions(false);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      toast.error('Failed to load transaction data');
+      setIsLoadingTransactions(false);
+    }
+  };
+
+  const fetchHallBookings = async () => {
+    try {
+      setIsLoadingHallData(true);
+      const bookingsData = await getHallBookingIncomes();
+      setHallBookings(bookingsData);
+      
+      const financeData = generateHallBookingFinanceData(bookingsData);
+      setHallBookingFinanceData(financeData);
+      setHallBookingIncomes(bookingsData);
+      
+      setIsLoadingHallData(false);
+    } catch (error) {
+      console.error('Error loading hall bookings data:', error);
+      toast.error('Failed to load hall bookings data');
+      setIsLoadingHallData(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTransactions();
+    fetchHallBookings();
+  }, []);
+
+  useEffect(() => {
+    if (transactions.length > 0) {
+      const weeklyData = generateWeeklyData(transactions);
+      const dailyExpenseData = generateDailyExpenseData(transactions);
+    }
+  }, [transactions]);
+
+  const dailyExpenseData = React.useMemo(() => {
+    return generateDailyExpenseData(transactions);
+  }, [transactions]);
+
+  const weeklyChartData = React.useMemo(() => {
+    return generateWeeklyData(transactions);
+  }, [transactions]);
 
   const filteredTransactions = transactions.filter(transaction => {
     if (transactionType === 'all') return true;
@@ -266,7 +284,7 @@ const Finance = () => {
     
   const netProfit = totalIncome - totalExpense;
 
-  const handleAddTransaction = () => {
+  const handleAddTransaction = async () => {
     if (!newTransaction.description || !newTransaction.amount) {
       toast.error("Please fill in all required fields");
       return;
@@ -278,29 +296,32 @@ const Finance = () => {
       return;
     }
 
-    const newId = Math.random().toString(36).substr(2, 9);
-    
-    const transaction: Transaction = {
-      id: newId,
-      date: format(newTransaction.date, 'yyyy-MM-dd'),
-      description: newTransaction.description,
-      amount: amount,
-      type: newTransaction.type,
-      category: newTransaction.category
-    };
+    try {
+      const transaction = {
+        date: format(newTransaction.date, 'yyyy-MM-dd'),
+        description: newTransaction.description,
+        amount: amount,
+        type: newTransaction.type,
+        category: newTransaction.category
+      };
 
-    setTransactions([transaction, ...transactions]);
-    setIsAddTransactionOpen(false);
-    
-    setNewTransaction({
-      description: '',
-      amount: '',
-      type: 'expense',
-      category: 'Grocery',
-      date: new Date(),
-    });
+      const addedTransaction = await addTransaction(transaction);
+      setTransactions([addedTransaction, ...transactions]);
+      setIsAddTransactionOpen(false);
+      
+      setNewTransaction({
+        description: '',
+        amount: '',
+        type: 'expense',
+        category: 'Grocery',
+        date: new Date(),
+      });
 
-    toast.success(`${newTransaction.type === 'income' ? 'Income' : 'Expense'} added successfully!`);
+      toast.success(`${newTransaction.type === 'income' ? 'Income' : 'Expense'} added successfully!`);
+    } catch (error) {
+      console.error('Error adding transaction:', error);
+      toast.error('Failed to add transaction');
+    }
   };
 
   const openDetailDialog = (type: string, title: string) => {
@@ -314,32 +335,147 @@ const Finance = () => {
     setHallDetailModalOpen(true);
   };
 
-  useEffect(() => {
-    const loadHallBookingsData = async () => {
-      try {
-        setIsLoadingHallData(true);
-        const bookingsData = await fetchHallBookings();
-        setHallBookings(bookingsData);
-        
-        const financeData = generateHallBookingFinanceData(bookingsData);
-        setHallBookingFinanceData(financeData);
-        
-        const formattedBookings = formatBookingsForIncomeList(bookingsData);
-        setHallBookingIncomes(formattedBookings);
-        
-        setIsLoadingHallData(false);
-      } catch (error) {
-        console.error('Error loading hall bookings data:', error);
-        toast.error('Failed to load hall bookings data');
-        setIsLoadingHallData(false);
-      }
+  const totalHallIncome = hallBookingIncomes.reduce((sum, booking) => sum + Number(booking.amount), 0);
+  const totalHallExpense = totalHallIncome * 0.3;
+
+  const calculateMonthlyFinancials = () => {
+    const today = new Date();
+    const oneMonthAgo = new Date(today);
+    oneMonthAgo.setMonth(today.getMonth() - 1);
+    
+    const thisMonthExpenses = transactions
+      .filter(t => 
+        t.type === 'expense' && 
+        isThisMonth(new Date(t.date))
+      )
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const lastMonthExpenses = transactions
+      .filter(t => {
+        const txDate = new Date(t.date);
+        return t.type === 'expense' && 
+               txDate.getMonth() === oneMonthAgo.getMonth() && 
+               txDate.getFullYear() === oneMonthAgo.getFullYear();
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    return {
+      thisMonth: thisMonthExpenses,
+      lastMonth: lastMonthExpenses,
+      percentChange: lastMonthExpenses ? ((thisMonthExpenses - lastMonthExpenses) / lastMonthExpenses) * 100 : 0
+    };
+  };
+
+  const monthlyFinancials = calculateMonthlyFinancials();
+
+  const calculateTodayFinancials = () => {
+    const todayIncome = transactions
+      .filter(t => t.type === 'income' && isToday(new Date(t.date)))
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const todayExpenses = transactions
+      .filter(t => t.type === 'expense' && isToday(new Date(t.date)))
+      .reduce((sum, t) => sum + t.amount, 0);
+      
+    return {
+      income: todayIncome,
+      expense: todayExpenses,
+      net: todayIncome - todayExpenses
+    };
+  };
+
+  const todayFinancials = calculateTodayFinancials();
+
+  const calculateTopIncomeCategories = () => {
+    const categories = [...new Set(transactions
+      .filter(t => t.type === 'income')
+      .map(t => t.category))];
+    
+    const categorySums = categories.map(category => {
+      return {
+        name: category,
+        total: transactions
+          .filter(t => t.type === 'income' && t.category === category)
+          .reduce((sum, t) => sum + t.amount, 0)
+      };
+    });
+    
+    return categorySums.sort((a, b) => b.total - a.total).slice(0, 2);
+  };
+
+  const topIncomeCategories = calculateTopIncomeCategories();
+  
+  const subscriptions: SubscriptionWithIcon[] = [
+    { 
+      id: '1', 
+      name: topIncomeCategories[0]?.name || 'Most Sales Item', 
+      amount: topIncomeCategories[0]?.total || 0, 
+      date: format(new Date(), 'MMM dd, yyyy'), 
+      icon: Music, 
+      color: '#1DB954' 
+    },
+    { 
+      id: '2', 
+      name: topIncomeCategories[1]?.name || 'Most Rented Hall', 
+      amount: topIncomeCategories[1]?.total || 0, 
+      date: format(new Date(), 'MMM dd, yyyy'), 
+      icon: Youtube, 
+      color: '#FF0000' 
+    },
+  ];
+
+  const calculateInsights = () => {
+    const netIncome = {
+      id: '1',
+      name: 'Net Income',
+      currentAmount: totalIncome - totalExpense,
+      targetAmount: 1200,
+      color: COLORS.green,
+      icon: PiggyBank
     };
     
-    loadHallBookingsData();
-  }, []);
+    const leastSellingItem = {
+      id: '2',
+      name: 'Least Selling Item',
+      currentAmount: expenseCategories.length > 0 ? expenseCategories[expenseCategories.length - 1].value : 0,
+      targetAmount: 83000,
+      color: COLORS.purple,
+      icon: Car
+    };
+    
+    const mostRecurringExpense = {
+      id: '3',
+      name: 'Most Recurring Expense',
+      currentAmount: expenseCategories.length > 0 ? expenseCategories[0].value : 0,
+      targetAmount: 325000,
+      color: COLORS.orange,
+      icon: Home
+    };
+    
+    const favoriteItem = {
+      id: '4',
+      name: 'Favorite Item',
+      currentAmount: topIncomeCategories[1]?.total || 0,
+      targetAmount: 325000,
+      color: COLORS.pink,
+      icon: Laptop
+    };
+    
+    const dhaweeye = {
+      id: '5',
+      name: 'Dhaweeye',
+      currentAmount: transactions
+        .filter(t => t.type === 'expense' && t.category === 'Dhaweeye')
+        .reduce((sum, t) => sum + t.amount, 0),
+      targetAmount: 25000,
+      color: COLORS.blue,
+      icon: Navigation
+    };
+    
+    return [netIncome, leastSellingItem, mostRecurringExpense, favoriteItem, dhaweeye];
+  };
 
-  const totalHallIncome = hallBookingIncomes.reduce((sum, booking) => sum + booking.amount, 0);
-  const totalHallExpense = totalHallIncome * 0.3;
+  const savingGoals: SavingGoalWithIcon[] = calculateInsights();
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
@@ -384,20 +520,29 @@ const Finance = () => {
                   vs Previous Month
                 </div>
                 <div className="text-2xl font-bold dark:text-white mt-4">
-                  $252.98
+                  ${monthlyFinancials.thisMonth.toFixed(2)}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  $1,200 last month
+                  ${monthlyFinancials.lastMonth.toFixed(2)} last month
                 </div>
                 <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden mt-4 dark:bg-gray-700">
                   <div 
                     className="h-full bg-green-500 rounded-full dark:bg-green-400"
-                    style={{ width: `${(252.98/1200)*100}%` }}
+                    style={{ width: `${monthlyFinancials.lastMonth ? (monthlyFinancials.thisMonth/monthlyFinancials.lastMonth)*100 : 0}%` }}
                   ></div>
                 </div>
                 <div className="flex items-center text-xs text-green-500 dark:text-green-400 mt-2">
-                  <TrendingDown size={12} className="mr-1" />
-                  <span>21.1% decrease from last month</span>
+                  {monthlyFinancials.percentChange < 0 ? (
+                    <>
+                      <TrendingDown size={12} className="mr-1" />
+                      <span>{Math.abs(monthlyFinancials.percentChange).toFixed(1)}% decrease from last month</span>
+                    </>
+                  ) : (
+                    <>
+                      <TrendingUp size={12} className="mr-1" />
+                      <span>{monthlyFinancials.percentChange.toFixed(1)}% increase from last month</span>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -430,7 +575,7 @@ const Finance = () => {
                           <div className="text-xs text-gray-500 dark:text-gray-400">{subscription.date}</div>
                         </div>
                         <div className="text-sm font-medium dark:text-white">
-                          ${subscription.amount}
+                          ${subscription.amount.toFixed(2)}
                         </div>
                       </div>
                     </CardContent>
@@ -521,6 +666,7 @@ const Finance = () => {
                   onTransactionTypeChange={setTransactionType}
                   onViewDetails={(id, title) => openDetailDialog('transaction-detail', title)}
                   onViewAll={() => openDetailDialog('transactions', 'All Transactions')}
+                  isLoading={isLoadingTransactions}
                 />
               </CardContent>
             </Card>
@@ -530,6 +676,7 @@ const Finance = () => {
             <HallBookingIncomesList
               bookings={hallBookingIncomes}
               onViewDetails={handleViewHallBookingDetails}
+              isLoading={isLoadingHallData}
             />
           </div>
         </div>
@@ -566,5 +713,3 @@ const Finance = () => {
 };
 
 export default Finance;
-
-

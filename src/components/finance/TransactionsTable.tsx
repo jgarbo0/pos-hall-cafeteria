@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format } from 'date-fns';
 import { cn, formatCurrency } from '@/lib/utils';
@@ -19,6 +20,7 @@ interface TransactionsTableProps {
   onTransactionTypeChange: (value: 'all' | 'income' | 'expense') => void;
   onViewDetails: (id: string, title: string) => void;
   onViewAll: () => void;
+  isLoading?: boolean;
 }
 
 const TransactionsTable: React.FC<TransactionsTableProps> = ({
@@ -27,6 +29,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
   onTransactionTypeChange,
   onViewDetails,
   onViewAll,
+  isLoading = false
 }) => {
   return (
     <div>
@@ -69,7 +72,16 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-4">
+                  <div className="flex justify-center items-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary"></div>
+                    <span className="ml-2">Loading transactions...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : transactions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-4">
                   No transactions found

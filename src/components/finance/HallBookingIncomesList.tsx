@@ -19,11 +19,13 @@ interface HallBookingIncome {
 interface HallBookingIncomesListProps {
   bookings: HallBookingIncome[];
   onViewDetails: (id: string) => void;
+  isLoading?: boolean;
 }
 
 const HallBookingIncomesList: React.FC<HallBookingIncomesListProps> = ({
   bookings,
-  onViewDetails
+  onViewDetails,
+  isLoading = false
 }) => {
   return (
     <Card className="shadow-sm">
@@ -46,7 +48,16 @@ const HallBookingIncomesList: React.FC<HallBookingIncomesListProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bookings.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-4">
+                  <div className="flex justify-center items-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary"></div>
+                    <span className="ml-2">Loading hall bookings...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : bookings.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-4">
                   No hall booking incomes found
