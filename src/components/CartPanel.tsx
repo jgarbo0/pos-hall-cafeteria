@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MinusCircle, PlusCircle, Trash2, Users } from 'lucide-react';
+import { MinusCircle, PlusCircle, Trash2, Users, Printer } from 'lucide-react';
 import { CartItem, OrderType } from '@/types';
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -51,15 +51,100 @@ const CartPanel = ({
     return calculateSubtotal() + calculateTax();
   };
 
-  const handlePlaceOrder = () => {
+  const handlePrintAndPay = () => {
     if (items.length === 0) {
       toast.error("Please add items to cart first");
       return;
     }
     
+    // Generate receipt content
+    const receiptContent = generateReceiptContent();
+    
+    // Create a print window
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Receipt #${orderNumber}</title>
+            <style>
+              body { font-family: 'Courier New', monospace; margin: 0; padding: 20px; }
+              .receipt { width: 300px; margin: 0 auto; }
+              .header { text-align: center; margin-bottom: 20px; }
+              .items { margin-bottom: 20px; }
+              .item { margin-bottom: 5px; }
+              .total { border-top: 1px dashed #000; padding-top: 10px; }
+              .footer { text-align: center; margin-top: 30px; font-size: 12px; }
+            </style>
+          </head>
+          <body>
+            <div class="receipt">
+              ${receiptContent}
+            </div>
+            <script>
+              window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 500); }
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+    
     toast.success(`Order #${orderNumber} placed successfully!`);
     onPlaceOrder();
     setNotes('');
+  };
+
+  const generateReceiptContent = () => {
+    const date = new Date().toLocaleString();
+    const customerName = customers.find(c => c.id === customer)?.name || 'Walk-in Customer';
+    
+    let content = `
+      <div class="header">
+        <h2>Somali Restaurant</h2>
+        <p>Order #${orderNumber}</p>
+        <p>${date}</p>
+        <p>Customer: ${customerName}</p>
+        <p>Order Type: ${orderType}</p>
+        ${orderType === 'Dine In' ? `<p>Table #${tableNumber}</p>` : ''}
+      </div>
+      <div class="items">
+        <h3>Items</h3>
+    `;
+    
+    items.forEach(item => {
+      content += `
+        <div class="item">
+          <p>${item.quantity} x ${item.title} - $${(item.price * item.quantity).toFixed(2)}</p>
+        </div>
+      `;
+    });
+    
+    content += `
+      </div>
+      <div class="total">
+        <p>Subtotal: $${calculateSubtotal().toFixed(2)}</p>
+        <p>Tax (10%): $${calculateTax().toFixed(2)}</p>
+        <p><strong>Total: $${calculateTotal().toFixed(2)}</strong></p>
+      </div>
+    `;
+    
+    if (notes) {
+      content += `
+        <div class="notes">
+          <h3>Notes</h3>
+          <p>${notes}</p>
+        </div>
+      `;
+    }
+    
+    content += `
+      <div class="footer">
+        <p>Thank you for your order!</p>
+      </div>
+    `;
+    
+    return content;
   };
 
   return (
@@ -211,10 +296,11 @@ const CartPanel = ({
           
           <Button 
             variant="default" 
-            className="w-full"
-            onClick={handlePlaceOrder}
+            className="w-full flex items-center gap-2"
+            onClick={handlePrintAndPay}
           >
-            Place Order
+            <Printer size={16} />
+            Pay & Print
           </Button>
         </div>
       </div>

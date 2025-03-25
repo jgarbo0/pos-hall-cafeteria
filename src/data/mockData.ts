@@ -116,3 +116,39 @@ export const generateTableNumber = () => {
   return Math.floor(1 + Math.random() * 50);
 };
 
+// Hall booking data
+export const bookings = [
+  {
+    id: '1',
+    date: '2023-10-15',
+    startTime: '10:00',
+    endTime: '12:00',
+    customerName: 'Ahmed Hassan',
+    purpose: 'Birthday Party',
+    attendees: 25
+  },
+  {
+    id: '2',
+    date: '2023-10-15',
+    startTime: '14:00',
+    endTime: '16:00',
+    customerName: 'Fatima Ali',
+    purpose: 'Business Meeting',
+    attendees: 12
+  },
+  {
+    id: '3',
+    date: '2023-10-16',
+    startTime: '18:00',
+    endTime: '22:00',
+    customerName: 'Mohammed Omar',
+    purpose: 'Wedding Reception',
+    attendees: 50
+  }
+];
+
+export const timeSlots = [
+  '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
+  '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', 
+  '20:00', '21:00', '22:00'
+];

@@ -29,11 +29,22 @@ import {
 import { Plus, Edit, Trash } from 'lucide-react';
 import { menuItems, categories } from '@/data/mockData';
 import { MenuItem } from '@/types';
+import { toast } from "sonner";
 
 const Products = () => {
   const [products, setProducts] = useState<MenuItem[]>(menuItems);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState<MenuItem | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    title: '',
+    price: 0,
+    available: 0,
+    category: '',
+    image: ''
+  });
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -43,6 +54,76 @@ const Products = () => {
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
+  };
+
+  const handleEditClick = (product: MenuItem) => {
+    setCurrentProduct(product);
+    setEditFormData({
+      title: product.title,
+      price: product.price,
+      available: product.available,
+      category: product.category,
+      image: product.image
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = (product: MenuItem) => {
+    setCurrentProduct(product);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: name === 'price' || name === 'available' ? parseFloat(value) : value
+    }));
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      category: value
+    }));
+  };
+
+  const handleUpdateProduct = () => {
+    if (!currentProduct) return;
+    
+    const updatedProducts = products.map(product => 
+      product.id === currentProduct.id 
+        ? { ...product, ...editFormData }
+        : product
+    );
+    
+    setProducts(updatedProducts);
+    setIsEditDialogOpen(false);
+    toast.success(`${editFormData.title} updated successfully`);
+  };
+
+  const handleDeleteProduct = () => {
+    if (!currentProduct) return;
+    
+    const updatedProducts = products.filter(product => product.id !== currentProduct.id);
+    setProducts(updatedProducts);
+    setIsDeleteDialogOpen(false);
+    toast.success(`${currentProduct.title} deleted successfully`);
+  };
+
+  const handleAddNewProduct = () => {
+    const newProduct: MenuItem = {
+      id: `${products.length + 1}`,
+      title: editFormData.title,
+      price: editFormData.price,
+      available: editFormData.available,
+      category: editFormData.category,
+      image: editFormData.image || 'https://images.unsplash.com/photo-1506084868230-bb9d95c24759?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80'
+    };
+    
+    setProducts([...products, newProduct]);
+    setIsEditDialogOpen(false);
+    toast.success(`${newProduct.title} added successfully`);
   };
 
   return (
@@ -74,33 +155,63 @@ const Products = () => {
                 </SelectContent>
               </Select>
               
-              <Dialog>
+              <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button onClick={() => {
+                    setCurrentProduct(null);
+                    setEditFormData({
+                      title: '',
+                      price: 0,
+                      available: 0,
+                      category: 'main',
+                      image: ''
+                    });
+                  }}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Product
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
                   <DialogHeader>
-                    <DialogTitle>Add New Product</DialogTitle>
+                    <DialogTitle>{currentProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                      <label htmlFor="name">Product Name</label>
-                      <Input id="name" />
+                      <label htmlFor="title">Product Name</label>
+                      <Input 
+                        id="title" 
+                        name="title"
+                        value={editFormData.title}
+                        onChange={handleEditFormChange}
+                      />
                     </div>
                     <div className="grid gap-2">
                       <label htmlFor="price">Price</label>
-                      <Input id="price" type="number" step="0.01" />
+                      <Input 
+                        id="price" 
+                        name="price"
+                        type="number" 
+                        step="0.01"
+                        value={editFormData.price}
+                        onChange={handleEditFormChange}
+                      />
                     </div>
                     <div className="grid gap-2">
                       <label htmlFor="available">Available Quantity</label>
-                      <Input id="available" type="number" />
+                      <Input 
+                        id="available" 
+                        name="available"
+                        type="number"
+                        value={editFormData.available}
+                        onChange={handleEditFormChange}
+                      />
                     </div>
                     <div className="grid gap-2">
                       <label htmlFor="category">Category</label>
-                      <Select>
+                      <Select 
+                        value={editFormData.category}
+                        onValueChange={handleCategoryChange}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
@@ -115,11 +226,37 @@ const Products = () => {
                     </div>
                     <div className="grid gap-2">
                       <label htmlFor="image">Image URL</label>
-                      <Input id="image" />
+                      <Input 
+                        id="image" 
+                        name="image"
+                        value={editFormData.image}
+                        onChange={handleEditFormChange}
+                      />
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <Button>Save Product</Button>
+                    <Button onClick={currentProduct ? handleUpdateProduct : handleAddNewProduct}>
+                      {currentProduct ? 'Update Product' : 'Save Product'}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Confirm Delete</DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <p>Are you sure you want to delete {currentProduct?.title}?</p>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button variant="destructive" onClick={handleDeleteProduct}>
+                      Delete
+                    </Button>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -156,10 +293,10 @@ const Products = () => {
                     <TableCell>{product.available}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => handleEditClick(product)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => handleDeleteClick(product)}>
                           <Trash className="h-4 w-4" />
                         </Button>
                       </div>

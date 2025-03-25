@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, Bell, Menu } from 'lucide-react';
+import { Search, Filter, Bell, Languages } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,12 @@ import {
   PopoverContent,
   PopoverTrigger 
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 
 const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
@@ -18,6 +24,7 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
     { id: 2, text: "Payment completed", time: "10 min ago", read: false },
     { id: 3, text: "New customer registered", time: "1 hour ago", read: true }
   ]);
+  const [language, setLanguage] = useState('English');
   const { toast } = useToast();
   
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,6 +38,14 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
     toast({
       title: "Notifications",
       description: "All notifications marked as read",
+    });
+  };
+
+  const handleLanguageChange = (lang: string) => {
+    setLanguage(lang);
+    toast({
+      title: "Language Changed",
+      description: `Language set to ${lang}`,
     });
   };
 
@@ -59,6 +74,25 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
         </div>
         
         <div className="flex items-center ml-4 space-x-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="rounded-full">
+                <Languages className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleLanguageChange('English')}>
+                English
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleLanguageChange('Somali')}>
+                Somali
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleLanguageChange('Arabic')}>
+                Arabic
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" size="icon" className="rounded-full relative">
