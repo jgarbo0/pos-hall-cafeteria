@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { MenuItem } from '@/types';
 import { Minus, Plus, Check } from 'lucide-react';
@@ -36,19 +35,10 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
   const handleAddToCart = (item: MenuItem) => {
     const quantity = getQuantity(item.id);
     onAddToCart(item, quantity);
-    setSelectedItem(null); // Deselect after adding to cart
   };
 
   const handleCardClick = (itemId: string) => {
     setSelectedItem(prev => prev === itemId ? null : itemId);
-    
-    // If item is being selected (not deselected), find it and add to cart
-    if (selectedItem !== itemId) {
-      const item = items.find(i => i.id === itemId);
-      if (item) {
-        handleAddToCart(item);
-      }
-    }
   };
 
   return (
