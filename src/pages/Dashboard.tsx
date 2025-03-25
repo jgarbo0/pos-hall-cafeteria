@@ -15,7 +15,6 @@ import StatsCard from '@/components/dashboard/StatsCard';
 import FinanceStatsCards from '@/components/dashboard/FinanceStatsCards';
 import SalesOverviewChart from '@/components/dashboard/SalesOverviewChart';
 import CategoryPieChart from '@/components/dashboard/CategoryPieChart';
-import IncomeExpenseWidget from '@/components/dashboard/IncomeExpenseWidget';
 import PopularItemsList from '@/components/dashboard/PopularItemsList';
 import RecentOrdersList from '@/components/dashboard/RecentOrdersList';
 import UpcomingBookings from '@/components/dashboard/UpcomingBookings';
@@ -81,7 +80,7 @@ const paymentMethodsData = [
 const paymentMethods = [
   { 
     name: 'Zaad', 
-    value: 45,  // Added the missing 'value' property to match PaymentMethod interface
+    value: 45,
     percentage: 45, 
     icon: <Smartphone className="h-4 w-4 text-blue-500" />,
     bgColorClass: 'bg-blue-500/10',
@@ -89,7 +88,7 @@ const paymentMethods = [
   },
   { 
     name: 'Cash', 
-    value: 30,  // Added the missing 'value' property to match PaymentMethod interface
+    value: 30,
     percentage: 30, 
     icon: <DollarSignIcon className="h-4 w-4 text-green-500" />,
     bgColorClass: 'bg-green-500/10',
@@ -97,7 +96,7 @@ const paymentMethods = [
   },
   { 
     name: 'Edahb', 
-    value: 25,  // Added the missing 'value' property to match PaymentMethod interface
+    value: 25,
     percentage: 25, 
     icon: <Wallet className="h-4 w-4 text-orange-500" />,
     bgColorClass: 'bg-orange-500/10',
@@ -166,12 +165,7 @@ const Dashboard: React.FC = () => {
             <CategoryPieChart data={categoryData} colors={COLORS} />
           </div>
           
-          {/* Income vs Expense Chart */}
-          <IncomeExpenseWidget 
-            data={financeData} 
-            monthlyIncome="$65,890" 
-            monthlyExpense="$48,230" 
-          />
+          {/* Removed the Income vs Expense Chart */}
           
           {/* Popular items and recent orders */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
