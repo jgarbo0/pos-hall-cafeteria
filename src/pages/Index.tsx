@@ -10,6 +10,7 @@ import { generateOrderNumber, generateTableNumber } from '@/data/mockData';
 import { toast } from 'sonner';
 import { useLanguage } from '@/context/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { getMenuItems, getCategories, createOrder, getCustomers, Customer } from '@/services/SupabaseService';
 
 const Index = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -21,51 +22,39 @@ const Index = () => {
   const [orderNumber, setOrderNumber] = useState(generateOrderNumber());
   const [tableNumber, setTableNumber] = useState(generateTableNumber());
   const [isLoading, setIsLoading] = useState(true);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<string>('Walk-in Customer');
+  const [orderType, setOrderType] = useState<'Dine In' | 'Take Away'>('Dine In');
   const { t } = useLanguage();
   
   useEffect(() => {
     // Set document title
     document.title = "Doob Café - Menu";
     
-    // Fetch menu items and categories
+    // Fetch menu items, categories, and customers
     fetchMenuItems();
     fetchCategories();
+    fetchCustomers();
   }, []);
+  
+  const fetchCustomers = async () => {
+    try {
+      const data = await getCustomers();
+      setCustomers(data);
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      toast.error('Failed to load customers');
+    }
+  };
   
   const fetchMenuItems = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('menu_items')
-        .select(`
-          id,
-          title,
-          price,
-          available,
-          popular,
-          description,
-          image,
-          categories(id, name)
-        `)
-        .order('title');
-      
-      if (error) {
-        throw error;
-      }
+      const data = await getMenuItems();
       
       if (data) {
-        const formattedItems: MenuItem[] = data.map(item => ({
-          id: item.id,
-          title: item.title,
-          price: item.price,
-          available: item.available,
-          image: item.image || 'https://images.unsplash.com/photo-1506084868230-bb9d95c24759?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80',
-          category: item.categories?.id || '',
-          popular: item.popular || false,
-          description: item.description
-        }));
-        setMenuItems(formattedItems);
-        setFilteredItems(formattedItems);
+        setMenuItems(data);
+        setFilteredItems(data);
       }
     } catch (error) {
       console.error('Error fetching menu items:', error);
@@ -77,23 +66,13 @@ const Index = () => {
   
   const fetchCategories = async () => {
     try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('id, name')
-        .order('name');
-      
-      if (error) {
-        throw error;
-      }
+      const data = await getCategories();
       
       if (data) {
         // Add 'all' category
         const allCategories: Category[] = [
           { id: 'all', name: 'All Items' },
-          ...data.map(category => ({
-            id: category.id,
-            name: category.name
-          }))
+          ...data
         ];
         setCategories(allCategories);
       }
@@ -168,6 +147,14 @@ const Index = () => {
     setCartItems([]);
   };
   
+  const handleOrderTypeChange = (type: 'Dine In' | 'Take Away') => {
+    setOrderType(type);
+  };
+  
+  const handleCustomerChange = (customerId: string) => {
+    setSelectedCustomer(customerId);
+  };
+  
   const handlePlaceOrder = async () => {
     if (cartItems.length === 0) {
       toast.error("Your cart is empty!");
@@ -175,46 +162,27 @@ const Index = () => {
     }
     
     try {
-      // Calculate totals
-      const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const tax = subtotal * 0.1; // 10% tax
-      const total = subtotal + tax;
+      // Get customer name from selected customer
+      let customerName = 'Walk-in Customer';
+      if (selectedCustomer !== 'Walk-in Customer') {
+        const selectedCustomerObj = customers.find(c => c.id === selectedCustomer);
+        if (selectedCustomerObj) {
+          customerName = selectedCustomerObj.name;
+        }
+      }
       
-      // Insert order to database
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          order_number: orderNumber,
-          order_type: 'Dine In', // This should be dynamic based on user selection
-          table_number: tableNumber, // This should be conditional based on order type
-          subtotal: subtotal,
-          tax: tax,
-          total: total,
-          status: 'processing',
-          customer_name: 'Walk-in Customer' // This should be dynamic based on selected customer
-        })
-        .select('id')
-        .single();
-      
-      if (orderError) throw orderError;
-      
-      // Insert order items
-      const orderItems = cartItems.map(item => ({
-        order_id: orderData.id,
-        menu_item_id: item.id,
-        quantity: item.quantity,
-        price: item.price,
-        notes: item.notes || null,
-        spicy_level: item.spicyLevel || null
-      }));
-      
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-      
-      if (itemsError) throw itemsError;
+      // Insert order to database using the service
+      const orderId = await createOrder(
+        orderNumber, 
+        orderType, 
+        orderType === 'Dine In' ? tableNumber : null, 
+        cartItems, 
+        customerName
+      );
       
       toast.success("Order placed successfully!");
+      
+      // Reset cart and generate new order number/table number
       setCartItems([]);
       setOrderNumber(generateOrderNumber());
       setTableNumber(generateTableNumber());
@@ -269,6 +237,11 @@ const Index = () => {
         onPlaceOrder={handlePlaceOrder}
         orderNumber={orderNumber}
         tableNumber={tableNumber}
+        customers={customers}
+        selectedCustomer={selectedCustomer}
+        onCustomerChange={handleCustomerChange}
+        orderType={orderType}
+        onOrderTypeChange={handleOrderTypeChange}
       />
     </div>
   );
