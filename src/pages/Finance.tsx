@@ -718,9 +718,9 @@ const Finance = () => {
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: `${subscription.color}20` }}
                       >
+                        {/* Fix: remove className from React.createElement and move it to a style property */}
                         {React.createElement(subscription.icon, {
-                          className: "h-5 w-5",
-                          style: { color: subscription.color }
+                          style: { width: "20px", height: "20px", color: subscription.color }
                         })}
                       </div>
                       <div className="flex-1">
@@ -749,9 +749,9 @@ const Finance = () => {
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: `${goal.color}20` }}
                       >
+                        {/* Fix: remove className from React.createElement and move it to a style property */}
                         {React.createElement(goal.icon, {
-                          className: "h-5 w-5",
-                          style: { color: goal.color }
+                          style: { width: "20px", height: "20px", color: goal.color }
                         })}
                       </div>
                       <div className="flex-1">
