@@ -37,12 +37,12 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
         </div>
         
         <div className="flex items-center ml-4 space-x-4">
-          <Button variant="primary" size="sm" className="gap-2 rounded-full h-10 px-4 bg-blue-600 text-white">
+          <Button variant="default" size="sm" className="gap-2 rounded-full h-10 px-4 bg-blue-600 text-white">
             <Menu className="h-4 w-4" />
             <span>All Menu</span>
           </Button>
           
-          <Button variant="primary" size="sm" className="gap-2 rounded-full h-10 px-4 bg-blue-600 text-white">
+          <Button variant="default" size="sm" className="gap-2 rounded-full h-10 px-4 bg-blue-600 text-white">
             <Menu className="h-4 w-4" />
             <span>All Menu</span>
           </Button>
