@@ -8,7 +8,7 @@ import {
 import { 
   Calendar, ArrowUpRight, TrendingUp, Users, ShoppingBag, DollarSign, 
   CreditCard, Calendar as CalendarIcon, Clock, CreditCard as CreditCardIcon,
-  Utensils, Coffee
+  Utensils, Coffee, Wallet, Smartphone
 } from 'lucide-react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -374,9 +374,9 @@ const Dashboard: React.FC = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={[
-                      { name: 'Credit Card', value: 65 },
-                      { name: 'Cash', value: 20 },
-                      { name: 'Mobile Money', value: 15 }
+                      { name: 'Zaad', value: 45 },
+                      { name: 'Cash', value: 30 },
+                      { name: 'Edahb', value: 25 }
                     ]}
                     margin={{
                       top: 5,
@@ -396,11 +396,11 @@ const Dashboard: React.FC = () => {
               <div className="flex justify-between mt-4">
                 <div className="flex items-center">
                   <div className="h-8 w-8 bg-blue-500/10 rounded-full flex items-center justify-center mr-2">
-                    <CreditCardIcon className="h-4 w-4 text-blue-500" />
+                    <Smartphone className="h-4 w-4 text-blue-500" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Credit Card</p>
-                    <p className="text-xs text-muted-foreground">65% of payments</p>
+                    <p className="text-sm font-medium">Zaad</p>
+                    <p className="text-xs text-muted-foreground">45% of payments</p>
                   </div>
                 </div>
                 <div className="flex items-center">
@@ -409,16 +409,16 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-sm font-medium">Cash</p>
-                    <p className="text-xs text-muted-foreground">20% of payments</p>
+                    <p className="text-xs text-muted-foreground">30% of payments</p>
                   </div>
                 </div>
                 <div className="flex items-center">
                   <div className="h-8 w-8 bg-orange-500/10 rounded-full flex items-center justify-center mr-2">
-                    <CreditCard className="h-4 w-4 text-orange-500" />
+                    <Wallet className="h-4 w-4 text-orange-500" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Mobile Money</p>
-                    <p className="text-xs text-muted-foreground">15% of payments</p>
+                    <p className="text-sm font-medium">Edahb</p>
+                    <p className="text-xs text-muted-foreground">25% of payments</p>
                   </div>
                 </div>
               </div>
