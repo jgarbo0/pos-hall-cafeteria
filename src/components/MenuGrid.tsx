@@ -33,13 +33,19 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
     }));
   };
 
-  const handleAddToCart = (item: MenuItem) => {
+  const handleCardClick = (item: MenuItem) => {
+    // If item is already selected, unselect it and don't add to cart
+    if (selectedItem === item.id) {
+      setSelectedItem(null);
+      return;
+    }
+    
+    // Set as selected item
+    setSelectedItem(item.id);
+    
+    // Add to cart with current quantity
     const quantity = getQuantity(item.id);
     onAddToCart(item, quantity);
-  };
-
-  const handleCardClick = (itemId: string) => {
-    setSelectedItem(prev => prev === itemId ? null : itemId);
   };
 
   return (
@@ -51,7 +57,7 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
             "food-card overflow-hidden bg-white dark:bg-gray-800 border-none shadow-md rounded-3xl transition-all hover:shadow-lg cursor-pointer",
             selectedItem === item.id && "ring-2 ring-blue-500"
           )}
-          onClick={() => handleCardClick(item.id)}
+          onClick={() => handleCardClick(item)}
         >
           <div className="food-card-image-container h-52 overflow-hidden relative">
             <img 
@@ -96,16 +102,6 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
                 </Button>
               </div>
             </div>
-            <Button
-              variant="default"
-              className="w-full mt-3 rounded-full bg-blue-500 hover:bg-blue-600"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAddToCart(item);
-              }}
-            >
-              Add to Cart
-            </Button>
           </CardContent>
         </Card>
       ))}
