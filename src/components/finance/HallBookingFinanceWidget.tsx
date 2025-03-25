@@ -17,15 +17,42 @@ interface HallBookingFinanceWidgetProps {
   totalIncome: number;
   totalExpense: number;
   onViewReport: () => void;
+  isLoading?: boolean; // Added isLoading prop
 }
 
 const HallBookingFinanceWidget: React.FC<HallBookingFinanceWidgetProps> = ({
   data,
   totalIncome,
   totalExpense,
-  onViewReport
+  onViewReport,
+  isLoading = false // Set default to false
 }) => {
   const profit = totalIncome - totalExpense;
+  
+  if (isLoading) {
+    return (
+      <Card className="shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div>
+            <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
+              Hall Booking Revenue
+            </CardTitle>
+            <CardDescription className="text-xs text-muted-foreground dark:text-gray-400 mt-1">
+              Loading data...
+            </CardDescription>
+          </div>
+          <div className="h-8 w-8 bg-blue-500/10 rounded-full flex items-center justify-center">
+            <Building className="h-4 w-4 text-blue-500" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[180px] flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card className="shadow-sm">

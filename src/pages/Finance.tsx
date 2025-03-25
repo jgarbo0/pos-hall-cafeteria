@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -406,11 +405,10 @@ const Finance = () => {
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: `${subscription.color}20` }}
                       >
-                        {/* Fix: Properly apply styling to icon component */}
-                        <subscription.icon 
-                          className="text-[20px]" 
-                          style={{ color: subscription.color }} 
-                        />
+                        {React.createElement(subscription.icon, {
+                          className: "h-5 w-5",
+                          style: { color: subscription.color }
+                        })}
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium dark:text-white">{subscription.name}</div>
@@ -438,11 +436,10 @@ const Finance = () => {
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: `${goal.color}20` }}
                       >
-                        {/* Fix: Properly apply styling to icon component */}
-                        <goal.icon 
-                          className="text-[20px]" 
-                          style={{ color: goal.color }} 
-                        />
+                        {React.createElement(goal.icon, {
+                          className: "h-5 w-5",
+                          style: { color: goal.color }
+                        })}
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium dark:text-white">{goal.name}</div>
@@ -484,10 +481,10 @@ const Finance = () => {
               <CardContent>
                 <HallBookingFinanceWidget 
                   isLoading={isLoadingHallData}
-                  financeData={hallBookingFinanceData}
+                  data={hallBookingFinanceData}
                   totalIncome={totalHallIncome}
                   totalExpense={totalHallExpense}
-                  onViewDetails={() => handleViewHallBookingDetails('all')}
+                  onViewReport={() => handleViewHallBookingDetails('all')}
                 />
               </CardContent>
             </Card>

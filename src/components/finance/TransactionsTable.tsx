@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { cn, formatCurrency } from '@/lib/utils';
@@ -12,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Transaction } from '@/types';
+import { Transaction } from '@/types/finance';
 
 interface TransactionsTableProps {
   transactions: Transaction[];
