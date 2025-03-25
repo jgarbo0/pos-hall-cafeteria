@@ -74,9 +74,10 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
         <Card 
           key={item.id} 
           className={cn(
-            "food-card overflow-hidden bg-white dark:bg-gray-800 border-none shadow-md rounded-xl transition-all hover:shadow-lg",
+            "food-card overflow-hidden bg-white dark:bg-gray-800 border-none shadow-md rounded-xl transition-all hover:shadow-lg cursor-pointer",
             selectedItem === item.id && "ring-2 ring-blue-500"
           )}
+          onClick={() => handleCardClick(item)}
         >
           <div className="food-card-image-container h-48 overflow-hidden relative">
             <img 
@@ -131,10 +132,13 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
               <Button 
                 variant="default" 
                 className="rounded-full bg-blue-500 hover:bg-blue-600 text-white"
-                onClick={() => handleCardClick(item)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCardClick(item);
+                }}
               >
                 <ShoppingCart className="h-4 w-4 mr-2" />
-                Add
+                {selectedItem === item.id ? 'Added' : 'Add'}
               </Button>
             </div>
           </CardContent>
