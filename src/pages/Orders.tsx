@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -49,7 +48,7 @@ interface OrderFormData {
   orderType: OrderType;
   items: number; 
   total: number;
-  status: "completed" | "cancelled";
+  status: "processing" | "completed" | "cancelled";
   customerName: string;
 }
 
@@ -240,7 +239,7 @@ const Orders = () => {
       orderType: order.orderType,
       items: order.items.length,
       total: order.total,
-      status: order.status === "processing" ? "completed" : order.status,
+      status: order.status === "processing" ? "processing" : order.status,
       customerName: order.customerName || 'Walk-in Customer'
     });
     setIsEditDialogOpen(true);

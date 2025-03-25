@@ -35,6 +35,7 @@ export interface Order {
   status: 'processing' | 'completed' | 'cancelled';
   paymentStatus?: 'paid' | 'pending';
   timestamp: string;
+  customerName?: string;
 }
 
 export interface TableItem {
