@@ -27,7 +27,8 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageSelector from '@/components/LanguageSelector';
-import { Check, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { Check, ShieldCheck, UserPlus, Users, Plus, Edit, Trash2 } from 'lucide-react';
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 const Settings = () => {
   const { t } = useLanguage();
@@ -48,6 +49,21 @@ const Settings = () => {
       document.documentElement.classList.toggle('dark', systemPrefersDark);
     }
   };
+
+  const mockCategories = [
+    { id: '1', name: 'Main Dishes', itemCount: 12 },
+    { id: '2', name: 'Appetizers', itemCount: 8 },
+    { id: '3', name: 'Desserts', itemCount: 6 },
+    { id: '4', name: 'Beverages', itemCount: 10 },
+    { id: '5', name: 'Specials', itemCount: 5 },
+  ];
+
+  const mockCustomers = [
+    { id: 'c1', name: 'Ahmed Mohamed', email: 'ahmed@example.com', totalOrders: 24, totalSpent: 845.50 },
+    { id: 'c2', name: 'Fatima Hussein', email: 'fatima@example.com', totalOrders: 18, totalSpent: 620.75 },
+    { id: 'c3', name: 'Omar Jama', email: 'omar@example.com', totalOrders: 9, totalSpent: 312.25 },
+    { id: 'c4', name: 'Amina Abdi', email: 'amina@example.com', totalOrders: 15, totalSpent: 490.00 },
+  ];
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
@@ -71,6 +87,7 @@ const Settings = () => {
               <TabsTrigger value="roles" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Roles & Permissions</TabsTrigger>
               <TabsTrigger value="notifications" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Notifications</TabsTrigger>
               <TabsTrigger value="appearance" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Appearance</TabsTrigger>
+              <TabsTrigger value="customers" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Customers</TabsTrigger>
             </TabsList>
             
             <TabsContent value="general">
@@ -86,7 +103,7 @@ const Settings = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="restaurant-name" className="dark:text-gray-300">Restaurant Name</Label>
-                        <Input id="restaurant-name" defaultValue="Somali Delights" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                        <Input id="restaurant-name" defaultValue="Doob Venue" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="restaurant-phone" className="dark:text-gray-300">Phone Number</Label>
@@ -99,7 +116,7 @@ const Settings = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="restaurant-email" className="dark:text-gray-300">Email</Label>
-                      <Input id="restaurant-email" type="email" defaultValue="contact@somalidelights.com" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                      <Input id="restaurant-email" type="email" defaultValue="contact@doobvenue.com" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="restaurant-hours" className="dark:text-gray-300">Business Hours</Label>
@@ -109,6 +126,66 @@ const Settings = () => {
                   <CardFooter>
                     <Button>Save Changes</Button>
                   </CardFooter>
+                </Card>
+
+                <Card className="dark:bg-gray-800 dark:border-gray-700">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle className="dark:text-white">Categories</CardTitle>
+                      <CardDescription className="dark:text-gray-400">
+                        Manage menu categories
+                      </CardDescription>
+                    </div>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="sm" className="flex items-center gap-1">
+                          <Plus size={16} />
+                          Add Category
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="dark:bg-gray-800 dark:border-gray-700">
+                        <DialogHeader>
+                          <DialogTitle className="dark:text-white">Add New Category</DialogTitle>
+                          <DialogDescription className="dark:text-gray-400">
+                            Create a new category for menu items
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="category-name" className="dark:text-gray-300">Category Name</Label>
+                            <Input id="category-name" placeholder="e.g. Breakfast, Lunch, Dinner" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="category-description" className="dark:text-gray-300">Description (Optional)</Label>
+                            <Input id="category-description" placeholder="Brief description of this category" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button type="submit">Save Category</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {mockCategories.map((category) => (
+                        <div key={category.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                          <div>
+                            <h4 className="font-medium dark:text-white">{category.name}</h4>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">{category.itemCount} items</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 dark:text-gray-400">
+                              <Edit size={16} />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500">
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
                 </Card>
                 
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
@@ -127,6 +204,10 @@ const Settings = () => {
                       <Switch id="include-tax" defaultChecked />
                       <Label htmlFor="include-tax" className="dark:text-gray-300">Include tax in listed prices</Label>
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch id="show-tax-receipt" defaultChecked />
+                      <Label htmlFor="show-tax-receipt" className="dark:text-gray-300">Show tax details on receipt</Label>
+                    </div>
                   </CardContent>
                   <CardFooter>
                     <Button>Save Changes</Button>
@@ -141,6 +222,14 @@ const Settings = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="receipt-header" className="dark:text-gray-300">Receipt Header</Label>
+                      <Input id="receipt-header" defaultValue="Doob Venue" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="receipt-address" className="dark:text-gray-300">Receipt Address</Label>
+                      <Input id="receipt-address" defaultValue="123 Main Street, Minneapolis, MN 55414" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="receipt-footer" className="dark:text-gray-300">Receipt Footer Text</Label>
                       <Input id="receipt-footer" defaultValue="Thank you for dining with us!" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
@@ -430,6 +519,69 @@ const Settings = () => {
                 <CardFooter>
                   <Button>Save Appearance</Button>
                 </CardFooter>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="customers">
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="dark:text-white">Registered Customers</CardTitle>
+                    <CardDescription className="dark:text-gray-400">
+                      Manage customer accounts and view payment history
+                    </CardDescription>
+                  </div>
+                  <Button size="sm" className="flex items-center gap-1">
+                    <UserPlus size={16} />
+                    Add Customer
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {mockCustomers.map((customer) => (
+                      <div key={customer.id} className="p-4 border rounded-md dark:border-gray-700 dark:bg-gray-700">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h4 className="font-medium dark:text-white">{customer.name}</h4>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{customer.email}</p>
+                          </div>
+                          <Button variant="outline" size="sm" className="dark:bg-gray-600 dark:text-white dark:border-gray-600">
+                            View Details
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-500 dark:text-gray-400">Total Orders:</span> 
+                            <span className="ml-2 dark:text-white">{customer.totalOrders}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 dark:text-gray-400">Total Spent:</span> 
+                            <span className="ml-2 dark:text-white">${customer.totalSpent.toFixed(2)}</span>
+                          </div>
+                        </div>
+                        <div className="mt-3 pt-3 border-t dark:border-gray-600">
+                          <h5 className="text-sm font-medium mb-2 dark:text-gray-300">Pending Payments</h5>
+                          {customer.id === 'c1' || customer.id === 'c3' ? (
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md">
+                              <div className="flex justify-between mb-1">
+                                <span className="text-sm dark:text-gray-300">Order #12458</span>
+                                <span className="text-sm font-medium dark:text-yellow-300">${customer.id === 'c1' ? '45.75' : '28.50'}</span>
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                From {customer.id === 'c1' ? '2 days ago' : 'yesterday'}
+                              </div>
+                              <Button size="sm" variant="outline" className="mt-2 h-8 text-xs w-full dark:bg-gray-700 dark:border-gray-600">
+                                Mark as Paid
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-500 dark:text-gray-400">No pending payments</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
               </Card>
             </TabsContent>
           </Tabs>

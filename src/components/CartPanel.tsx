@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MinusCircle, PlusCircle, Trash2, Users, Printer } from 'lucide-react';
+import { MinusCircle, PlusCircle, Trash2, Users, Printer, Clock } from 'lucide-react';
 import { CartItem, OrderType } from '@/types';
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -30,13 +30,14 @@ const CartPanel = ({
   const [orderType, setOrderType] = useState<OrderType>('Dine In');
   const [notes, setNotes] = useState('');
   const [customer, setCustomer] = useState('walk-in');
+  const [paymentMethod, setPaymentMethod] = useState('immediate');
   
   const customers = [
-    { id: 'walk-in', name: 'Walk-in Customer' },
-    { id: 'ahmed', name: 'Ahmed Mohamed' },
-    { id: 'fatima', name: 'Fatima Hussein' },
-    { id: 'omar', name: 'Omar Jama' },
-    { id: 'amina', name: 'Amina Abdi' },
+    { id: 'walk-in', name: 'Walk-in Customer', registered: false },
+    { id: 'ahmed', name: 'Ahmed Mohamed', registered: true },
+    { id: 'fatima', name: 'Fatima Hussein', registered: true },
+    { id: 'omar', name: 'Omar Jama', registered: true },
+    { id: 'amina', name: 'Amina Abdi', registered: true },
   ];
 
   const calculateSubtotal = () => {
@@ -49,6 +50,11 @@ const CartPanel = ({
 
   const calculateTotal = () => {
     return calculateSubtotal() + calculateTax();
+  };
+
+  const isRegisteredCustomer = () => {
+    const selectedCustomer = customers.find(c => c.id === customer);
+    return selectedCustomer ? selectedCustomer.registered : false;
   };
 
   const handlePrintAndPay = () => {
@@ -68,13 +74,27 @@ const CartPanel = ({
           <head>
             <title>Receipt #${orderNumber}</title>
             <style>
-              body { font-family: 'Courier New', monospace; margin: 0; padding: 20px; }
+              body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; }
               .receipt { width: 300px; margin: 0 auto; }
               .header { text-align: center; margin-bottom: 20px; }
-              .items { margin-bottom: 20px; }
-              .item { margin-bottom: 5px; }
-              .total { border-top: 1px dashed #000; padding-top: 10px; }
-              .footer { text-align: center; margin-top: 30px; font-size: 12px; }
+              .logo { font-size: 24px; font-weight: bold; margin-bottom: 8px; }
+              .address { font-size: 12px; color: #555; margin-bottom: 5px; }
+              .contact { font-size: 12px; color: #555; margin-bottom: 15px; }
+              .divider { border-top: 1px dashed #ccc; margin: 10px 0; }
+              .order-info { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; }
+              .items { margin: 15px 0; }
+              .item-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
+              .item { display: flex; justify-content: space-between; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
+              .item-name { flex: 1; }
+              .item-qty { width: 30px; text-align: center; }
+              .item-price { width: 70px; text-align: right; }
+              .total-section { margin-top: 10px; }
+              .total-row { display: flex; justify-content: space-between; font-size: 14px; }
+              .grand-total { font-weight: bold; font-size: 16px; margin-top: 5px; }
+              .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #777; }
+              .payment-method { text-align: center; margin-top: 10px; padding: 5px; background: #f9f9f9; border-radius: 5px; font-size: 13px; }
+              .qr-placeholder { width: 100px; height: 100px; margin: 10px auto; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #777; }
+              .barcode-placeholder { height: 40px; margin: 10px auto; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #777; }
             </style>
           </head>
           <body>
@@ -98,49 +118,97 @@ const CartPanel = ({
   const generateReceiptContent = () => {
     const date = new Date().toLocaleString();
     const customerName = customers.find(c => c.id === customer)?.name || 'Walk-in Customer';
+    const isPaidLater = paymentMethod === 'later';
     
     let content = `
       <div class="header">
-        <h2>Somali Restaurant</h2>
-        <p>Order #${orderNumber}</p>
-        <p>${date}</p>
-        <p>Customer: ${customerName}</p>
-        <p>Order Type: ${orderType}</p>
-        ${orderType === 'Dine In' ? `<p>Table #${tableNumber}</p>` : ''}
+        <div class="logo">Doob Venue</div>
+        <div class="address">123 Main Street, Minneapolis, MN 55414</div>
+        <div class="contact">Tel: (555) 123-4567 | info@doobvenue.com</div>
+        <div class="divider"></div>
       </div>
+
+      <div class="order-info">
+        <span>Receipt #</span>
+        <span>${orderNumber}</span>
+      </div>
+      <div class="order-info">
+        <span>Date</span>
+        <span>${date}</span>
+      </div>
+      <div class="order-info">
+        <span>Customer</span>
+        <span>${customerName}</span>
+      </div>
+      <div class="order-info">
+        <span>Order Type</span>
+        <span>${orderType}</span>
+      </div>
+      ${orderType === 'Dine In' ? `
+      <div class="order-info">
+        <span>Table #</span>
+        <span>${tableNumber}</span>
+      </div>` : ''}
+      <div class="divider"></div>
+      
       <div class="items">
-        <h3>Items</h3>
+        <div class="item-header">
+          <div class="item-name">Item</div>
+          <div class="item-qty">Qty</div>
+          <div class="item-price">Amount</div>
+        </div>
     `;
     
     items.forEach(item => {
       content += `
         <div class="item">
-          <p>${item.quantity} x ${item.title} - $${(item.price * item.quantity).toFixed(2)}</p>
+          <div class="item-name">${item.title}</div>
+          <div class="item-qty">${item.quantity}</div>
+          <div class="item-price">$${(item.price * item.quantity).toFixed(2)}</div>
         </div>
       `;
     });
     
     content += `
       </div>
-      <div class="total">
-        <p>Subtotal: $${calculateSubtotal().toFixed(2)}</p>
-        <p>Tax (10%): $${calculateTax().toFixed(2)}</p>
-        <p><strong>Total: $${calculateTotal().toFixed(2)}</strong></p>
+      <div class="divider"></div>
+      
+      <div class="total-section">
+        <div class="total-row">
+          <span>Subtotal</span>
+          <span>$${calculateSubtotal().toFixed(2)}</span>
+        </div>
+        <div class="total-row">
+          <span>Tax (10%)</span>
+          <span>$${calculateTax().toFixed(2)}</span>
+        </div>
+        <div class="total-row grand-total">
+          <span>Total</span>
+          <span>$${calculateTotal().toFixed(2)}</span>
+        </div>
+      </div>
+      
+      <div class="payment-method">
+        ${isPaidLater ? 'PAYMENT PENDING - To be paid later' : 'PAID IN FULL - Thank you!'}
       </div>
     `;
     
     if (notes) {
       content += `
-        <div class="notes">
-          <h3>Notes</h3>
-          <p>${notes}</p>
+        <div class="divider"></div>
+        <div style="font-size: 14px;">
+          <strong>Notes:</strong>
+          <p style="margin-top: 5px;">${notes}</p>
         </div>
       `;
     }
     
     content += `
+      <div class="divider"></div>
+      <div class="barcode-placeholder">Order #${orderNumber}</div>
       <div class="footer">
         <p>Thank you for your order!</p>
+        <p>www.doobvenue.com</p>
       </div>
     `;
     
@@ -196,11 +264,37 @@ const CartPanel = ({
             </SelectTrigger>
             <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
               {customers.map(c => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name} {c.registered && <span className="ml-1 text-xs text-blue-500">(Registered)</span>}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
+
+        {isRegisteredCustomer() && (
+          <div className="mb-4">
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">Payment Method</div>
+            <div className="flex gap-2">
+              <Button 
+                variant={paymentMethod === 'immediate' ? 'default' : 'outline'} 
+                className="flex-1 text-sm"
+                onClick={() => setPaymentMethod('immediate')}
+              >
+                Pay Now
+              </Button>
+              
+              <Button 
+                variant={paymentMethod === 'later' ? 'default' : 'outline'} 
+                className="flex-1 text-sm flex items-center gap-1"
+                onClick={() => setPaymentMethod('later')}
+              >
+                <Clock size={14} />
+                Pay Later
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="flex-1 overflow-y-auto p-4">
@@ -300,7 +394,7 @@ const CartPanel = ({
             onClick={handlePrintAndPay}
           >
             <Printer size={16} />
-            Pay & Print
+            {paymentMethod === 'later' && isRegisteredCustomer() ? 'Print Order' : 'Pay & Print'}
           </Button>
         </div>
       </div>

@@ -41,6 +41,14 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
 
   const handleCardClick = (itemId: string) => {
     setSelectedItem(prev => prev === itemId ? null : itemId);
+    
+    // If item is being selected (not deselected), find it and add to cart
+    if (selectedItem !== itemId) {
+      const item = items.find(i => i.id === itemId);
+      if (item) {
+        handleAddToCart(item);
+      }
+    }
   };
 
   return (
