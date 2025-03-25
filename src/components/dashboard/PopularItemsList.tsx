@@ -6,7 +6,7 @@ import {
 import { Utensils, Coffee } from 'lucide-react';
 
 interface PopularItem {
-  id: number;
+  id: string; // Changed from number to string
   name: string;
   category: string;
   sales: number;
