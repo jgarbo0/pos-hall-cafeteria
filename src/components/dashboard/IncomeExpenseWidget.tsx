@@ -43,8 +43,8 @@ const IncomeExpenseWidget: React.FC<IncomeExpenseWidgetProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Fixed height container to prevent chart from expanding too much */}
-        <div className="h-64">
+        {/* Reduced height container from h-64 to h-48 to make the chart more compact */}
+        <div className="h-48">
           <ChartContainer
             config={{
               income: { color: "#22c55e" },
@@ -54,7 +54,7 @@ const IncomeExpenseWidget: React.FC<IncomeExpenseWidgetProps> = ({
             <AreaChart
               data={data}
               margin={{
-                top: 10,
+                top: 5, // Reduced top margin from 10 to 5
                 right: 30,
                 left: 0,
                 bottom: 0,
