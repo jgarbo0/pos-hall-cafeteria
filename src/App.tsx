@@ -50,6 +50,31 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   return <>{children}</>;
 };
 
+// New component to check if user is admin and redirect accordingly
+const HomeRedirect = () => {
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    // Check if user is logged in and is admin
+    const userString = localStorage.getItem('user');
+    const user = userString ? JSON.parse(userString) as User : null;
+    
+    if (user && user.role === 'admin') {
+      setIsAdmin(true);
+    }
+    
+    setIsLoading(false);
+  }, []);
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen dark:bg-gray-900 dark:text-white">Loading...</div>;
+  }
+
+  // Redirect admin to dashboard, others to home page
+  return isAdmin ? <Navigate to="/dashboard" replace /> : <Home />;
+};
+
 const App = () => {
   // Initialize theme from localStorage or default to light
   useEffect(() => {
@@ -79,7 +104,7 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<HomeRedirect />} />
               <Route path="/login" element={<Login />} />
               <Route path="/index" element={<ProtectedRoute><Index /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

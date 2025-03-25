@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -51,6 +51,7 @@ const formSchema = z.object({
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -70,10 +71,18 @@ const Login = () => {
       const user = predefinedUsers.find(user => user.email === values.email);
       
       if (user && values.password === 'password') { // Simple password check
-        // In a real app, store user in localStorage or context
+        // Store user in localStorage
         localStorage.setItem('user', JSON.stringify(user));
         toast.success('Logged in successfully');
-        navigate('/');
+        
+        // Redirect admin users to dashboard, others to home page
+        if (user.role === 'admin') {
+          navigate('/dashboard');
+        } else {
+          // Use the from location if available, otherwise go to home
+          const from = location.state?.from?.pathname || '/';
+          navigate(from);
+        }
       } else {
         toast.error('Invalid email or password');
       }
