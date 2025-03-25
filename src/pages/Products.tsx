@@ -55,7 +55,6 @@ const Products = () => {
   const [editFormData, setEditFormData] = useState({
     title: '',
     price: 0,
-    available: 0,
     category: '',
     description: '',
     image: '',
@@ -149,7 +148,6 @@ const Products = () => {
     setEditFormData({
       title: product.title,
       price: product.price,
-      available: product.available,
       category: product.category,
       description: product.description || '',
       image: product.image,
@@ -175,7 +173,7 @@ const Products = () => {
     } else {
       setEditFormData(prev => ({
         ...prev,
-        [name]: name === 'price' || name === 'available' ? parseFloat(value) : value
+        [name]: name === 'price' ? parseFloat(value) : value
       }));
     }
   };
@@ -203,7 +201,6 @@ const Products = () => {
         .update({
           title: editFormData.title,
           price: editFormData.price,
-          available: editFormData.available,
           category_id: editFormData.category,
           description: editFormData.description,
           image: editFormData.image,
@@ -221,7 +218,6 @@ const Products = () => {
                 ...product, 
                 title: editFormData.title,
                 price: editFormData.price,
-                available: editFormData.available,
                 category: editFormData.category,
                 description: editFormData.description,
                 image: editFormData.image,
@@ -301,7 +297,6 @@ const Products = () => {
         .insert({
           title: editFormData.title,
           price: editFormData.price,
-          available: editFormData.available,
           category_id: editFormData.category,
           description: editFormData.description || null,
           image: editFormData.image || 'https://images.unsplash.com/photo-1506084868230-bb9d95c24759?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80',
@@ -397,7 +392,6 @@ const Products = () => {
                     setEditFormData({
                       title: '',
                       price: 0,
-                      available: 0,
                       category: categories.length > 1 ? categories[1].id : '',
                       description: '',
                       image: '',
@@ -430,16 +424,6 @@ const Products = () => {
                         type="number" 
                         step="0.01"
                         value={editFormData.price}
-                        onChange={handleEditFormChange}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <label htmlFor="available" className="dark:text-white">Available Quantity</label>
-                      <Input 
-                        id="available" 
-                        name="available"
-                        type="number"
-                        value={editFormData.available}
                         onChange={handleEditFormChange}
                       />
                     </div>
@@ -576,7 +560,6 @@ const Products = () => {
                       </div>
                       <p className="text-blue-500 font-bold">${product.price.toFixed(2)}</p>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">Available: {product.available}</p>
                   </CardContent>
                   <CardFooter className="p-4 pt-0 flex justify-end gap-2">
                     <Button variant="outline" size="sm" onClick={() => handleEditClick(product)}>
@@ -600,7 +583,6 @@ const Products = () => {
                     <TableHead>Name</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Price</TableHead>
-                    <TableHead>Available</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -619,7 +601,6 @@ const Products = () => {
                         {categories.find(c => c.id === product.category)?.name || product.category}
                       </TableCell>
                       <TableCell className="dark:text-gray-300">${product.price.toFixed(2)}</TableCell>
-                      <TableCell className="dark:text-gray-300">{product.available}</TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
                           <Button variant="outline" size="icon" onClick={() => handleEditClick(product)}>
