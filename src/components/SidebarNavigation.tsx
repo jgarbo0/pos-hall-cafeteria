@@ -28,7 +28,7 @@ const SidebarNavigation = () => {
   const navItems = [
     { icon: LayoutDashboard, path: '/dashboard', label: 'Dashboard' },
     { icon: LayoutGrid, path: '/menu', label: 'Menu' },
-    { icon: ShoppingCart, path: '/orders', label: 'Orders' },
+    { icon: ShoppingCart, path: '/orders', label: 'Orders/Sales' },
     { icon: Package, path: '/products', label: 'Products' },
     { icon: Users, path: '/customers', label: 'Customers' },
     { icon: Calendar, path: '/hall', label: 'Hall Booking' },

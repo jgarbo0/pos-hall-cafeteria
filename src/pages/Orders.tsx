@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -31,11 +30,14 @@ import {
   Calendar, 
   ChevronDown, 
   Printer,
-  FileText 
+  FileText,
+  DollarSign,
+  CreditCard,
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Order, OrderType, CartItem } from '@/types';
-import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { format, parse, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +45,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { getOrders } from '@/services/SupabaseService';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface OrderFormData {
   tableNumber: number | null;
@@ -76,7 +79,7 @@ const Orders = () => {
   });
   
   useEffect(() => {
-    document.title = "Doob Café - Orders";
+    document.title = "Doob Café - Orders/Sales";
     fetchOrders();
   }, []);
   
@@ -92,6 +95,42 @@ const Orders = () => {
       setIsLoading(false);
     }
   };
+
+  // Format the timestamp to a more readable date and time
+  const formatTimestamp = (timestamp: string): string => {
+    try {
+      // Parse the timestamp and format it to a readable date and time
+      return format(new Date(timestamp), 'MMM dd, yyyy h:mm a');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return timestamp; // Return original if parsing fails
+    }
+  };
+  
+  // Summary calculations for the payment status widgets
+  const calculateOrderSummary = () => {
+    const today = new Date();
+    const todayString = format(today, 'yyyy-MM-dd');
+    
+    const totalOrders = orders.length;
+    const paidOrders = orders.filter(order => order.paymentStatus === 'paid').length;
+    const pendingOrders = orders.filter(order => order.paymentStatus === 'pending').length;
+    
+    const totalSales = orders.reduce((sum, order) => sum + order.total, 0);
+    const todaySales = orders
+      .filter(order => format(new Date(order.timestamp), 'yyyy-MM-dd') === todayString)
+      .reduce((sum, order) => sum + order.total, 0);
+    
+    return {
+      totalOrders,
+      paidOrders,
+      pendingOrders,
+      totalSales,
+      todaySales
+    };
+  };
+
+  const orderSummary = calculateOrderSummary();
   
   const getFilteredOrders = () => {
     const today = new Date();
@@ -179,7 +218,7 @@ const Orders = () => {
           
           <div class="order-info">
             <div><strong>Order #:</strong> ${currentOrder.orderNumber}</div>
-            <div><strong>Date:</strong> ${currentOrder.timestamp}</div>
+            <div><strong>Date:</strong> ${formatTimestamp(currentOrder.timestamp)}</div>
             <div><strong>Type:</strong> ${currentOrder.orderType}</div>
             ${currentOrder.tableNumber ? `<div><strong>Table:</strong> ${currentOrder.tableNumber}</div>` : ''}
             <div><strong>Status:</strong> ${currentOrder.status}</div>
@@ -357,7 +396,7 @@ const Orders = () => {
         
         <div className="flex-1 p-6 overflow-auto">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-semibold dark:text-white">Orders Management</h1>
+            <h1 className="text-2xl font-semibold dark:text-white">Orders/Sales Management</h1>
             <div className="flex gap-2">
               <Button onClick={handleRefresh} variant="outline">
                 <Clock className="mr-2 h-4 w-4" />
@@ -372,6 +411,59 @@ const Orders = () => {
                 Export Report
               </Button>
             </div>
+          </div>
+          
+          {/* Payment Status Widgets */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <Card>
+              <CardContent className="p-4 flex flex-col justify-center items-center">
+                <div className="mb-2 mt-2 flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900">
+                  <Receipt className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+                </div>
+                <div className="text-xl font-bold dark:text-white">{orderSummary.totalOrders}</div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Orders</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4 flex flex-col justify-center items-center">
+                <div className="mb-2 mt-2 flex items-center justify-center w-8 h-8 rounded-full bg-green-100 dark:bg-green-900">
+                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-300" />
+                </div>
+                <div className="text-xl font-bold text-green-600 dark:text-green-400">{orderSummary.paidOrders}</div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Paid Orders</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4 flex flex-col justify-center items-center">
+                <div className="mb-2 mt-2 flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-300" />
+                </div>
+                <div className="text-xl font-bold text-amber-600 dark:text-amber-400">{orderSummary.pendingOrders}</div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Pending Payments</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4 flex flex-col justify-center items-center">
+                <div className="mb-2 mt-2 flex items-center justify-center w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900">
+                  <DollarSign className="h-4 w-4 text-purple-600 dark:text-purple-300" />
+                </div>
+                <div className="text-xl font-bold dark:text-white">${orderSummary.totalSales.toFixed(2)}</div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Sales</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4 flex flex-col justify-center items-center">
+                <div className="mb-2 mt-2 flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900">
+                  <CreditCard className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
+                </div>
+                <div className="text-xl font-bold dark:text-white">${orderSummary.todaySales.toFixed(2)}</div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Today's Sales</p>
+              </CardContent>
+            </Card>
           </div>
           
           <div className="flex justify-between items-center mb-6">
@@ -448,7 +540,7 @@ const Orders = () => {
                         </TableCell>
                         <TableCell className="dark:text-gray-300">{order.items.length}</TableCell>
                         <TableCell className="dark:text-gray-300">${order.total.toFixed(2)}</TableCell>
-                        <TableCell className="dark:text-gray-300">{order.timestamp}</TableCell>
+                        <TableCell className="dark:text-gray-300">{formatTimestamp(order.timestamp)}</TableCell>
                         <TableCell>
                           <div className={`flex items-center space-x-1 ${
                             order.status === 'completed' ? 'text-green-600 dark:text-green-500' : 'text-amber-500'
@@ -518,7 +610,7 @@ const Orders = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Date</p>
-                    <p className="font-medium dark:text-white">{currentOrder.timestamp}</p>
+                    <p className="font-medium dark:text-white">{formatTimestamp(currentOrder.timestamp)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Type</p>
@@ -691,139 +783,3 @@ const Orders = () => {
                   id="total"
                   name="total"
                   type="number"
-                  step="0.01"
-                  value={formData.total}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="status" className="text-sm dark:text-white">Status</label>
-                <Select 
-                  value={formData.status} 
-                  onValueChange={(value) => handleSelectChange('status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleUpdateOrder}>Update Order</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Confirm Delete</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="dark:text-white">Are you sure you want to delete order {currentOrder?.id}?</p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleConfirmDelete}>Delete</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Create New Order</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2 col-span-2">
-                <label htmlFor="add-customerName" className="text-sm dark:text-white">Customer Name</label>
-                <Input
-                  id="add-customerName"
-                  name="customerName"
-                  type="text"
-                  value={formData.customerName}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="add-orderType" className="text-sm dark:text-white">Order Type</label>
-                <Select 
-                  value={formData.orderType} 
-                  onValueChange={(value) => handleSelectChange('orderType', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Dine In">Dine In</SelectItem>
-                    <SelectItem value="Take Away">Take Away</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="add-tableNumber" className="text-sm dark:text-white">Table Number</label>
-                <Input
-                  id="add-tableNumber"
-                  name="tableNumber"
-                  type="number"
-                  value={formData.tableNumber === null ? '' : formData.tableNumber}
-                  onChange={handleInputChange}
-                  disabled={formData.orderType === "Take Away"}
-                />
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="add-items" className="text-sm dark:text-white">Items</label>
-                <Input
-                  id="add-items"
-                  name="items"
-                  type="number"
-                  value={formData.items}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="add-total" className="text-sm dark:text-white">Total</label>
-                <Input
-                  id="add-total"
-                  name="total"
-                  type="number"
-                  step="0.01"
-                  value={formData.total}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="add-status" className="text-sm dark:text-white">Status</label>
-                <Select 
-                  value={formData.status} 
-                  onValueChange={(value) => handleSelectChange('status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddOrder}>Create Order</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-export default Orders;
