@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -29,6 +29,8 @@ import { ServicePackage, TableItem, HallBooking } from '@/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { SheetClose } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { toast } from "sonner";
+import { timeSlots } from '@/data/mockData';
 
 // Define form schema
 const formSchema = z.object({
@@ -48,9 +50,11 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface HallBookingFormProps {
-  tables: TableItem[];
-  packages: ServicePackage[];
-  onSubmit: (booking: HallBooking) => void;
+  initialData?: HallBooking;
+  onClearSelection?: () => void;
+  onSubmit?: (booking: HallBooking) => void;
+  tables?: TableItem[];
+  packages?: ServicePackage[];
 }
 
 // Available additional services
@@ -62,21 +66,33 @@ const additionalServices = [
   { id: "microphone", label: "Microphone Set", price: 20 },
 ];
 
-// Time slots
-const timeSlots = Array.from({ length: 24 * 2 }, (_, i) => {
-  const hour = Math.floor(i / 2);
-  const minute = i % 2 === 0 ? "00" : "30";
-  return `${hour.toString().padStart(2, "0")}:${minute}`;
-});
-
-const HallBookingForm = ({ tables, packages, onSubmit }: HallBookingFormProps) => {
+const HallBookingForm = ({ 
+  initialData, 
+  onClearSelection, 
+  tables = [], 
+  packages = [],
+  onSubmit 
+}: HallBookingFormProps) => {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [totalAmount, setTotalAmount] = useState<number>(0);
 
+  // Initialize form with initialData if provided
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialData ? {
+      customerName: initialData.customerName,
+      customerPhone: initialData.customerPhone || "",
+      purpose: initialData.purpose,
+      attendees: initialData.attendees,
+      startTime: initialData.startTime,
+      endTime: initialData.endTime,
+      date: new Date(initialData.date),
+      tableId: initialData.tableId?.toString(),
+      packageId: initialData.packageId,
+      notes: initialData.notes || "",
+      additionalServices: initialData.additionalServices,
+    } : {
       customerName: "",
       customerPhone: "",
       purpose: "",
@@ -84,6 +100,16 @@ const HallBookingForm = ({ tables, packages, onSubmit }: HallBookingFormProps) =
       additionalServices: [],
     }
   });
+
+  // Set selected services and package from initialData
+  useEffect(() => {
+    if (initialData) {
+      setSelectedServices(initialData.additionalServices || []);
+      if (initialData.packageId) {
+        setSelectedPackage(initialData.packageId);
+      }
+    }
+  }, [initialData]);
 
   // Calculate total whenever selections change
   React.useEffect(() => {
@@ -124,7 +150,7 @@ const HallBookingForm = ({ tables, packages, onSubmit }: HallBookingFormProps) =
   const onFormSubmit = (data: FormValues) => {
     // Create a new booking object
     const newBooking: HallBooking = {
-      id: `BK${Math.floor(1000 + Math.random() * 9000)}`, // Generate a random ID
+      id: initialData?.id || `BK${Math.floor(1000 + Math.random() * 9000)}`, // Use existing ID or generate new one
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       date: format(data.date, 'yyyy-MM-dd'),
@@ -132,22 +158,41 @@ const HallBookingForm = ({ tables, packages, onSubmit }: HallBookingFormProps) =
       endTime: data.endTime,
       purpose: data.purpose,
       attendees: data.attendees,
-      tableId: data.tableId ? parseInt(data.tableId) : undefined,
+      tableId: data.tableId && data.tableId !== "no-table" ? parseInt(data.tableId) : undefined,
       packageId: data.packageId,
       additionalServices: selectedServices,
-      status: 'pending',
+      status: initialData?.status || 'pending',
       notes: data.notes,
       totalAmount: totalAmount
     };
     
-    onSubmit(newBooking);
+    if (onSubmit) {
+      onSubmit(newBooking);
+      toast.success(`Booking ${initialData ? 'updated' : 'created'} successfully!`);
+    }
+  };
+
+  const handleClearSelection = () => {
+    if (onClearSelection) {
+      onClearSelection();
+      form.reset();
+      setSelectedServices([]);
+      setSelectedPackage(null);
+    }
   };
 
   return (
     <div className="space-y-6 py-4">
-      <div>
-        <h2 className="text-lg font-semibold">New Hall Booking</h2>
-        <p className="text-sm text-gray-500">Create a new booking for the hall</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">{initialData ? 'Edit Booking' : 'New Hall Booking'}</h2>
+          <p className="text-sm text-gray-500">{initialData ? 'Update booking details' : 'Create a new booking for the hall'}</p>
+        </div>
+        {initialData && (
+          <Button variant="outline" onClick={handleClearSelection}>
+            Create New Booking
+          </Button>
+        )}
       </div>
 
       <Form {...form}>
@@ -428,9 +473,9 @@ const HallBookingForm = ({ tables, packages, onSubmit }: HallBookingFormProps) =
             </div>
           </div>
           
-          <SheetClose asChild>
-            <Button type="submit" className="w-full">Create Booking</Button>
-          </SheetClose>
+          <Button type="submit" className="w-full">
+            {initialData ? 'Update Booking' : 'Create Booking'}
+          </Button>
         </form>
       </Form>
     </div>
