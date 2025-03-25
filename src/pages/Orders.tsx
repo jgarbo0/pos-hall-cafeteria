@@ -22,65 +22,67 @@ import {
 } from '@/components/ui/select';
 import { Receipt, CheckCircle, Clock, Eye, Edit, Trash, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { Order, OrderType } from '@/types';
 
-// Mock data for orders
-const initialOrders = [
+// Modified mock data to match the Order type exactly
+const initialOrders: Order[] = [
   {
     id: "ORD-3421",
+    items: [],
+    orderType: "Dine In",
     tableNumber: 5,
-    type: "Dine In",
-    items: 4,
+    orderNumber: "3421",
+    subtotal: 35.00,
+    tax: 7.50,
     total: 42.50,
     status: "completed",
-    date: "2023-10-15 12:34 PM"
+    timestamp: "2023-10-15 12:34 PM"
   },
   {
     id: "ORD-3422",
+    items: [],
+    orderType: "Take Away",
     tableNumber: null,
-    type: "Take Away",
-    items: 2,
+    orderNumber: "3422",
+    subtotal: 15.75,
+    tax: 3.00,
     total: 18.75,
     status: "completed",
-    date: "2023-10-15 12:45 PM"
+    timestamp: "2023-10-15 12:45 PM"
   },
   {
     id: "ORD-3423",
+    items: [],
+    orderType: "Dine In",
     tableNumber: 3,
-    type: "Dine In",
-    items: 6,
+    orderNumber: "3423",
+    subtotal: 72.66,
+    tax: 14.54,
     total: 87.20,
     status: "processing",
-    date: "2023-10-15 1:05 PM"
+    timestamp: "2023-10-15 1:05 PM"
   },
   {
     id: "ORD-3424",
+    items: [],
+    orderType: "Take Away",
     tableNumber: null,
-    type: "Take Away",
-    items: 1,
+    orderNumber: "3424",
+    subtotal: 10.82,
+    tax: 2.17,
     total: 12.99,
     status: "processing",
-    date: "2023-10-15 1:15 PM"
+    timestamp: "2023-10-15 1:15 PM"
   }
 ];
 
-// Order interface
-interface Order {
-  id: string;
-  tableNumber: number | null;
-  type: "Dine In" | "Take Away";
-  items: number;
-  total: number;
-  status: "processing" | "completed";
-  date: string;
-}
-
-// Order form data interface
+// Order form data interface that matches our Order type
 interface OrderFormData {
   tableNumber: number | null;
-  type: "Dine In" | "Take Away";
-  items: number;
+  orderType: OrderType;
+  items: number; // We'll just track count here for form
   total: number;
-  status: "processing" | "completed";
+  status: "processing" | "completed" | "cancelled";
 }
 
 const Orders = () => {
@@ -93,7 +95,7 @@ const Orders = () => {
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const [formData, setFormData] = useState<OrderFormData>({
     tableNumber: null,
-    type: "Dine In",
+    orderType: "Dine In",
     items: 1,
     total: 0,
     status: "processing"
@@ -113,8 +115,8 @@ const Orders = () => {
     setCurrentOrder(order);
     setFormData({
       tableNumber: order.tableNumber,
-      type: order.type,
-      items: order.items,
+      orderType: order.orderType,
+      items: order.items.length,
       total: order.total,
       status: order.status
     });
@@ -129,7 +131,7 @@ const Orders = () => {
   const handleAddNewClick = () => {
     setFormData({
       tableNumber: null,
-      type: "Dine In",
+      orderType: "Dine In",
       items: 1,
       total: 0,
       status: "processing"
@@ -148,10 +150,17 @@ const Orders = () => {
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    if (name === 'orderType') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value as OrderType,
+      }));
+    } else if (name === 'status') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value as "processing" | "completed" | "cancelled",
+      }));
+    }
   };
 
   const handleConfirmDelete = () => {
@@ -166,9 +175,16 @@ const Orders = () => {
   const handleUpdateOrder = () => {
     if (!currentOrder) return;
     
+    // Update the order with the new data, ensuring it matches the Order type
     const updatedOrders = orders.map(order => 
       order.id === currentOrder.id 
-        ? { ...order, ...formData }
+        ? { 
+            ...order,
+            tableNumber: formData.tableNumber,
+            orderType: formData.orderType,
+            total: formData.total,
+            status: formData.status
+          }
         : order
     );
     
@@ -178,10 +194,18 @@ const Orders = () => {
   };
 
   const handleAddOrder = () => {
+    // Create a new order that matches the Order type
     const newOrder: Order = {
       id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-      ...formData,
-      date: new Date().toLocaleString()
+      items: [],
+      orderType: formData.orderType,
+      tableNumber: formData.tableNumber,
+      orderNumber: Math.floor(1000 + Math.random() * 9000).toString(),
+      subtotal: formData.total * 0.85, // Just for demo: subtracting estimated tax
+      tax: formData.total * 0.15,
+      total: formData.total,
+      status: formData.status,
+      timestamp: new Date().toLocaleString()
     };
     
     setOrders([newOrder, ...orders]);
@@ -244,13 +268,13 @@ const Orders = () => {
                       filteredOrders.map((order) => (
                         <TableRow key={order.id} className="dark:border-gray-700">
                           <TableCell className="font-medium dark:text-white">{order.id}</TableCell>
-                          <TableCell className="dark:text-gray-300">{order.type}</TableCell>
+                          <TableCell className="dark:text-gray-300">{order.orderType}</TableCell>
                           <TableCell className="dark:text-gray-300">
                             {order.tableNumber ? `Table ${order.tableNumber}` : 'N/A'}
                           </TableCell>
-                          <TableCell className="dark:text-gray-300">{order.items}</TableCell>
+                          <TableCell className="dark:text-gray-300">{order.items.length}</TableCell>
                           <TableCell className="dark:text-gray-300">${order.total.toFixed(2)}</TableCell>
-                          <TableCell className="dark:text-gray-300">{order.date}</TableCell>
+                          <TableCell className="dark:text-gray-300">{order.timestamp}</TableCell>
                           <TableCell>
                             <div className={`flex items-center space-x-1 ${
                               order.status === 'completed' ? 'text-green-600 dark:text-green-500' : 'text-amber-500'
@@ -308,11 +332,11 @@ const Orders = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Date</p>
-                    <p className="font-medium dark:text-white">{currentOrder.date}</p>
+                    <p className="font-medium dark:text-white">{currentOrder.timestamp}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Type</p>
-                    <p className="font-medium dark:text-white">{currentOrder.type}</p>
+                    <p className="font-medium dark:text-white">{currentOrder.orderType}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Table</p>
@@ -320,7 +344,7 @@ const Orders = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Items</p>
-                    <p className="font-medium dark:text-white">{currentOrder.items}</p>
+                    <p className="font-medium dark:text-white">{currentOrder.items.length}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
@@ -363,10 +387,10 @@ const Orders = () => {
           <div className="py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <label htmlFor="type" className="text-sm dark:text-white">Order Type</label>
+                <label htmlFor="orderType" className="text-sm dark:text-white">Order Type</label>
                 <Select 
-                  value={formData.type} 
-                  onValueChange={(value) => handleSelectChange('type', value)}
+                  value={formData.orderType} 
+                  onValueChange={(value) => handleSelectChange('orderType', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
@@ -385,7 +409,7 @@ const Orders = () => {
                   type="number"
                   value={formData.tableNumber === null ? '' : formData.tableNumber}
                   onChange={handleInputChange}
-                  disabled={formData.type === "Take Away"}
+                  disabled={formData.orderType === "Take Away"}
                 />
               </div>
               <div className="grid gap-2">
@@ -413,7 +437,7 @@ const Orders = () => {
                 <label htmlFor="status" className="text-sm dark:text-white">Status</label>
                 <Select 
                   value={formData.status} 
-                  onValueChange={(value) => handleSelectChange('status', value as "processing" | "completed")}
+                  onValueChange={(value) => handleSelectChange('status', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
@@ -421,6 +445,7 @@ const Orders = () => {
                   <SelectContent>
                     <SelectItem value="processing">Processing</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -458,10 +483,10 @@ const Orders = () => {
           <div className="py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <label htmlFor="add-type" className="text-sm dark:text-white">Order Type</label>
+                <label htmlFor="add-orderType" className="text-sm dark:text-white">Order Type</label>
                 <Select 
-                  value={formData.type} 
-                  onValueChange={(value) => handleSelectChange('type', value)}
+                  value={formData.orderType} 
+                  onValueChange={(value) => handleSelectChange('orderType', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
@@ -480,7 +505,7 @@ const Orders = () => {
                   type="number"
                   value={formData.tableNumber === null ? '' : formData.tableNumber}
                   onChange={handleInputChange}
-                  disabled={formData.type === "Take Away"}
+                  disabled={formData.orderType === "Take Away"}
                 />
               </div>
               <div className="grid gap-2">
@@ -508,7 +533,7 @@ const Orders = () => {
                 <label htmlFor="add-status" className="text-sm dark:text-white">Status</label>
                 <Select 
                   value={formData.status} 
-                  onValueChange={(value) => handleSelectChange('status', value as "processing" | "completed")}
+                  onValueChange={(value) => handleSelectChange('status', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
@@ -516,6 +541,7 @@ const Orders = () => {
                   <SelectContent>
                     <SelectItem value="processing">Processing</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -532,3 +558,4 @@ const Orders = () => {
 };
 
 export default Orders;
+
