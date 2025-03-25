@@ -26,7 +26,8 @@ import {
   Pie,
   Cell,
   LineChart,
-  Line
+  Line,
+  Legend
 } from 'recharts';
 import { 
   Calendar as CalendarIcon, 
@@ -41,7 +42,6 @@ import {
   Car,
   Home,
   Laptop,
-  Restaurant,
   Music,
   Youtube,
   ShoppingBag,
@@ -722,7 +722,10 @@ const Finance = () => {
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-4">
-                      <div className="p-2 rounded-full" style={{ backgroundColor: subscription.color + '20' }}>
+                      <div 
+                        className="p-2 rounded-full" 
+                        style={{ backgroundColor: `${subscription.color}20` }}
+                      >
                         <subscription.icon className="h-5 w-5" style={{ color: subscription.color }} />
                       </div>
                       <div className="flex-1">
@@ -748,7 +751,10 @@ const Finance = () => {
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-4 mb-3">
-                      <div className="p-2 rounded-full" style={{ backgroundColor: goal.color + '20' }}>
+                      <div 
+                        className="p-2 rounded-full" 
+                        style={{ backgroundColor: `${goal.color}20` }}
+                      >
                         <goal.icon className="h-5 w-5" style={{ color: goal.color }} />
                       </div>
                       <div className="flex-1">
@@ -931,6 +937,7 @@ const Finance = () => {
                       <YAxis />
                       <Tooltip />
                       <Line type="monotone" dataKey="income" stroke="#4ade80" name="Income" />
+                      <Legend />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -968,6 +975,7 @@ const Finance = () => {
                         ))}
                       </Pie>
                       <Tooltip />
+                      <Legend />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -990,6 +998,7 @@ const Finance = () => {
                       <YAxis />
                       <Tooltip />
                       <Line type="monotone" dataKey="value" stroke="#8884d8" />
+                      <Legend />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
