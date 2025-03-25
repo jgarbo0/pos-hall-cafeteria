@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -792,4 +793,405 @@ const Finance = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-xs text-muted-foreground dark:text-gray-400 mt-1">
-                  Data from 1-10
+                  Data from 1-10 Apr, 2024
+                </div>
+                <div className="h-[300px] mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dailyExpenseData} stackOffset="sign">
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: "#1F2937", 
+                          color: "#F9FAFB", 
+                          borderColor: "#374151",
+                          fontSize: "12px",
+                          padding: "8px"
+                        }}
+                        formatter={(value) => [`$${value}`, '']}
+                        labelFormatter={(label) => `Day ${label}`}
+                      />
+                      <Bar dataKey="Food & Drink" stackId="a" fill={COLORS.green} radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Grocery" stackId="a" fill={COLORS.purple} radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Shopping" stackId="a" fill={COLORS.pink} radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Dhaweeye" stackId="a" fill={COLORS.orange} radius={[0, 0, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex items-center justify-center space-x-4 mt-2">
+                  {['Food & Drink', 'Grocery', 'Shopping', 'Dhaweeye'].map((category, index) => (
+                    <div key={index} className="flex items-center space-x-1">
+                      <div 
+                        className="h-3 w-3 rounded-full" 
+                        style={{ 
+                          backgroundColor: 
+                            index === 0 ? COLORS.green : 
+                            index === 1 ? COLORS.purple : 
+                            index === 2 ? COLORS.pink : COLORS.orange
+                        }}
+                      ></div>
+                      <span className="text-xs dark:text-gray-300">{category}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
+                  Recent Transactions
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Select 
+                    value={transactionType} 
+                    onValueChange={(value: any) => setTransactionType(value)}
+                  >
+                    <SelectTrigger className="h-8 text-xs w-[120px] dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="income">Income</SelectItem>
+                      <SelectItem value="expense">Expense</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-8 text-xs dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
+                    onClick={() => openDetailDialog('transactions', 'All Transactions')}
+                  >
+                    View All
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs text-muted-foreground dark:text-gray-400 mt-1 mb-4">
+                  Showing {filteredTransactions.length} transactions
+                </div>
+                <div className="overflow-auto max-h-[360px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="dark:border-gray-700">
+                        <TableHead className="dark:text-gray-400">Date</TableHead>
+                        <TableHead className="dark:text-gray-400">Description</TableHead>
+                        <TableHead className="dark:text-gray-400">Category</TableHead>
+                        <TableHead className="text-right dark:text-gray-400">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTransactions.map((transaction) => (
+                        <TableRow 
+                          key={transaction.id}
+                          className="dark:border-gray-700 dark:hover:bg-gray-800/50 cursor-pointer"
+                          onClick={() => openDetailDialog('transaction-detail', `Transaction: ${transaction.description}`)}
+                        >
+                          <TableCell className="font-medium dark:text-gray-300">
+                            {format(new Date(transaction.date), 'dd MMM')}
+                          </TableCell>
+                          <TableCell className="dark:text-gray-300">{transaction.description}</TableCell>
+                          <TableCell className="dark:text-gray-300">{transaction.category}</TableCell>
+                          <TableCell 
+                            className={cn(
+                              "text-right",
+                              transaction.type === 'income' 
+                                ? "text-green-600 dark:text-green-400" 
+                                : "text-red-600 dark:text-red-400"
+                            )}
+                          >
+                            {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
+        <DialogContent className="dark:bg-gray-800 dark:border-gray-700 dark:text-white sm:max-w-[625px]">
+          <DialogHeader>
+            <DialogTitle>{detailTitle}</DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            {detailType === 'revenue' && (
+              <div className="space-y-4">
+                <p>Detailed revenue breakdown by channel and time period.</p>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={weeklyChartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="income" stroke="#4ade80" name="Income" />
+                      <Legend />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Food Sales</p>
+                    <p className="text-lg font-bold">$834.50</p>
+                  </div>
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Venue Bookings</p>
+                    <p className="text-lg font-bold">$416.49</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {detailType === 'weekly-expense' && (
+              <div className="space-y-4">
+                <p>Breakdown of expenses by category for the current week.</p>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={expenseCategories}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={true}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {expenseCategories.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {(detailType === 'most-sales' || detailType === 'most-rented' || 
+              detailType === 'least-selling-item' || detailType === 'favorite-item' || 
+              detailType === 'most-recurring-expense' || detailType === 'dhaweeye') && (
+              <div className="space-y-4">
+                <p>Detailed metrics and historical performance.</p>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={Array.from({length: 12}, (_, i) => ({
+                      month: `Month ${i+1}`,
+                      value: Math.floor(Math.random() * 1000) + 500
+                    }))}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="value" stroke="#8884d8" />
+                      <Legend />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Total Units</p>
+                    <p className="text-lg font-bold">1,245</p>
+                  </div>
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Average Price</p>
+                    <p className="text-lg font-bold">$24.99</p>
+                  </div>
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Growth</p>
+                    <p className="text-lg font-bold text-green-500">+12.4%</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {detailType === 'monthly-expense' && (
+              <div className="space-y-4">
+                <p>Compare current month expenses with previous month.</p>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={[
+                      {name: 'Food & Drink', current: 450, previous: 520},
+                      {name: 'Grocery', current: 300, previous: 380},
+                      {name: 'Shopping', current: 280, previous: 320},
+                      {name: 'Dhaweeye', current: 200, previous: 270},
+                      {name: 'Utilities', current: 180, previous: 190},
+                    ]}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="current" fill="#4ade80" name="Current Month" />
+                      <Bar dataKey="previous" fill="#9ca3af" name="Previous Month" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {detailType === 'daily-expense' && (
+              <div className="space-y-4">
+                <p>Daily breakdown of expenses by category.</p>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dailyExpenseData} stackOffset="sign">
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="Food & Drink" stackId="a" fill={COLORS.green} />
+                      <Bar dataKey="Grocery" stackId="a" fill={COLORS.purple} />
+                      <Bar dataKey="Shopping" stackId="a" fill={COLORS.pink} />
+                      <Bar dataKey="Dhaweeye" stackId="a" fill={COLORS.orange} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {detailType === 'transactions' && (
+              <div className="space-y-4">
+                <p>Complete list of all transactions with advanced filtering.</p>
+                <div className="flex gap-2 mb-4">
+                  <Select defaultValue="all">
+                    <SelectTrigger className="w-[150px]">
+                      <SelectValue placeholder="All Types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="income">Income</SelectItem>
+                      <SelectItem value="expense">Expense</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select defaultValue="all">
+                    <SelectTrigger className="w-[150px]">
+                      <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="food">Food & Drink</SelectItem>
+                      <SelectItem value="grocery">Grocery</SelectItem>
+                      <SelectItem value="shopping">Shopping</SelectItem>
+                      <SelectItem value="transportation">Dhaweeye</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="h-[400px] overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTransactions.concat(filteredTransactions).map((transaction, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{format(new Date(transaction.date), 'dd MMM yyyy')}</TableCell>
+                          <TableCell>{transaction.description}</TableCell>
+                          <TableCell>{transaction.category}</TableCell>
+                          <TableCell>{transaction.type}</TableCell>
+                          <TableCell className="text-right">
+                            <span className={transaction.type === 'income' ? 'text-green-500' : 'text-red-500'}>
+                              {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+
+            {detailType === 'transaction-detail' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Date</p>
+                    <p className="text-lg font-bold">Apr 10, 2024</p>
+                  </div>
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Amount</p>
+                    <p className="text-lg font-bold">$425.99</p>
+                  </div>
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Category</p>
+                    <p className="text-lg font-bold">Food & Drink</p>
+                  </div>
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Payment Method</p>
+                    <p className="text-lg font-bold">Card</p>
+                  </div>
+                </div>
+                <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3 mt-4">
+                  <p className="text-sm font-medium">Description</p>
+                  <p className="text-md">Restaurant supplies for this week's special menu. Includes specialty ingredients and packaging materials.</p>
+                </div>
+              </div>
+            )}
+
+            {detailType === 'net-income' && (
+              <div className="space-y-4">
+                <p>Net income analysis over time with income/expense breakdown.</p>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={Array.from({length: 12}, (_, i) => ({
+                      month: `Month ${i+1}`,
+                      income: Math.floor(Math.random() * 2000) + 1000,
+                      expense: Math.floor(Math.random() * 1000) + 500,
+                      net: Math.floor(Math.random() * 1000) + 200,
+                    }))}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="income" stroke="#4ade80" name="Income" />
+                      <Line type="monotone" dataKey="expense" stroke="#f87171" name="Expense" />
+                      <Line type="monotone" dataKey="net" stroke="#60a5fa" name="Net Income" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Total Income</p>
+                    <p className="text-lg font-bold text-green-500">$12,450.75</p>
+                  </div>
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Total Expenses</p>
+                    <p className="text-lg font-bold text-red-500">$7,235.60</p>
+                  </div>
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Net Profit</p>
+                    <p className="text-lg font-bold text-blue-500">$5,215.15</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowDetailModal(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Finance;
