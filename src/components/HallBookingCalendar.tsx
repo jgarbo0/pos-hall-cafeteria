@@ -32,6 +32,19 @@ const mockServices = [
   { id: 'microphone', name: 'Microphone Set' },
 ];
 
+// Ensure mock bookings have all required properties to avoid TypeScript errors
+const enrichBookings = (bookingsList: any[]): HallBooking[] => {
+  return bookingsList.map(booking => ({
+    ...booking,
+    customerPhone: booking.customerPhone || '',
+    additionalServices: booking.additionalServices || [],
+    status: booking.status || 'pending',
+    totalAmount: booking.totalAmount || 0,
+    notes: booking.notes || '',
+    hallId: booking.hallId || 1
+  }));
+};
+
 const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooking, hallId = 1 }) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -105,11 +118,11 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
       });
     }
     
-    // Fallback to mock data if needed
-    return bookings.filter(booking => {
+    // Fallback to enriched mock data if needed
+    return enrichBookings(bookings.filter(booking => {
       const bookingHallId = (booking as any).hallId;
       return booking.date === dateStr && (!hallId || bookingHallId === hallId);
-    });
+    }));
   };
 
   // Check if a date has any bookings
