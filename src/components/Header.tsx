@@ -30,6 +30,49 @@ const availableLanguages = [
   { code: 'ar', name: 'Arabic', flag: '🇸🇦' }
 ];
 
+// Mock translations (in a real app, this would be more comprehensive)
+const translations = {
+  en: {
+    search: "Search menu here...",
+    filter: "Filter",
+    notifications: "Notifications",
+    markAllAsRead: "Mark all as read",
+    myAccount: "My Account",
+    switchUser: "Switch User",
+    profile: "Profile",
+    settings: "Settings",
+    logout: "Log out",
+    darkMode: "Dark mode",
+    noNotifications: "No notifications"
+  },
+  so: {
+    search: "Halkan raadi cuntooyinka...",
+    filter: "Shaandhayn",
+    notifications: "Ogeysiisyada",
+    markAllAsRead: "Dhamaan u calaamadee sida la aqriyay",
+    myAccount: "Akoonkeyga",
+    switchUser: "Bedel isticmaale",
+    profile: "Faahfaahinta",
+    settings: "Dejinta",
+    logout: "Ka bax",
+    darkMode: "Habka madow",
+    noNotifications: "Ma jiraan ogeysiisyo"
+  },
+  ar: {
+    search: "ابحث هنا عن القائمة...",
+    filter: "تصفية",
+    notifications: "الإشعارات",
+    markAllAsRead: "وضع علامة على الكل كمقروء",
+    myAccount: "حسابي",
+    switchUser: "تبديل المستخدم",
+    profile: "الملف الشخصي",
+    settings: "الإعدادات",
+    logout: "تسجيل الخروج",
+    darkMode: "الوضع المظلم",
+    noNotifications: "لا توجد إشعارات"
+  }
+};
+
 // Mock user data with correct role types
 const predefinedUsers: UserType[] = [
   { id: '1', name: 'Aisha', email: 'aisha@example.com', role: 'admin', avatar: '/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png' },
@@ -44,11 +87,14 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
     { id: 2, text: "Payment completed", time: "10 min ago", read: false },
     { id: 3, text: "New customer registered", time: "1 hour ago", read: true }
   ]);
-  const [language, setLanguage] = useState('English');
+  const [languageCode, setLanguageCode] = useState('en');
   const [theme, setTheme] = useState<Theme>('light');
   const [user, setUser] = useState<UserType>(predefinedUsers[0]);
   
   const navigate = useNavigate();
+  
+  // Get current translations based on selected language
+  const t = translations[languageCode as keyof typeof translations];
   
   // Initialize theme from localStorage or system preference
   useEffect(() => {
@@ -58,6 +104,10 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
     
     setTheme(initialTheme);
     applyTheme(initialTheme);
+
+    // Get saved language preference
+    const savedLanguage = localStorage.getItem('language') || 'en';
+    setLanguageCode(savedLanguage);
   }, []);
 
   const applyTheme = (newTheme: Theme) => {
@@ -80,10 +130,14 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
     toast.success("All notifications marked as read");
   };
 
-  const handleLanguageChange = (lang: string) => {
-    setLanguage(lang);
-    // In a real app, this would update the app's localization
-    toast.success(`Language set to ${lang}`);
+  const handleLanguageChange = (code: string) => {
+    setLanguageCode(code);
+    // Save language preference
+    localStorage.setItem('language', code);
+    
+    // Find the language name to display in the toast
+    const language = availableLanguages.find(lang => lang.code === code)?.name || code;
+    toast.success(`Language set to ${language}`);
   };
 
   const handleThemeToggle = () => {
@@ -117,7 +171,7 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
             </div>
             <Input
               type="search"
-              placeholder="Search menu here..."
+              placeholder={t.search}
               className="pl-10 h-10 w-full rounded-full bg-gray-50 border-none focus-visible:ring-1 focus-visible:ring-primary dark:bg-gray-800 dark:text-gray-200 dark:placeholder:text-gray-400"
               value={searchTerm}
               onChange={handleSearch}
@@ -125,7 +179,7 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
           </div>
           <Button variant="outline" size="sm" className="ml-2 gap-2 rounded-full h-10 px-4 dark:text-gray-300 dark:border-gray-700">
             <Filter className="h-4 w-4" />
-            <span>Filter</span>
+            <span>{t.filter}</span>
           </Button>
         </div>
         
@@ -142,8 +196,8 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
               {availableLanguages.map(lang => (
                 <DropdownMenuItem 
                   key={lang.code}
-                  onClick={() => handleLanguageChange(lang.name)}
-                  className={`${language === lang.name ? 'bg-blue-50 dark:bg-blue-900/30' : ''} dark:text-gray-200 dark:hover:bg-gray-800`}
+                  onClick={() => handleLanguageChange(lang.code)}
+                  className={`${languageCode === lang.code ? 'bg-blue-50 dark:bg-blue-900/30' : ''} dark:text-gray-200 dark:hover:bg-gray-800`}
                 >
                   <span className="mr-2">{lang.flag}</span> {lang.name}
                 </DropdownMenuItem>
@@ -164,14 +218,14 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
             </PopoverTrigger>
             <PopoverContent className="w-80 p-0 dark:bg-gray-900 dark:border-gray-700" align="end">
               <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                <h3 className="font-medium dark:text-gray-200">Notifications</h3>
+                <h3 className="font-medium dark:text-gray-200">{t.notifications}</h3>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={markAllAsRead}
                   className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                 >
-                  Mark all as read
+                  {t.markAllAsRead}
                 </Button>
               </div>
               <div className="max-h-80 overflow-y-auto">
@@ -189,7 +243,7 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
                     </div>
                   ))
                 ) : (
-                  <div className="p-4 text-center text-gray-500 dark:text-gray-400">No notifications</div>
+                  <div className="p-4 text-center text-gray-500 dark:text-gray-400">{t.noNotifications}</div>
                 )}
               </div>
             </PopoverContent>
@@ -222,11 +276,11 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 dark:bg-gray-900 dark:border-gray-700">
-              <DropdownMenuLabel className="dark:text-gray-200">My Account</DropdownMenuLabel>
+              <DropdownMenuLabel className="dark:text-gray-200">{t.myAccount}</DropdownMenuLabel>
               <DropdownMenuSeparator className="dark:bg-gray-700" />
               
               {/* User switching section */}
-              <DropdownMenuLabel className="text-xs text-gray-500 dark:text-gray-400 pt-2">Switch User</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs text-gray-500 dark:text-gray-400 pt-2">{t.switchUser}</DropdownMenuLabel>
               {predefinedUsers.map(predefinedUser => (
                 <DropdownMenuItem 
                   key={predefinedUser.id} 
@@ -248,11 +302,11 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
               <DropdownMenuSeparator className="dark:bg-gray-700" />
               <DropdownMenuItem className="dark:text-gray-200 dark:hover:bg-gray-800">
                 <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+                <span>{t.profile}</span>
               </DropdownMenuItem>
               <DropdownMenuItem className="dark:text-gray-200 dark:hover:bg-gray-800">
                 <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+                <span>{t.settings}</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="dark:bg-gray-700" />
               <DropdownMenuItem 
@@ -260,7 +314,7 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
                 className="text-red-600 dark:text-red-400 dark:hover:bg-gray-800"
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
+                <span>{t.logout}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

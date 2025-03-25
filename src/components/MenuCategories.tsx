@@ -21,7 +21,7 @@ const MenuCategories: React.FC<MenuCategoriesProps> = ({
           className={cn(
             "py-2 px-4 rounded-full text-sm font-medium transition-colors",
             activeCategory === "all" 
-              ? "bg-blue-500 text-white" 
+              ? "bg-primary text-primary-foreground" 
               : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700"
           )}
           onClick={() => onCategoryChange("all")}
@@ -35,7 +35,7 @@ const MenuCategories: React.FC<MenuCategoriesProps> = ({
             className={cn(
               "py-2 px-4 rounded-full text-sm font-medium transition-colors",
               activeCategory === category.id 
-                ? "bg-blue-500 text-white" 
+                ? "bg-primary text-primary-foreground" 
                 : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700"
             )}
             onClick={() => onCategoryChange(category.id)}

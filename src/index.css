@@ -77,8 +77,8 @@
   }
 
   /* Dark mode transitions */
-  body {
-    transition: background-color 0.2s ease-in-out;
+  body, input, textarea, button, select, div, span, p, h1, h2, h3, h4, h5, h6 {
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
   }
 
   /* Additional dark mode styles */
@@ -89,6 +89,39 @@
 
   .dark .glassmorphism {
     @apply bg-gray-900/80 backdrop-blur-lg border-gray-700;
+  }
+  
+  /* Ensure inputs and buttons have proper dark mode styling */
+  .dark input,
+  .dark textarea,
+  .dark select {
+    @apply bg-gray-800 border-gray-700 text-gray-200;
+  }
+  
+  .dark button {
+    @apply border-gray-700;
+  }
+  
+  /* Table dark mode styling */
+  .dark th,
+  .dark td {
+    @apply border-gray-700 text-gray-200;
+  }
+  
+  /* Card dark mode styling */
+  .dark .card {
+    @apply bg-gray-800 border-gray-700;
+  }
+  
+  /* Calendar dark mode styling */
+  .dark .rdp-day,
+  .dark .rdp-button {
+    @apply text-gray-200 hover:bg-gray-700;
+  }
+  
+  .dark .rdp-day_selected,
+  .dark .rdp-day_selected:hover {
+    @apply bg-blue-600 text-white;
   }
 }
 
@@ -102,3 +135,14 @@
   animation: fadeIn 0.5s ease-out forwards;
 }
 
+/* No scrollbar utility */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
