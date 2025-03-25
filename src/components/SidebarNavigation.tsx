@@ -10,7 +10,9 @@ import {
   Wallet,
   Users,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Home,
+  LayoutDashboard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,6 +26,7 @@ const SidebarNavigation = () => {
   };
   
   const navItems = [
+    { icon: LayoutDashboard, path: '/dashboard', label: 'Dashboard' },
     { icon: LayoutGrid, path: '/', label: 'Menu' },
     { icon: ShoppingCart, path: '/orders', label: 'Orders' },
     { icon: Package, path: '/products', label: 'Products' },

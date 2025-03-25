@@ -19,23 +19,26 @@ const MenuCategories: React.FC<MenuCategoriesProps> = ({
       <div className="flex space-x-2 min-w-max animate-fadeIn">
         <button
           className={cn(
-            "menu-category-button",
-            activeCategory === "all" && "active"
+            "py-2 px-4 rounded-full text-sm font-medium transition-colors",
+            activeCategory === "all" 
+              ? "bg-blue-500 text-white" 
+              : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700"
           )}
           onClick={() => onCategoryChange("all")}
         >
           All Menu
         </button>
         
-        {categories.map((category, index) => (
+        {categories.map(category => (
           <button
             key={category.id}
             className={cn(
-              "menu-category-button",
-              activeCategory === category.id && "active"
+              "py-2 px-4 rounded-full text-sm font-medium transition-colors",
+              activeCategory === category.id 
+                ? "bg-blue-500 text-white" 
+                : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700"
             )}
             onClick={() => onCategoryChange(category.id)}
-            style={{ animationDelay: `${index * 0.05}s` }}
           >
             {category.name}
           </button>
