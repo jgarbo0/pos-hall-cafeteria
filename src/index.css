@@ -149,6 +149,38 @@
   .dark .shadow-xl {
     @apply shadow-dark-xl;
   }
+  
+  /* Dropdown menu dark mode styling for all components */
+  .dark [data-radix-popper-content-wrapper] {
+    @apply text-gray-200 !important;
+  }
+  
+  .dark [role="dialog"],
+  .dark [role="alertdialog"] {
+    @apply bg-gray-800 border-gray-700 text-white;
+  }
+  
+  /* Add styling specifically for Select component in dark mode */
+  .dark [role="combobox"] {
+    @apply bg-gray-700 border-gray-600 text-white;
+  }
+  
+  /* Make all radix content properly styled in dark mode */
+  .dark [data-radix-popper-content-wrapper] [role="listbox"],
+  .dark [data-radix-popper-content-wrapper] [role="menu"] {
+    @apply bg-gray-800 border-gray-700 text-gray-200 !important;
+  }
+  
+  /* Fix for dark mode dropdown items */
+  .dark [role="option"],
+  .dark [role="menuitem"] {
+    @apply text-gray-200 hover:bg-gray-700 !important;
+  }
+  
+  .dark [role="option"][data-highlighted],
+  .dark [role="menuitem"][data-highlighted] {
+    @apply bg-gray-700 !important;
+  }
 }
 
 /* Animations */
@@ -171,18 +203,4 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-}
-
-/* Fix for dark mode in radix components */
-.dark [data-radix-popper-content-wrapper] {
-  @apply text-gray-200 bg-gray-800 border-gray-700;
-}
-
-/* Fix for dark mode dropdown/select items */
-.dark [role="option"] {
-  @apply hover:bg-gray-700;
-}
-
-.dark [role="option"][data-highlighted] {
-  @apply bg-gray-700;
 }

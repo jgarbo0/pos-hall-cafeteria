@@ -148,11 +148,11 @@ const CartPanel = ({
   };
 
   return (
-    <div className="w-[380px] bg-white border-l flex flex-col overflow-hidden">
-      <div className="p-4 border-b">
+    <div className="w-[380px] bg-white dark:bg-gray-800 border-l dark:border-gray-700 flex flex-col overflow-hidden">
+      <div className="p-4 border-b dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold">Current Order</h2>
-          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-md">
+          <h2 className="text-lg font-bold dark:text-white">Current Order</h2>
+          <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 text-xs px-2 py-1 rounded-md">
             #{orderNumber}
           </span>
         </div>
@@ -177,13 +177,13 @@ const CartPanel = ({
         
         {orderType === 'Dine In' && (
           <div className="mb-4">
-            <div className="text-sm text-gray-500 mb-1">Table No.</div>
-            <div className="font-medium text-lg">{tableNumber}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Table No.</div>
+            <div className="font-medium text-lg dark:text-white">{tableNumber}</div>
           </div>
         )}
         
         <div className="mb-4">
-          <div className="text-sm text-gray-500 mb-2 flex items-center gap-1">
+          <div className="text-sm text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1">
             <Users size={16} />
             Customer
           </div>
@@ -191,10 +191,10 @@ const CartPanel = ({
             value={customer}
             onValueChange={setCustomer}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white">
               <SelectValue placeholder="Select a customer" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
               {customers.map(c => (
                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
               ))}
@@ -205,7 +205,7 @@ const CartPanel = ({
       
       <div className="flex-1 overflow-y-auto p-4">
         {items.length === 0 ? (
-          <div className="text-center text-gray-500 mt-8">
+          <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
             <div className="text-5xl mb-2">🛒</div>
             <p>Your cart is empty</p>
             <p className="text-sm">Add some items to get started</p>
@@ -213,14 +213,14 @@ const CartPanel = ({
         ) : (
           <div className="space-y-4">
             {items.map(item => (
-              <div key={item.id} className="bg-gray-50 rounded-lg p-3 flex items-start">
+              <div key={item.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 flex items-start">
                 <div className="flex-1">
-                  <div className="font-medium">{item.title}</div>
-                  <div className="text-sm text-gray-500 mb-2">${item.price.toFixed(2)}</div>
+                  <div className="font-medium dark:text-white">{item.title}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">${item.price.toFixed(2)}</div>
                   
                   <div className="flex items-center mt-2">
                     <button 
-                      className="text-gray-500 hover:text-primary transition-colors"
+                      className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors"
                       onClick={() => {
                         if (item.quantity > 1) {
                           onUpdateQuantity(item.id, item.quantity - 1);
@@ -232,10 +232,10 @@ const CartPanel = ({
                       <MinusCircle size={20} />
                     </button>
                     
-                    <span className="mx-2 w-8 text-center font-medium">{item.quantity}</span>
+                    <span className="mx-2 w-8 text-center font-medium dark:text-white">{item.quantity}</span>
                     
                     <button 
-                      className="text-gray-500 hover:text-primary transition-colors"
+                      className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors"
                       onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
                     >
                       <PlusCircle size={20} />
@@ -244,9 +244,9 @@ const CartPanel = ({
                 </div>
                 
                 <div className="text-right">
-                  <div className="font-bold">${(item.price * item.quantity).toFixed(2)}</div>
+                  <div className="font-bold dark:text-white">${(item.price * item.quantity).toFixed(2)}</div>
                   <button 
-                    className="text-red-500 hover:text-red-700 p-1 transition-colors mt-4"
+                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 transition-colors mt-4"
                     onClick={() => onRemoveItem(item.id)}
                   >
                     <Trash2 size={18} />
@@ -258,28 +258,28 @@ const CartPanel = ({
         )}
       </div>
       
-      <div className="p-4 border-t">
+      <div className="p-4 border-t dark:border-gray-700">
         <div className="space-y-2 mb-4">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Subtotal</span>
-            <span>${calculateSubtotal().toFixed(2)}</span>
+            <span className="text-gray-500 dark:text-gray-400">Subtotal</span>
+            <span className="dark:text-white">${calculateSubtotal().toFixed(2)}</span>
           </div>
           
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Tax (10%)</span>
-            <span>${calculateTax().toFixed(2)}</span>
+            <span className="text-gray-500 dark:text-gray-400">Tax (10%)</span>
+            <span className="dark:text-white">${calculateTax().toFixed(2)}</span>
           </div>
           
-          <div className="flex justify-between font-bold text-lg pt-2 border-t">
-            <span>Total</span>
-            <span>${calculateTotal().toFixed(2)}</span>
+          <div className="flex justify-between font-bold text-lg pt-2 border-t dark:border-gray-700">
+            <span className="dark:text-white">Total</span>
+            <span className="dark:text-white">${calculateTotal().toFixed(2)}</span>
           </div>
         </div>
         
         <div className="mb-4">
           <Textarea
             placeholder="Order notes..."
-            className="text-sm"
+            className="text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder:text-gray-400"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />

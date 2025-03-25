@@ -38,7 +38,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }, []);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return <div className="flex items-center justify-center h-screen dark:bg-gray-900 dark:text-white">Loading...</div>;
   }
 
   if (!isAuthenticated) {
@@ -54,6 +54,20 @@ const App = () => {
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    
+    // Listen for system preference changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      if (localStorage.getItem('theme') === 'system') {
+        document.documentElement.classList.toggle('dark', mediaQuery.matches);
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
   }, []);
 
   return (
