@@ -390,76 +390,82 @@ const Finance = () => {
             </Card>
 
             <div className="md:col-span-3 space-y-4">
-              {subscriptions.map(subscription => (
-                <Card 
-                  key={subscription.id} 
-                  className="dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  onClick={() => openDetailDialog(
-                    subscription.id === '1' ? 'most-sales' : 'most-rented', 
-                    subscription.name
-                  )}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-4">
-                      <div 
-                        className="p-2 rounded-full" 
-                        style={{ backgroundColor: `${subscription.color}20` }}
-                      >
-                        <subscription.icon 
-                          className="h-5 w-5"
-                          style={{ color: subscription.color }} 
-                        />
+              {subscriptions.map(subscription => {
+                const SubscriptionIcon = subscription.icon;
+                return (
+                  <Card 
+                    key={subscription.id} 
+                    className="dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() => openDetailDialog(
+                      subscription.id === '1' ? 'most-sales' : 'most-rented', 
+                      subscription.name
+                    )}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-4">
+                        <div 
+                          className="p-2 rounded-full" 
+                          style={{ backgroundColor: `${subscription.color}20` }}
+                        >
+                          <SubscriptionIcon 
+                            className="h-5 w-5"
+                            style={{ color: subscription.color }} 
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium dark:text-white">{subscription.name}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">{subscription.date}</div>
+                        </div>
+                        <div className="text-sm font-medium dark:text-white">
+                          ${subscription.amount}
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium dark:text-white">{subscription.name}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">{subscription.date}</div>
-                      </div>
-                      <div className="text-sm font-medium dark:text-white">
-                        ${subscription.amount}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
 
             <div className="md:col-span-6 grid grid-cols-2 gap-4">
-              {savingGoals.slice(1).map(goal => (
-                <Card 
-                  key={goal.id} 
-                  className="dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  onClick={() => openDetailDialog(goal.name.toLowerCase().replace(/\s+/g, '-'), goal.name)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-4 mb-3">
-                      <div 
-                        className="p-2 rounded-full" 
-                        style={{ backgroundColor: `${goal.color}20` }}
-                      >
-                        <goal.icon 
-                          className="h-5 w-5"
-                          style={{ color: goal.color }} 
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium dark:text-white">{goal.name}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          ${goal.currentAmount.toLocaleString()} of ${goal.targetAmount.toLocaleString()}
+              {savingGoals.slice(1).map(goal => {
+                const GoalIcon = goal.icon;
+                return (
+                  <Card 
+                    key={goal.id} 
+                    className="dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() => openDetailDialog(goal.name.toLowerCase().replace(/\s+/g, '-'), goal.name)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-4 mb-3">
+                        <div 
+                          className="p-2 rounded-full" 
+                          style={{ backgroundColor: `${goal.color}20` }}
+                        >
+                          <GoalIcon 
+                            className="h-5 w-5"
+                            style={{ color: goal.color }} 
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium dark:text-white">{goal.name}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            ${goal.currentAmount.toLocaleString()} of ${goal.targetAmount.toLocaleString()}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full rounded-full" 
-                        style={{ 
-                          width: `${(goal.currentAmount/goal.targetAmount)*100}%`,
-                          backgroundColor: goal.color 
-                        }}
-                      ></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full rounded-full" 
+                          style={{ 
+                            width: `${(goal.currentAmount/goal.targetAmount)*100}%`,
+                            backgroundColor: goal.color 
+                          }}
+                        ></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
           
