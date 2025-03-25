@@ -10,7 +10,8 @@ import {
 } from '@/components/ui/card';
 import { UserPlus, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Customer, getCustomers } from '@/services/SupabaseService';
+import { getCustomers } from '@/services/SupabaseService';
+import { Customer } from '@/types';
 import { toast } from 'sonner';
 
 const CustomerSettings: React.FC = () => {

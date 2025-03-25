@@ -124,4 +124,12 @@ export interface Customer {
   email?: string | null;
   phone?: string | null;
   address?: string | null;
+  totalOrders?: number;
+  totalSpent?: number;
+  pendingPayments?: {
+    id: string;
+    amount: number;
+    date: string;
+    description: string;
+  }[];
 }

@@ -448,22 +448,6 @@ export const getPopularItems = async (): Promise<{id: string; name: string; cate
 };
 
 // Customers
-export interface Customer {
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  totalOrders?: number;
-  totalSpent?: number;
-  pendingPayments?: {
-    id: string;
-    amount: number;
-    date: string;
-    description: string;
-  }[];
-}
-
 export const getCustomers = async (): Promise<Customer[]> => {
   try {
     const { data, error } = await supabase
@@ -630,4 +614,3 @@ export default {
   updateCustomer,
   deleteCustomer
 };
-
