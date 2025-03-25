@@ -1,3 +1,4 @@
+
 import React from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -26,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageSelector from '@/components/LanguageSelector';
+import { Check, ShieldCheck, UserPlus, Users } from 'lucide-react';
 
 const Settings = () => {
   const { t } = useLanguage();
@@ -64,11 +66,11 @@ const Settings = () => {
           
           <Tabs defaultValue="general" className="w-full">
             <TabsList className="mb-6 dark:bg-gray-800">
-              <TabsTrigger value="general" className="dark:data-[state=active]:bg-gray-700">General</TabsTrigger>
-              <TabsTrigger value="users" className="dark:data-[state=active]:bg-gray-700">Users</TabsTrigger>
-              <TabsTrigger value="billing" className="dark:data-[state=active]:bg-gray-700">Billing</TabsTrigger>
-              <TabsTrigger value="notifications" className="dark:data-[state=active]:bg-gray-700">Notifications</TabsTrigger>
-              <TabsTrigger value="appearance" className="dark:data-[state=active]:bg-gray-700">Appearance</TabsTrigger>
+              <TabsTrigger value="general" className="dark:data-[state=active]:bg-gray-700 dark:text-white">General</TabsTrigger>
+              <TabsTrigger value="users" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Users</TabsTrigger>
+              <TabsTrigger value="roles" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Roles & Permissions</TabsTrigger>
+              <TabsTrigger value="notifications" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Notifications</TabsTrigger>
+              <TabsTrigger value="appearance" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Appearance</TabsTrigger>
             </TabsList>
             
             <TabsContent value="general">
@@ -109,21 +111,21 @@ const Settings = () => {
                   </CardFooter>
                 </Card>
                 
-                <Card>
+                <Card className="dark:bg-gray-800 dark:border-gray-700">
                   <CardHeader>
-                    <CardTitle>Tax Settings</CardTitle>
-                    <CardDescription>
+                    <CardTitle className="dark:text-white">Tax Settings</CardTitle>
+                    <CardDescription className="dark:text-gray-400">
                       Configure tax rates for your orders
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="tax-rate">Sales Tax Rate (%)</Label>
+                      <Label htmlFor="tax-rate" className="dark:text-gray-300">Sales Tax Rate (%)</Label>
                       <Input id="tax-rate" type="number" step="0.01" defaultValue="8.25" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                     </div>
                     <div className="flex items-center space-x-2">
                       <Switch id="include-tax" defaultChecked />
-                      <Label htmlFor="include-tax">Include tax in listed prices</Label>
+                      <Label htmlFor="include-tax" className="dark:text-gray-300">Include tax in listed prices</Label>
                     </div>
                   </CardContent>
                   <CardFooter>
@@ -131,25 +133,25 @@ const Settings = () => {
                   </CardFooter>
                 </Card>
                 
-                <Card>
+                <Card className="dark:bg-gray-800 dark:border-gray-700">
                   <CardHeader>
-                    <CardTitle>Receipt Settings</CardTitle>
-                    <CardDescription>
+                    <CardTitle className="dark:text-white">Receipt Settings</CardTitle>
+                    <CardDescription className="dark:text-gray-400">
                       Customize your receipt format and information
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="receipt-footer">Receipt Footer Text</Label>
+                      <Label htmlFor="receipt-footer" className="dark:text-gray-300">Receipt Footer Text</Label>
                       <Input id="receipt-footer" defaultValue="Thank you for dining with us!" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                     </div>
                     <div className="flex items-center space-x-2">
                       <Switch id="show-logo" defaultChecked />
-                      <Label htmlFor="show-logo">Show logo on receipt</Label>
+                      <Label htmlFor="show-logo" className="dark:text-gray-300">Show logo on receipt</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Switch id="include-tip" defaultChecked />
-                      <Label htmlFor="include-tip">Include tip suggestion</Label>
+                      <Label htmlFor="include-tip" className="dark:text-gray-300">Include tip suggestion</Label>
                     </div>
                   </CardContent>
                   <CardFooter>
@@ -160,34 +162,37 @@ const Settings = () => {
             </TabsContent>
             
             <TabsContent value="users">
-              <Card>
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader>
-                  <CardTitle>User Management</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="dark:text-white">User Management</CardTitle>
+                  <CardDescription className="dark:text-gray-400">
                     Manage staff accounts and permissions
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-medium">Staff Members</h3>
-                      <Button>Add User</Button>
+                      <h3 className="text-lg font-medium dark:text-white">Staff Members</h3>
+                      <Button className="flex items-center gap-2">
+                        <UserPlus size={16} />
+                        Add User
+                      </Button>
                     </div>
-                    <Separator />
+                    <Separator className="dark:bg-gray-700" />
                     <div className="space-y-4">
                       {[
                         { name: 'Ahmed Mohamed', email: 'ahmed@example.com', role: 'Admin' },
                         { name: 'Fatima Hassan', email: 'fatima@example.com', role: 'Manager' },
                         { name: 'Omar Ali', email: 'omar@example.com', role: 'Staff' },
                       ].map((user, index) => (
-                        <div key={index} className="flex justify-between items-center p-4 border rounded-md">
+                        <div key={index} className="flex justify-between items-center p-4 border rounded-md dark:border-gray-700 dark:bg-gray-800">
                           <div>
-                            <p className="font-medium">{user.name}</p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                            <p className="font-medium dark:text-white">{user.name}</p>
+                            <p className="text-sm text-muted-foreground dark:text-gray-400">{user.email}</p>
                           </div>
                           <div className="flex items-center gap-4">
-                            <span className="text-sm font-medium">{user.role}</span>
-                            <Button variant="outline" size="sm">Edit</Button>
+                            <span className="text-sm font-medium dark:text-gray-300">{user.role}</span>
+                            <Button variant="outline" size="sm" className="dark:bg-gray-700 dark:text-white dark:border-gray-600">Edit</Button>
                           </div>
                         </div>
                       ))}
@@ -197,85 +202,108 @@ const Settings = () => {
               </Card>
             </TabsContent>
             
-            <TabsContent value="billing">
-              <Card>
+            <TabsContent value="roles">
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader>
-                  <CardTitle>Billing Information</CardTitle>
-                  <CardDescription>
-                    Manage your subscription and payment methods
+                  <CardTitle className="dark:text-white">Roles & Permissions</CardTitle>
+                  <CardDescription className="dark:text-gray-400">
+                    Configure roles and assign permissions to users
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-medium mb-2">Current Plan</h3>
-                      <div className="p-4 bg-primary/10 rounded-md">
-                        <div className="flex justify-between items-center mb-2">
-                          <p className="font-medium">Premium Plan</p>
-                          <span className="bg-primary text-white px-2 py-1 rounded text-xs">Active</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Unlimited orders, full analytics, and premium support
-                        </p>
-                        <div className="flex justify-between items-center">
-                          <span className="text-2xl font-bold">$49.99<span className="text-sm font-normal text-muted-foreground">/month</span></span>
-                          <Button variant="outline">Change Plan</Button>
-                        </div>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-medium dark:text-white">System Roles</h3>
+                        <Button className="flex items-center gap-2">
+                          <Users size={16} />
+                          Add Role
+                        </Button>
                       </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-lg font-medium mb-2">Payment Method</h3>
-                      <div className="p-4 border rounded-md flex justify-between items-center">
-                        <div className="flex items-center">
-                          <div className="w-10 h-6 bg-blue-600 rounded mr-3"></div>
-                          <div>
-                            <p className="font-medium">Visa ending in 4242</p>
-                            <p className="text-sm text-muted-foreground">Expires 04/2025</p>
+                      <Separator className="dark:bg-gray-700" />
+                      
+                      {[
+                        { id: 1, name: 'Admin', description: 'Full system access', users: 1 },
+                        { id: 2, name: 'Manager', description: 'Can manage orders, menu and staff', users: 2 },
+                        { id: 3, name: 'Staff', description: 'Can take orders and view assigned tasks', users: 5 },
+                        { id: 4, name: 'Kitchen', description: 'Can view and fulfill orders', users: 3 },
+                      ].map((role) => (
+                        <div key={role.id} className="p-4 border rounded-md dark:border-gray-700 dark:bg-gray-800">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-medium dark:text-white">{role.name}</h4>
+                              <p className="text-sm text-muted-foreground dark:text-gray-400">{role.description}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm px-2 py-1 bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900 dark:text-blue-100">{role.users} users</span>
+                              <Button variant="outline" size="sm" className="dark:bg-gray-700 dark:text-white dark:border-gray-600">Edit</Button>
+                            </div>
                           </div>
                         </div>
-                        <Button variant="ghost">Change</Button>
-                      </div>
+                      ))}
                     </div>
                     
-                    <div>
-                      <h3 className="text-lg font-medium mb-2">Billing History</h3>
-                      <div className="border rounded-md overflow-hidden">
-                        <div className="grid grid-cols-3 p-3 bg-muted font-medium">
-                          <div>Date</div>
-                          <div>Amount</div>
-                          <div>Status</div>
-                        </div>
-                        {[
-                          { date: 'May 1, 2023', amount: '$49.99', status: 'Paid' },
-                          { date: 'Apr 1, 2023', amount: '$49.99', status: 'Paid' },
-                          { date: 'Mar 1, 2023', amount: '$49.99', status: 'Paid' },
-                        ].map((invoice, index) => (
-                          <div key={index} className="grid grid-cols-3 p-3 border-t">
-                            <div>{invoice.date}</div>
-                            <div>{invoice.amount}</div>
-                            <div className="text-green-600">{invoice.status}</div>
-                          </div>
-                        ))}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium dark:text-white">Permission Matrix</h3>
+                      <Separator className="dark:bg-gray-700" />
+                      
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                          <thead>
+                            <tr>
+                              <th className="text-left p-2 border-b dark:border-gray-700 dark:text-gray-300">Permission</th>
+                              <th className="text-center p-2 border-b dark:border-gray-700 dark:text-gray-300">Admin</th>
+                              <th className="text-center p-2 border-b dark:border-gray-700 dark:text-gray-300">Manager</th>
+                              <th className="text-center p-2 border-b dark:border-gray-700 dark:text-gray-300">Staff</th>
+                              <th className="text-center p-2 border-b dark:border-gray-700 dark:text-gray-300">Kitchen</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[
+                              { name: 'View Dashboard', admin: true, manager: true, staff: false, kitchen: false },
+                              { name: 'Manage Users', admin: true, manager: false, staff: false, kitchen: false },
+                              { name: 'Edit Menu', admin: true, manager: true, staff: false, kitchen: false },
+                              { name: 'Take Orders', admin: true, manager: true, staff: true, kitchen: false },
+                              { name: 'Process Payments', admin: true, manager: true, staff: true, kitchen: false },
+                              { name: 'View Orders', admin: true, manager: true, staff: true, kitchen: true },
+                              { name: 'Change Settings', admin: true, manager: false, staff: false, kitchen: false },
+                              { name: 'View Reports', admin: true, manager: true, staff: false, kitchen: false },
+                            ].map((permission, index) => (
+                              <tr key={index} className="border-b dark:border-gray-700">
+                                <td className="p-2 text-left dark:text-white">{permission.name}</td>
+                                <td className="p-2 text-center">{permission.admin && <Check className="mx-auto text-green-500" size={16} />}</td>
+                                <td className="p-2 text-center">{permission.manager && <Check className="mx-auto text-green-500" size={16} />}</td>
+                                <td className="p-2 text-center">{permission.staff && <Check className="mx-auto text-green-500" size={16} />}</td>
+                                <td className="p-2 text-center">{permission.kitchen && <Check className="mx-auto text-green-500" size={16} />}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   </div>
                 </CardContent>
+                <CardFooter>
+                  <Button className="flex items-center gap-2">
+                    <ShieldCheck size={16} />
+                    Update Permissions
+                  </Button>
+                </CardFooter>
               </Card>
             </TabsContent>
             
             <TabsContent value="notifications">
-              <Card>
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader>
-                  <CardTitle>Notification Preferences</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="dark:text-white">Notification Preferences</CardTitle>
+                  <CardDescription className="dark:text-gray-400">
                     Customize your notification settings
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Email Notifications</h3>
+                      <h3 className="text-lg font-medium dark:text-white">Email Notifications</h3>
                       <div className="space-y-2">
                         {[
                           { id: 'new-order', label: 'New Order Notifications' },
@@ -284,17 +312,17 @@ const Settings = () => {
                           { id: 'customer-feedback', label: 'Customer Feedback' },
                         ].map((item) => (
                           <div key={item.id} className="flex items-center justify-between py-2">
-                            <Label htmlFor={item.id} className="flex-1">{item.label}</Label>
+                            <Label htmlFor={item.id} className="flex-1 dark:text-gray-300">{item.label}</Label>
                             <Switch id={item.id} defaultChecked={item.id !== 'customer-feedback'} />
                           </div>
                         ))}
                       </div>
                     </div>
                     
-                    <Separator />
+                    <Separator className="dark:bg-gray-700" />
                     
                     <div className="space-y-4">
-                      <h3 className="text-lg font-medium">App Notifications</h3>
+                      <h3 className="text-lg font-medium dark:text-white">App Notifications</h3>
                       <div className="space-y-2">
                         {[
                           { id: 'app-new-order', label: 'New Order Alerts' },
@@ -302,7 +330,7 @@ const Settings = () => {
                           { id: 'app-inventory', label: 'Inventory Updates' },
                         ].map((item) => (
                           <div key={item.id} className="flex items-center justify-between py-2">
-                            <Label htmlFor={item.id} className="flex-1">{item.label}</Label>
+                            <Label htmlFor={item.id} className="flex-1 dark:text-gray-300">{item.label}</Label>
                             <Switch id={item.id} defaultChecked />
                           </div>
                         ))}
@@ -358,7 +386,7 @@ const Settings = () => {
                       ].map((colorOption) => (
                         <div 
                           key={colorOption.name}
-                          className={`h-10 rounded-md cursor-pointer border-2 ${colorOption.color} ${colorOption.name === 'Blue' ? 'border-black' : 'border-transparent'}`}
+                          className={`h-10 rounded-md cursor-pointer border-2 ${colorOption.color} ${colorOption.name === 'Blue' ? 'border-black dark:border-white' : 'border-transparent'}`}
                           title={colorOption.name}
                         />
                       ))}
@@ -368,10 +396,10 @@ const Settings = () => {
                   <div className="space-y-2">
                     <Label htmlFor="font-size" className="dark:text-gray-300">Font Size</Label>
                     <Select defaultValue="medium">
-                      <SelectTrigger>
+                      <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <SelectValue placeholder="Select font size" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="dark:bg-gray-800">
                         <SelectItem value="small">Small</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
                         <SelectItem value="large">Large</SelectItem>
@@ -384,7 +412,7 @@ const Settings = () => {
                       <Label htmlFor="compact-mode" className="dark:text-gray-300">Compact Mode</Label>
                       <Switch id="compact-mode" />
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground dark:text-gray-400">
                       Reduces padding and margins for a more compact interface
                     </p>
                   </div>
@@ -394,7 +422,7 @@ const Settings = () => {
                       <Label htmlFor="animations" className="dark:text-gray-300">Interface Animations</Label>
                       <Switch id="animations" defaultChecked />
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground dark:text-gray-400">
                       Enable or disable interface animations and transitions
                     </p>
                   </div>

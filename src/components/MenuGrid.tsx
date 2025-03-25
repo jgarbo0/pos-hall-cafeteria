@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { MenuItem } from '@/types';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -36,6 +36,7 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
   const handleAddToCart = (item: MenuItem) => {
     const quantity = getQuantity(item.id);
     onAddToCart(item, quantity);
+    setSelectedItem(null); // Deselect after adding to cart
   };
 
   const handleCardClick = (itemId: string) => {
@@ -53,13 +54,18 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
           )}
           onClick={() => handleCardClick(item.id)}
         >
-          <div className="food-card-image-container h-52 overflow-hidden">
+          <div className="food-card-image-container h-52 overflow-hidden relative">
             <img 
               src={item.image} 
               alt={item.title} 
               className="w-full h-full object-cover"
               loading="lazy"
             />
+            {selectedItem === item.id && (
+              <div className="absolute top-2 right-2 bg-blue-500 text-white p-1 rounded-full">
+                <Check className="h-4 w-4" />
+              </div>
+            )}
           </div>
           <CardContent className="p-4">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{item.title}</h3>
@@ -77,7 +83,7 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
-                <span className="text-center w-8">{getQuantity(item.id)}</span>
+                <span className="text-center w-8 dark:text-white">{getQuantity(item.id)}</span>
                 <Button 
                   variant="outline" 
                   size="icon"
