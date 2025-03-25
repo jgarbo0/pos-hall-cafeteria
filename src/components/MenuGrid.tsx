@@ -1,10 +1,12 @@
 
 import React, { useState } from 'react';
 import { MenuItem } from '@/types';
-import { Minus, Plus, Check } from 'lucide-react';
+import { Minus, Plus, Check, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { motion } from 'framer-motion';
 
 interface MenuGridProps {
   items: MenuItem[];
@@ -47,35 +49,53 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
     const quantity = getQuantity(item.id);
     onAddToCart(item, quantity);
   };
+  
+  if (items.length === 0) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">No menu items found</h3>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Try changing your search or selecting a different category.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6 pb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
       {items.map((item) => (
         <Card 
           key={item.id} 
           className={cn(
-            "food-card overflow-hidden bg-white dark:bg-gray-800 border-none shadow-md rounded-3xl transition-all hover:shadow-lg cursor-pointer",
+            "food-card overflow-hidden bg-white dark:bg-gray-800 border-none shadow-md rounded-xl transition-all hover:shadow-lg",
             selectedItem === item.id && "ring-2 ring-blue-500"
           )}
-          onClick={() => handleCardClick(item)}
         >
-          <div className="food-card-image-container h-52 overflow-hidden relative">
+          <div className="food-card-image-container h-48 overflow-hidden relative">
             <img 
               src={item.image} 
               alt={item.title} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform hover:scale-105"
               loading="lazy"
             />
             {selectedItem === item.id && (
-              <div className="absolute top-2 right-2 bg-blue-500 text-white p-1 rounded-full">
+              <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full">
                 <Check className="h-4 w-4" />
               </div>
             )}
+            {item.popular && (
+              <Badge className="absolute top-2 left-2 bg-red-500 border-none">Popular</Badge>
+            )}
           </div>
           <CardContent className="p-4">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{item.title}</h3>
-            <div className="flex justify-between items-center mt-3">
-              <p className="text-blue-500 font-bold">${item.price.toFixed(2)}</p>
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{item.title}</h3>
+              <span className="text-blue-500 dark:text-blue-400 font-bold">${item.price.toFixed(2)}</span>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">
+              {item.description || `Delicious ${item.title} prepared with fresh ingredients.`}
+            </p>
+            <div className="flex justify-between items-center mt-2">
               <div className="flex items-center space-x-2">
                 <Button 
                   variant="outline" 
@@ -92,7 +112,7 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
                 <Button 
                   variant="outline" 
                   size="icon"
-                  className="h-8 w-8 rounded-full bg-blue-500 border-none text-white"
+                  className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-700 border-none"
                   onClick={(e) => {
                     e.stopPropagation();
                     increaseQuantity(item.id);
@@ -101,6 +121,14 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
+              <Button 
+                variant="default" 
+                className="rounded-full bg-blue-500 hover:bg-blue-600 text-white"
+                onClick={() => handleCardClick(item)}
+              >
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Add
+              </Button>
             </div>
           </CardContent>
         </Card>

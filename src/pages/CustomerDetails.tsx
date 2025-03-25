@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -68,7 +67,6 @@ const CustomerDetails: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('orders');
   
-  // Mock data - in a real app this would come from an API
   const customers: Record<string, Customer> = {
     c1: { 
       id: 'c1', 
@@ -118,9 +116,8 @@ const CustomerDetails: React.FC = () => {
     },
   };
   
-  const customer = customers[id || 'c1'];
+  const customer = id ? customers[id] : null;
   
-  // Mock payment history
   const payments: Payment[] = [
     { id: 'p1', date: '2023-09-15', amount: 45.75, status: 'paid', method: 'Credit Card', description: 'Order #12458', invoiceNumber: 'INV-2023-001' },
     { id: 'p2', date: '2023-08-22', amount: 125.00, status: 'paid', method: 'PayPal', description: 'Order #12356', invoiceNumber: 'INV-2023-002' },
@@ -130,7 +127,6 @@ const CustomerDetails: React.FC = () => {
     { id: 'p6', date: '2023-06-01', amount: 32.15, status: 'paid', method: 'Cash', description: 'Order #12188', invoiceNumber: 'INV-2023-006' },
   ];
   
-  // Mock invoices
   const invoices: Invoice[] = [
     { 
       id: 'INV-2023-001', 
@@ -166,7 +162,6 @@ const CustomerDetails: React.FC = () => {
     }
   ];
   
-  // Mock order history
   const orders: Order[] = [
     { id: 'ord-12458', date: '2023-09-15', items: 3, total: 45.75, status: 'completed' },
     { id: 'ord-12356', date: '2023-08-22', items: 7, total: 125.00, status: 'completed' },
@@ -176,7 +171,6 @@ const CustomerDetails: React.FC = () => {
     { id: 'ord-12188', date: '2023-06-01', items: 1, total: 32.15, status: 'completed' },
   ];
   
-  // Get pending bills
   const pendingInvoices = invoices.filter(invoice => invoice.status === 'pending' || invoice.status === 'overdue');
   
   const handleMarkAsPaid = (invoiceId: string) => {
@@ -184,7 +178,37 @@ const CustomerDetails: React.FC = () => {
   };
   
   if (!customer) {
-    return <div>Customer not found</div>;
+    return (
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
+        <SidebarNavigation />
+        
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header onSearch={() => {}} />
+          
+          <div className="flex-1 p-6 overflow-auto">
+            <div className="flex items-center gap-4 mb-6">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate(-1)}
+                className="dark:text-gray-300 dark:border-gray-600"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            </div>
+            
+            <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+              <h1 className="text-3xl font-bold mb-4 dark:text-white">Customer Not Found</h1>
+              <p className="text-gray-600 dark:text-gray-400 mb-8">The customer you are looking for does not exist or has been removed.</p>
+              <Button onClick={() => navigate('/customers')}>
+                Go to Customers List
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
   
   return (
@@ -590,3 +614,4 @@ const CustomerDetails: React.FC = () => {
 };
 
 export default CustomerDetails;
+

@@ -13,6 +13,7 @@ import Products from './pages/Products';
 import Hall from './pages/Hall';
 import Finance from './pages/Finance';
 import Home from './pages/Home';
+import Index from './pages/Index';
 import NotFound from './pages/NotFound';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
@@ -34,6 +35,7 @@ function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/menu" element={<Index />} />
             <Route path="/hall" element={<Hall />} />
             <Route path="/finance" element={<Finance />} />
             <Route path="/settings/*" element={<Settings />} />
