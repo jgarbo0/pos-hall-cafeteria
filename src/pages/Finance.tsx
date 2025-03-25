@@ -405,10 +405,10 @@ const Finance = () => {
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: `${subscription.color}20` }}
                       >
-                        {React.createElement(subscription.icon, {
-                          className: "h-5 w-5",
-                          style: { color: subscription.color }
-                        })}
+                        <subscription.icon 
+                          className="h-5 w-5"
+                          style={{ color: subscription.color }} 
+                        />
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium dark:text-white">{subscription.name}</div>
@@ -436,10 +436,10 @@ const Finance = () => {
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: `${goal.color}20` }}
                       >
-                        {React.createElement(goal.icon, {
-                          className: "h-5 w-5",
-                          style: { color: goal.color }
-                        })}
+                        <goal.icon 
+                          className="h-5 w-5"
+                          style={{ color: goal.color }} 
+                        />
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium dark:text-white">{goal.name}</div>
@@ -480,11 +480,11 @@ const Finance = () => {
               </CardHeader>
               <CardContent>
                 <HallBookingFinanceWidget 
-                  isLoading={isLoadingHallData}
                   data={hallBookingFinanceData}
                   totalIncome={totalHallIncome}
                   totalExpense={totalHallExpense}
                   onViewReport={() => handleViewHallBookingDetails('all')}
+                  isLoading={isLoadingHallData}
                 />
               </CardContent>
             </Card>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -17,7 +16,7 @@ interface HallBookingFinanceWidgetProps {
   totalIncome: number;
   totalExpense: number;
   onViewReport: () => void;
-  isLoading?: boolean; // Added isLoading prop
+  isLoading?: boolean;
 }
 
 const HallBookingFinanceWidget: React.FC<HallBookingFinanceWidgetProps> = ({
@@ -25,7 +24,7 @@ const HallBookingFinanceWidget: React.FC<HallBookingFinanceWidgetProps> = ({
   totalIncome,
   totalExpense,
   onViewReport,
-  isLoading = false // Set default to false
+  isLoading = false
 }) => {
   const profit = totalIncome - totalExpense;
   
