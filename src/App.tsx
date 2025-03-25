@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from './components/ui/toaster';
@@ -40,6 +40,7 @@ function App() {
             <Route path="/finance" element={<Finance />} />
             <Route path="/settings/*" element={<Settings />} />
             <Route path="/customer/:id" element={<CustomerDetails />} />
+            {/* Redirect to home page if no route matches */}
             <Route path="*" element={<NotFound />} />
           </Routes>
           <SonnerToaster position="top-right" richColors />

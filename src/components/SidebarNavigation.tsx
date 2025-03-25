@@ -46,12 +46,14 @@ const SidebarNavigation = () => {
       isCollapsed ? "w-[70px]" : "w-[240px]"
     )}>
       <div className="p-3 mb-6 flex justify-between w-full">
-        <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-lg">D</span>
-        </div>
-        {!isCollapsed && (
-          <span className="text-xl font-semibold ml-2 text-gray-800 dark:text-gray-200">Doob Venue</span>
-        )}
+        <Link to="/" className="flex items-center">
+          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg">D</span>
+          </div>
+          {!isCollapsed && (
+            <span className="text-xl font-semibold ml-2 text-gray-800 dark:text-gray-200">Doob Venue</span>
+          )}
+        </Link>
         <Button
           variant="ghost"
           size="icon"
@@ -85,9 +87,11 @@ const SidebarNavigation = () => {
             {!isCollapsed && (
               <span className="ml-2 text-sm font-medium">{item.label}</span>
             )}
-            <span className="absolute left-full ml-2 px-2 py-1 rounded bg-gray-800 text-white text-xs whitespace-nowrap opacity-0 invisible transition-all duration-200 group-hover:opacity-100 group-hover:visible">
-              {item.label}
-            </span>
+            {isCollapsed && (
+              <span className="absolute left-full ml-2 px-2 py-1 rounded bg-gray-800 text-white text-xs whitespace-nowrap opacity-0 invisible transition-all duration-200 group-hover:opacity-100 group-hover:visible">
+                {item.label}
+              </span>
+            )}
             {isActive(item.path) && (
               <span className="absolute left-0 w-1 h-5 bg-primary rounded-r-full -translate-x-full"></span>
             )}
