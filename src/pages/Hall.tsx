@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -49,7 +48,8 @@ const fullBookings: HallBooking[] = bookings.map(booking => ({
   additionalServices: [],
   status: 'pending' as const,
   totalAmount: 0,
-  notes: ''
+  notes: '',
+  hallId: 1 // Default hall ID
 }));
 
 // Mock data for hall cards

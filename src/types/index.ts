@@ -1,3 +1,4 @@
+
 export interface MenuItem {
   id: string;
   title: string;
@@ -62,6 +63,8 @@ export interface HallBooking {
   totalAmount: number;
   notes: string;
   hallId?: number;
+  tableId?: string | number;
+  packageId?: string;
 }
 
 export interface FinancialTransaction {

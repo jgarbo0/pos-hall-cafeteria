@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -55,6 +54,7 @@ interface HallBookingFormProps {
   onSubmit?: (booking: HallBooking) => void;
   tables?: TableItem[];
   packages?: ServicePackage[];
+  hallId?: number;
 }
 
 // Available additional services
@@ -71,7 +71,8 @@ const HallBookingForm = ({
   onClearSelection, 
   tables = [], 
   packages = [],
-  onSubmit 
+  onSubmit,
+  hallId
 }: HallBookingFormProps) => {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
@@ -111,29 +112,6 @@ const HallBookingForm = ({
     }
   }, [initialData]);
 
-  // Calculate total whenever selections change
-  React.useEffect(() => {
-    let total = 0;
-    
-    // Add package price
-    if (selectedPackage) {
-      const packageObj = packages.find(p => p.id === selectedPackage);
-      if (packageObj) {
-        total += packageObj.price;
-      }
-    }
-    
-    // Add additional services
-    selectedServices.forEach(serviceId => {
-      const service = additionalServices.find(s => s.id === serviceId);
-      if (service) {
-        total += service.price;
-      }
-    });
-    
-    setTotalAmount(total);
-  }, [selectedPackage, selectedServices, packages]);
-
   const handleServiceToggle = (serviceId: string, checked: boolean) => {
     if (checked) {
       setSelectedServices(prev => [...prev, serviceId]);
@@ -158,12 +136,13 @@ const HallBookingForm = ({
       endTime: data.endTime,
       purpose: data.purpose,
       attendees: data.attendees,
-      tableId: data.tableId && data.tableId !== "no-table" ? parseInt(data.tableId) : undefined,
+      tableId: data.tableId && data.tableId !== "no-table" ? data.tableId : undefined,
       packageId: data.packageId,
       additionalServices: selectedServices,
       status: initialData?.status || 'pending',
-      notes: data.notes,
-      totalAmount: totalAmount
+      notes: data.notes || "",
+      totalAmount: totalAmount,
+      hallId: hallId
     };
     
     if (onSubmit) {

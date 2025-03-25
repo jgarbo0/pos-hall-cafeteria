@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -38,9 +37,11 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
 
   // Get bookings for the selected date
   const getBookingsForDate = (dateStr: string) => {
-    return bookings.filter(booking => 
-      booking.date === dateStr && (!hallId || booking.hallId === hallId)
-    );
+    return bookings.filter(booking => {
+      // Check if the booking has hallId property before comparing
+      const bookingHallId = (booking as any).hallId;
+      return booking.date === dateStr && (!hallId || bookingHallId === hallId);
+    });
   };
 
   // Check if a date has any bookings
