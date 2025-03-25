@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -783,3 +784,140 @@ const Orders = () => {
                   id="total"
                   name="total"
                   type="number"
+                  value={formData.total}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="status" className="text-sm dark:text-white">Status</label>
+                <Select 
+                  value={formData.status} 
+                  onValueChange={(value) => handleSelectChange('status', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="processing">Processing</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateOrder}>Update Order</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete Order</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="dark:text-white">Are you sure you want to delete order #{currentOrder?.orderNumber}?</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">This action cannot be undone.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add New Order</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2 col-span-2">
+                <label htmlFor="customerName" className="text-sm dark:text-white">Customer Name</label>
+                <Input
+                  id="customerName"
+                  name="customerName"
+                  type="text"
+                  value={formData.customerName}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="orderType" className="text-sm dark:text-white">Order Type</label>
+                <Select 
+                  value={formData.orderType} 
+                  onValueChange={(value) => handleSelectChange('orderType', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Dine In">Dine In</SelectItem>
+                    <SelectItem value="Take Away">Take Away</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="tableNumber" className="text-sm dark:text-white">Table Number</label>
+                <Input
+                  id="tableNumber"
+                  name="tableNumber"
+                  type="number"
+                  value={formData.tableNumber === null ? '' : formData.tableNumber}
+                  onChange={handleInputChange}
+                  disabled={formData.orderType === "Take Away"}
+                />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="items" className="text-sm dark:text-white">Items</label>
+                <Input
+                  id="items"
+                  name="items"
+                  type="number"
+                  value={formData.items}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="total" className="text-sm dark:text-white">Total</label>
+                <Input
+                  id="total"
+                  name="total"
+                  type="number"
+                  value={formData.total}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="status" className="text-sm dark:text-white">Status</label>
+                <Select 
+                  value={formData.status} 
+                  onValueChange={(value) => handleSelectChange('status', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="processing">Processing</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddOrder}>Create Order</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Orders;
