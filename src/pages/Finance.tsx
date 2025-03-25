@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -667,10 +668,12 @@ const Finance = () => {
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   of $1,200
                 </div>
-                <Progress 
-                  value={(252.98/1200)*100} 
-                  className="h-2 mt-4 bg-gray-200 dark:bg-gray-700" 
-                />
+                <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden mt-4 dark:bg-gray-700">
+                  <div 
+                    className="h-full bg-green-500 rounded-full dark:bg-green-400"
+                    style={{ width: `${(252.98/1200)*100}%` }}
+                  ></div>
+                </div>
               </CardContent>
             </Card>
 
@@ -772,4 +775,91 @@ const Finance = () => {
                       <div 
                         className="h-3 w-3 rounded-full" 
                         style={{ 
-                          backgroundColor: index === 0 ? COLORS
+                          backgroundColor: 
+                            index === 0 ? COLORS.green : 
+                            index === 1 ? COLORS.purple : 
+                            index === 2 ? COLORS.pink : COLORS.orange
+                        }}
+                      ></div>
+                      <span className="text-xs dark:text-gray-300">{category}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Transactions */}
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
+                  Recent Transactions
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Select 
+                    value={transactionType} 
+                    onValueChange={(value: any) => setTransactionType(value)}
+                  >
+                    <SelectTrigger className="h-8 text-xs w-[120px] dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="income">Income</SelectItem>
+                      <SelectItem value="expense">Expense</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" className="h-8 text-xs dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+                    View All
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs text-muted-foreground dark:text-gray-400 mt-1 mb-4">
+                  Showing {filteredTransactions.length} transactions
+                </div>
+                <div className="overflow-auto max-h-[360px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="dark:border-gray-700">
+                        <TableHead className="dark:text-gray-400">Date</TableHead>
+                        <TableHead className="dark:text-gray-400">Description</TableHead>
+                        <TableHead className="dark:text-gray-400">Category</TableHead>
+                        <TableHead className="text-right dark:text-gray-400">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTransactions.map((transaction) => (
+                        <TableRow 
+                          key={transaction.id}
+                          className="dark:border-gray-700 dark:hover:bg-gray-800/50"
+                        >
+                          <TableCell className="font-medium dark:text-gray-300">
+                            {format(new Date(transaction.date), 'dd MMM')}
+                          </TableCell>
+                          <TableCell className="dark:text-gray-300">{transaction.description}</TableCell>
+                          <TableCell className="dark:text-gray-300">{transaction.category}</TableCell>
+                          <TableCell 
+                            className={cn(
+                              "text-right",
+                              transaction.type === 'income' 
+                                ? "text-green-600 dark:text-green-400" 
+                                : "text-red-600 dark:text-red-400"
+                            )}
+                          >
+                            {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Finance;
