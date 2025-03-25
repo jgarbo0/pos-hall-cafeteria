@@ -377,6 +377,11 @@ export const getHallBookings = async (): Promise<HallBooking[]> => {
 
 export const createHallBooking = async (booking: Omit<HallBooking, 'id'>): Promise<HallBooking> => {
   try {
+    // Ensure total_amount is a number
+    const totalAmount = typeof booking.totalAmount === 'string' 
+      ? parseFloat(booking.totalAmount as string) 
+      : booking.totalAmount;
+
     const { data, error } = await supabase
       .from('hall_bookings')
       .insert({
@@ -389,7 +394,7 @@ export const createHallBooking = async (booking: Omit<HallBooking, 'id'>): Promi
         attendees: booking.attendees,
         additional_services: booking.additionalServices,
         status: booking.status,
-        total_amount: booking.totalAmount,
+        total_amount: totalAmount,
         notes: booking.notes,
         hall_id: booking.hallId,
         table_id: booking.tableId ? String(booking.tableId) : null,
@@ -400,11 +405,12 @@ export const createHallBooking = async (booking: Omit<HallBooking, 'id'>): Promi
     
     if (error) throw error;
     
+    console.log('Hall booking created:', data);
+    
     // Record the hall booking income in the transactions table for financial reporting
     // We import the function here to avoid circular dependency
     const { addHallBookingIncome } = await import('@/services/FinanceService');
     await addHallBookingIncome({
-      id: data.id,
       date: data.date,
       customerName: data.customer_name,
       purpose: data.purpose,

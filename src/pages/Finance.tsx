@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -221,7 +220,9 @@ const Finance = () => {
   const fetchTransactions = async () => {
     setIsLoadingTransactions(true);
     try {
+      console.log('Fetching transactions...');
       const transactionsData = await getTransactions();
+      console.log('Transactions fetched:', transactionsData);
       setTransactions(transactionsData);
       
       const categories = calculateExpenseCategories(transactionsData);
@@ -238,7 +239,9 @@ const Finance = () => {
   const fetchHallBookings = async () => {
     try {
       setIsLoadingHallData(true);
+      console.log('Fetching hall bookings...');
       const bookingsData = await getHallBookingIncomes();
+      console.log('Hall bookings fetched:', bookingsData);
       setHallBookings(bookingsData);
       
       const financeData = generateHallBookingFinanceData(bookingsData);
@@ -263,10 +266,20 @@ const Finance = () => {
     }
   };
 
-  useEffect(() => {
+  const refreshData = () => {
     fetchTransactions();
     fetchHallBookings();
     fetchPaymentMethods();
+  };
+
+  useEffect(() => {
+    refreshData();
+    
+    const intervalId = setInterval(() => {
+      refreshData();
+    }, 30000);
+    
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
@@ -289,14 +302,12 @@ const Finance = () => {
     return transaction.type === transactionType;
   });
 
-  // Calculate total income including both regular transactions and hall bookings
   const calculateTotalIncome = () => {
     const transactionsIncome = transactions
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
     
-    // We're not adding hall booking income separately here anymore since they are
-    // already recorded as transactions through the integrated system
+    console.log('Total income from transactions:', transactionsIncome);
     
     return transactionsIncome;
   };
@@ -414,7 +425,6 @@ const Finance = () => {
   const todayFinancials = calculateTodayFinancials();
 
   const calculateTopIncomeCategories = () => {
-    // Group transactions by category and sum amounts
     const incomeByCategory = transactions
       .filter(t => t.type === 'income')
       .reduce((acc, t) => {
@@ -426,7 +436,6 @@ const Finance = () => {
         return acc;
       }, {} as Record<string, number>);
     
-    // Convert to array of { name, total } objects
     const categoryTotals = Object.entries(incomeByCategory).map(([name, total]) => ({
       name,
       total

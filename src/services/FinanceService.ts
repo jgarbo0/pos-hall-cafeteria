@@ -78,13 +78,19 @@ export const getHallBookingIncomes = async (): Promise<HallBookingIncome[]> => {
   }));
 };
 
-export const addHallBookingIncome = async (hallBooking: HallBookingIncome): Promise<void> => {
+export const addHallBookingIncome = async (hallBooking: Omit<HallBookingIncome, 'id'>): Promise<void> => {
   try {
-    // 1. First, record the hall booking income as a transaction
+    console.log('Adding hall booking income:', hallBooking);
+    // Convert the date to ISO format if it's a Date object
+    const bookingDate = typeof hallBooking.date === 'string' 
+      ? hallBooking.date 
+      : new Date(hallBooking.date).toISOString().split('T')[0];
+
+    // 1. Record the hall booking income as a transaction
     const transaction = {
-      date: typeof hallBooking.date === 'string' ? hallBooking.date : new Date(hallBooking.date).toISOString().split('T')[0],
+      date: bookingDate,
       description: `Hall booking: ${hallBooking.purpose} for ${hallBooking.customerName}`,
-      amount: hallBooking.amount,
+      amount: Number(hallBooking.amount),
       type: 'income' as const,
       category: 'Hall Rental',
       paymentMethod: 'Cash' // Default payment method, can be updated if needed
