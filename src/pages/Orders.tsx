@@ -256,7 +256,8 @@ const Orders = () => {
       orderType: "Dine In",
       items: 1,
       total: 0,
-      status: "processing"
+      status: "processing",
+      customerName: 'Walk-in Customer'
     });
     setIsAddDialogOpen(true);
   };
