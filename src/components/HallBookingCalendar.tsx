@@ -48,7 +48,7 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
   // Get bookings for the selected date
   const getBookingsForDate = (dateStr: string) => {
     return bookings.filter(booking => {
-      // Check if the booking has hallId property before comparing
+      // Safely access hallId property, treating bookings as having optional hallId
       const bookingHallId = (booking as any).hallId;
       return booking.date === dateStr && (!hallId || bookingHallId === hallId);
     });
@@ -104,11 +104,26 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
 
   // Get services for the first booking on the selected date (for demo purposes)
   const firstBooking = selectedDateBookings[0];
+  // Safely access additionalServices property, treating it as optional
+  const firstBookingAdditionalServices = firstBooking ? (firstBooking as any).additionalServices || [] : [];
   const bookingServices = firstBooking 
     ? mockServices.filter(service => 
-        firstBooking.additionalServices?.includes(service.id)
+        firstBookingAdditionalServices.includes(service.id)
       )
     : [];
+
+  // Handle the createBooking action (this was the undefined setActiveTab)
+  const handleCreateBooking = () => {
+    // Instead of using undefined setActiveTab, we'll just call onSelectBooking with a new random ID
+    // which will trigger the parent component to show the booking form
+    if (firstBooking) {
+      handleSelectBooking(firstBooking.id);
+    } else {
+      // Generate a temporary ID for a new booking
+      const tempId = `new-${Date.now()}`;
+      handleSelectBooking(tempId);
+    }
+  };
 
   return (
     <div className="h-full">
@@ -275,7 +290,7 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
                       <div className="space-y-1">
                         <p className="text-sm text-gray-500">Notes</p>
                         <div className="border rounded-md p-2 min-h-[60px] text-sm">
-                          {firstBooking?.notes || "No notes available"}
+                          {firstBooking && (firstBooking as any).notes ? (firstBooking as any).notes : "No notes available"}
                         </div>
                       </div>
                       
@@ -290,7 +305,7 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
                   ) : (
                     <div className="flex flex-col items-center justify-center py-6">
                       <p className="text-gray-500 mb-4">No bookings for this date</p>
-                      <Button onClick={() => setActiveTab('new')}>Create Booking</Button>
+                      <Button onClick={handleCreateBooking}>Create Booking</Button>
                     </div>
                   )}
                 </div>

@@ -8,7 +8,7 @@ import HallEditForm from '@/components/HallEditForm';
 import PackageManagement from '@/components/PackageManagement';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { bookings } from '@/data/mockData';
-import { TableItem, ServicePackage, HallBooking, Hall, AvailabilityRange } from '@/types';
+import { TableItem, ServicePackage, HallBooking, Hall as HallType, AvailabilityRange } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
