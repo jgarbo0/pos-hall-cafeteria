@@ -1,12 +1,14 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, Plus, Minus, ShoppingBag, CreditCard, Clock } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, CreditCard, Clock, Printer } from 'lucide-react';
 import { CartItem, Customer } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface CartPanelProps {
   items: CartItem[];
@@ -38,12 +40,132 @@ const CartPanel: React.FC<CartPanelProps> = ({
   onOrderTypeChange = () => {},
 }) => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const tax = subtotal * 0.1; // 10% tax
   const total = subtotal + tax;
 
   const isWalkInCustomer = selectedCustomer === 'Walk-in Customer';
+
+  const handleCompleteOrder = (paymentStatus: 'paid' | 'pending') => {
+    onPlaceOrder(paymentStatus);
+    
+    // Show success message with option to view order
+    toast.success(
+      `Order #${orderNumber} completed successfully!`,
+      {
+        action: {
+          label: "View Orders",
+          onClick: () => navigate('/orders')
+        },
+      }
+    );
+    
+    // Option to print receipt
+    const printReceipt = window.confirm("Do you want to print a receipt?");
+    if (printReceipt) {
+      handlePrintReceipt();
+    }
+  };
+
+  const handlePrintReceipt = () => {
+    // Generate print content
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('Pop-up blocked. Please allow pop-ups for this site.');
+      return;
+    }
+    
+    // Get customer name
+    let customerName = 'Walk-in Customer';
+    if (selectedCustomer !== 'Walk-in Customer') {
+      const selectedCustomerObj = customers.find(c => c.id === selectedCustomer);
+      if (selectedCustomerObj) {
+        customerName = selectedCustomerObj.name;
+      }
+    }
+    
+    // Generate HTML content for printing
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Order #${orderNumber}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { text-align: center; font-size: 18px; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .order-info { margin-bottom: 20px; }
+            .order-info div { margin-bottom: 5px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+            .totals { margin-top: 20px; text-align: right; }
+            .footer { margin-top: 30px; text-align: center; font-size: 12px; }
+            @media print {
+              .no-print { display: none; }
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Doob Café</h1>
+            <p>Order Receipt</p>
+          </div>
+          
+          <div class="order-info">
+            <div><strong>Order #:</strong> ${orderNumber}</div>
+            <div><strong>Date:</strong> ${new Date().toLocaleString()}</div>
+            <div><strong>Type:</strong> ${orderType}</div>
+            ${orderType === 'Dine In' ? `<div><strong>Table:</strong> ${tableNumber}</div>` : ''}
+            <div><strong>Customer:</strong> ${customerName}</div>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(item => `
+                <tr>
+                  <td>${item.title}</td>
+                  <td>${item.quantity}</td>
+                  <td>$${item.price.toFixed(2)}</td>
+                  <td>$${(item.price * item.quantity).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div class="totals">
+            <div><strong>Subtotal:</strong> $${subtotal.toFixed(2)}</div>
+            <div><strong>Tax:</strong> $${tax.toFixed(2)}</div>
+            <div><strong>Total:</strong> $${total.toFixed(2)}</div>
+          </div>
+          
+          <div class="footer">
+            <p>Thank you for your business!</p>
+          </div>
+          
+          <div class="no-print" style="text-align: center; margin-top: 20px;">
+            <button onclick="window.print()">Print Receipt</button>
+          </div>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    
+    // Auto trigger print dialog
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
+  };
 
   return (
     <div className="w-96 bg-white dark:bg-gray-800 border-l dark:border-gray-700 flex flex-col h-full">
@@ -182,32 +304,53 @@ const CartPanel: React.FC<CartPanelProps> = ({
           </div>
         </div>
         
-        {isWalkInCustomer ? (
-          <Button
-            className="w-full bg-emerald-600 hover:bg-emerald-700"
-            disabled={items.length === 0}
-            onClick={() => onPlaceOrder('paid')}
-          >
-            <CreditCard className="mr-2 h-4 w-4" /> Pay Now
-          </Button>
-        ) : (
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              className="bg-emerald-600 hover:bg-emerald-700"
-              disabled={items.length === 0}
-              onClick={() => onPlaceOrder('paid')}
+        <div className="space-y-2">
+          {isWalkInCustomer ? (
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                className="bg-emerald-600 hover:bg-emerald-700"
+                disabled={items.length === 0}
+                onClick={() => handleCompleteOrder('paid')}
+              >
+                <CreditCard className="mr-2 h-4 w-4" /> Pay Now
+              </Button>
+              <Button
+                variant="outline"
+                disabled={items.length === 0}
+                onClick={handlePrintReceipt}
+              >
+                <Printer className="mr-2 h-4 w-4" /> Print
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                className="bg-emerald-600 hover:bg-emerald-700"
+                disabled={items.length === 0}
+                onClick={() => handleCompleteOrder('paid')}
+              >
+                <CreditCard className="mr-2 h-4 w-4" /> Pay Now
+              </Button>
+              <Button
+                className="bg-amber-500 hover:bg-amber-600"
+                disabled={items.length === 0}
+                onClick={() => handleCompleteOrder('pending')}
+              >
+                <Clock className="mr-2 h-4 w-4" /> Pay Later
+              </Button>
+            </div>
+          )}
+          
+          {items.length > 0 && (
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={handlePrintReceipt}
             >
-              <CreditCard className="mr-2 h-4 w-4" /> Pay Now
+              <Printer className="mr-2 h-4 w-4" /> Print Receipt
             </Button>
-            <Button
-              className="bg-amber-500 hover:bg-amber-600"
-              disabled={items.length === 0}
-              onClick={() => onPlaceOrder('pending')}
-            >
-              <Clock className="mr-2 h-4 w-4" /> Pay Later
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

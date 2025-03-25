@@ -174,7 +174,14 @@ const Index = () => {
         ? "Order completed and payment received!" 
         : "Order completed with pending payment.";
       
-      toast.success(paymentMessage);
+      toast.success(paymentMessage, {
+        action: {
+          label: "View Orders",
+          onClick: () => {
+            window.location.href = '/orders';
+          }
+        },
+      });
       
       setCartItems([]);
       setOrderNumber(generateOrderNumber());

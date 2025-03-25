@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -20,9 +19,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Receipt, CheckCircle, Clock, Eye, Edit, Trash, Plus, Calendar, ChevronDown } from 'lucide-react';
+import { 
+  Receipt, 
+  CheckCircle, 
+  Clock, 
+  Eye, 
+  Edit, 
+  Trash, 
+  Plus, 
+  Calendar, 
+  ChevronDown, 
+  Printer,
+  FileText 
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { Order, OrderType } from '@/types';
+import { Order, OrderType, CartItem } from '@/types';
 import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import {
   DropdownMenu,
@@ -30,64 +41,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { getOrders } from '@/services/SupabaseService';
 
-// Modified mock data to match the Order type exactly
-const initialOrders: Order[] = [
-  {
-    id: "ORD-3421",
-    items: [],
-    orderType: "Dine In",
-    tableNumber: 5,
-    orderNumber: "3421",
-    subtotal: 35.00,
-    tax: 7.50,
-    total: 42.50,
-    status: "completed",
-    timestamp: "2023-10-15 12:34 PM"
-  },
-  {
-    id: "ORD-3422",
-    items: [],
-    orderType: "Take Away",
-    tableNumber: null,
-    orderNumber: "3422",
-    subtotal: 15.75,
-    tax: 3.00,
-    total: 18.75,
-    status: "completed",
-    timestamp: "2023-10-16 12:45 PM"
-  },
-  {
-    id: "ORD-3423",
-    items: [],
-    orderType: "Dine In",
-    tableNumber: 3,
-    orderNumber: "3423",
-    subtotal: 72.66,
-    tax: 14.54,
-    total: 87.20,
-    status: "processing",
-    timestamp: "2023-10-17 1:05 PM"
-  },
-  {
-    id: "ORD-3424",
-    items: [],
-    orderType: "Take Away",
-    tableNumber: null,
-    orderNumber: "3424",
-    subtotal: 10.82,
-    tax: 2.17,
-    total: 12.99,
-    status: "processing",
-    timestamp: format(new Date(), "yyyy-MM-dd h:mm a")
-  }
-];
-
-// Order form data interface that matches our Order type
 interface OrderFormData {
   tableNumber: number | null;
   orderType: OrderType;
-  items: number; // We'll just track count here for form
+  items: number; 
   total: number;
   status: "processing" | "completed" | "cancelled";
 }
@@ -96,13 +55,15 @@ type DateRange = 'all' | 'today' | 'week' | 'month';
 
 const Orders = () => {
   const [activeTab, setActiveTab] = useState("processing");
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>('all');
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState<OrderFormData>({
     tableNumber: null,
     orderType: "Dine In",
@@ -110,6 +71,24 @@ const Orders = () => {
     total: 0,
     status: "processing"
   });
+  
+  useEffect(() => {
+    document.title = "Doob Café - Orders";
+    fetchOrders();
+  }, []);
+  
+  const fetchOrders = async () => {
+    setIsLoading(true);
+    try {
+      const ordersData = await getOrders();
+      setOrders(ordersData);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast.error('Failed to load orders');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const getFilteredOrders = () => {
     const today = new Date();
@@ -153,6 +132,102 @@ const Orders = () => {
   const handleViewOrder = (order: Order) => {
     setCurrentOrder(order);
     setIsViewDialogOpen(true);
+  };
+
+  const handlePrintOrder = (order: Order) => {
+    setCurrentOrder(order);
+    setIsPrintDialogOpen(true);
+  };
+
+  const handlePrintPreview = () => {
+    if (!currentOrder) return;
+    
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('Pop-up blocked. Please allow pop-ups for this site.');
+      return;
+    }
+    
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Order #${currentOrder.orderNumber}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { text-align: center; font-size: 18px; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .order-info { margin-bottom: 20px; }
+            .order-info div { margin-bottom: 5px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+            .totals { margin-top: 20px; text-align: right; }
+            .footer { margin-top: 30px; text-align: center; font-size: 12px; }
+            @media print {
+              .no-print { display: none; }
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Doob Café</h1>
+            <p>Order Receipt</p>
+          </div>
+          
+          <div class="order-info">
+            <div><strong>Order #:</strong> ${currentOrder.orderNumber}</div>
+            <div><strong>Date:</strong> ${currentOrder.timestamp}</div>
+            <div><strong>Type:</strong> ${currentOrder.orderType}</div>
+            ${currentOrder.tableNumber ? `<div><strong>Table:</strong> ${currentOrder.tableNumber}</div>` : ''}
+            <div><strong>Status:</strong> ${currentOrder.status}</div>
+            <div><strong>Payment:</strong> ${currentOrder.paymentStatus || 'Paid'}</div>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${currentOrder.items.map(item => `
+                <tr>
+                  <td>${item.title}</td>
+                  <td>${item.quantity}</td>
+                  <td>$${item.price.toFixed(2)}</td>
+                  <td>$${(item.price * item.quantity).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div class="totals">
+            <div><strong>Subtotal:</strong> $${currentOrder.subtotal.toFixed(2)}</div>
+            <div><strong>Tax:</strong> $${currentOrder.tax.toFixed(2)}</div>
+            <div><strong>Total:</strong> $${currentOrder.total.toFixed(2)}</div>
+          </div>
+          
+          <div class="footer">
+            <p>Thank you for your business!</p>
+          </div>
+          
+          <div class="no-print" style="text-align: center; margin-top: 20px;">
+            <button onclick="window.print()">Print Receipt</button>
+          </div>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
+    
+    setIsPrintDialogOpen(false);
   };
 
   const handleEditOrder = (order: Order) => {
@@ -219,7 +294,6 @@ const Orders = () => {
   const handleUpdateOrder = () => {
     if (!currentOrder) return;
     
-    // Update the order with the new data, ensuring it matches the Order type
     const updatedOrders = orders.map(order => 
       order.id === currentOrder.id 
         ? { 
@@ -238,14 +312,13 @@ const Orders = () => {
   };
 
   const handleAddOrder = () => {
-    // Create a new order that matches the Order type
     const newOrder: Order = {
       id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
       items: [],
       orderType: formData.orderType,
       tableNumber: formData.tableNumber,
       orderNumber: Math.floor(1000 + Math.random() * 9000).toString(),
-      subtotal: formData.total * 0.85, // Just for demo: subtracting estimated tax
+      subtotal: formData.total * 0.85,
       tax: formData.total * 0.15,
       total: formData.total,
       status: formData.status,
@@ -255,6 +328,11 @@ const Orders = () => {
     setOrders([newOrder, ...orders]);
     setIsAddDialogOpen(false);
     toast.success(`Order ${newOrder.id} has been created.`);
+  };
+
+  const handleRefresh = () => {
+    fetchOrders();
+    toast.success('Orders refreshed');
   };
 
   return (
@@ -268,6 +346,10 @@ const Orders = () => {
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-semibold dark:text-white">Orders Management</h1>
             <div className="flex gap-2">
+              <Button onClick={handleRefresh} variant="outline">
+                <Clock className="mr-2 h-4 w-4" />
+                Refresh
+              </Button>
               <Button onClick={handleAddNewClick}>
                 <Plus className="mr-2 h-4 w-4" />
                 New Order
@@ -316,89 +398,105 @@ const Orders = () => {
           </div>
           
           <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="dark:border-gray-700">
-                  <TableHead className="dark:text-gray-300">Order ID</TableHead>
-                  <TableHead className="dark:text-gray-300">Type</TableHead>
-                  <TableHead className="dark:text-gray-300">Table</TableHead>
-                  <TableHead className="dark:text-gray-300">Items</TableHead>
-                  <TableHead className="dark:text-gray-300">Total</TableHead>
-                  <TableHead className="dark:text-gray-300">Date</TableHead>
-                  <TableHead className="dark:text-gray-300">Status</TableHead>
-                  <TableHead className="dark:text-gray-300">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.length === 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center items-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
                   <TableRow className="dark:border-gray-700">
-                    <TableCell colSpan={8} className="text-center py-8 text-gray-500 dark:text-gray-400">
-                      No orders found
-                    </TableCell>
+                    <TableHead className="dark:text-gray-300">Order ID</TableHead>
+                    <TableHead className="dark:text-gray-300">Type</TableHead>
+                    <TableHead className="dark:text-gray-300">Table</TableHead>
+                    <TableHead className="dark:text-gray-300">Items</TableHead>
+                    <TableHead className="dark:text-gray-300">Total</TableHead>
+                    <TableHead className="dark:text-gray-300">Date</TableHead>
+                    <TableHead className="dark:text-gray-300">Status</TableHead>
+                    <TableHead className="dark:text-gray-300">Payment</TableHead>
+                    <TableHead className="dark:text-gray-300">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  filteredOrders.map((order) => (
-                    <TableRow key={order.id} className="dark:border-gray-700">
-                      <TableCell className="font-medium dark:text-white">{order.id}</TableCell>
-                      <TableCell className="dark:text-gray-300">{order.orderType}</TableCell>
-                      <TableCell className="dark:text-gray-300">
-                        {order.tableNumber ? `Table ${order.tableNumber}` : 'N/A'}
-                      </TableCell>
-                      <TableCell className="dark:text-gray-300">{order.items.length}</TableCell>
-                      <TableCell className="dark:text-gray-300">${order.total.toFixed(2)}</TableCell>
-                      <TableCell className="dark:text-gray-300">{order.timestamp}</TableCell>
-                      <TableCell>
-                        <div className={`flex items-center space-x-1 ${
-                          order.status === 'completed' ? 'text-green-600 dark:text-green-500' : 'text-amber-500'
-                        }`}>
-                          {order.status === 'completed' ? (
-                            <>
-                              <CheckCircle size={16} />
-                              <span>Completed</span>
-                            </>
-                          ) : (
-                            <>
-                              <Clock size={16} />
-                              <span>Processing</span>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button size="sm" variant="outline" onClick={() => handleViewOrder(order)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleEditOrder(order)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" className="text-red-500" onClick={() => handleDeleteOrder(order)}>
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.length === 0 ? (
+                    <TableRow className="dark:border-gray-700">
+                      <TableCell colSpan={9} className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        No orders found
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    filteredOrders.map((order) => (
+                      <TableRow key={order.id} className="dark:border-gray-700">
+                        <TableCell className="font-medium dark:text-white">{order.orderNumber}</TableCell>
+                        <TableCell className="dark:text-gray-300">{order.orderType}</TableCell>
+                        <TableCell className="dark:text-gray-300">
+                          {order.tableNumber ? `Table ${order.tableNumber}` : 'N/A'}
+                        </TableCell>
+                        <TableCell className="dark:text-gray-300">{order.items.length}</TableCell>
+                        <TableCell className="dark:text-gray-300">${order.total.toFixed(2)}</TableCell>
+                        <TableCell className="dark:text-gray-300">{order.timestamp}</TableCell>
+                        <TableCell>
+                          <div className={`flex items-center space-x-1 ${
+                            order.status === 'completed' ? 'text-green-600 dark:text-green-500' : 'text-amber-500'
+                          }`}>
+                            {order.status === 'completed' ? (
+                              <>
+                                <CheckCircle size={16} />
+                                <span>Completed</span>
+                              </>
+                            ) : (
+                              <>
+                                <Clock size={16} />
+                                <span>Processing</span>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className={`${
+                            order.paymentStatus === 'paid' ? 'text-green-600 dark:text-green-500' : 'text-orange-500'
+                          }`}>
+                            {order.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button size="sm" variant="outline" onClick={() => handleViewOrder(order)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => handlePrintOrder(order)}>
+                              <Printer className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => handleEditOrder(order)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" className="text-red-500" onClick={() => handleDeleteOrder(order)}>
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </div>
       </div>
 
-      {/* View Order Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Order Details</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             {currentOrder && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Order ID</p>
-                    <p className="font-medium dark:text-white">{currentOrder.id}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Order #</p>
+                    <p className="font-medium dark:text-white">{currentOrder.orderNumber}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Date</p>
@@ -411,14 +509,6 @@ const Orders = () => {
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Table</p>
                     <p className="font-medium dark:text-white">{currentOrder.tableNumber ? `Table ${currentOrder.tableNumber}` : 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Items</p>
-                    <p className="font-medium dark:text-white">{currentOrder.items.length}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
-                    <p className="font-medium dark:text-white">${currentOrder.total.toFixed(2)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Status</p>
@@ -438,17 +528,92 @@ const Orders = () => {
                       )}
                     </div>
                   </div>
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Payment</p>
+                    <p className={`font-medium ${
+                      currentOrder.paymentStatus === 'paid' ? 'text-green-600 dark:text-green-500' : 'text-orange-500'
+                    }`}>
+                      {currentOrder.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Order Items</h3>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-md border dark:border-gray-700">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="dark:border-gray-700">
+                          <TableHead className="dark:text-gray-300">Item</TableHead>
+                          <TableHead className="dark:text-gray-300">Price</TableHead>
+                          <TableHead className="dark:text-gray-300">Qty</TableHead>
+                          <TableHead className="dark:text-gray-300 text-right">Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {currentOrder.items.length === 0 ? (
+                          <TableRow className="dark:border-gray-700">
+                            <TableCell colSpan={4} className="text-center py-4 text-gray-500 dark:text-gray-400">
+                              No items
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          currentOrder.items.map((item, index) => (
+                            <TableRow key={index} className="dark:border-gray-700">
+                              <TableCell className="font-medium dark:text-white">{item.title}</TableCell>
+                              <TableCell className="dark:text-gray-300">${item.price.toFixed(2)}</TableCell>
+                              <TableCell className="dark:text-gray-300">{item.quantity}</TableCell>
+                              <TableCell className="dark:text-gray-300 text-right">${(item.price * item.quantity).toFixed(2)}</TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+                
+                <div className="space-y-1 text-right">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Subtotal: <span className="font-medium dark:text-white">${currentOrder.subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Tax: <span className="font-medium dark:text-white">${currentOrder.tax.toFixed(2)}</span>
+                  </div>
+                  <div className="text-base font-medium dark:text-white">
+                    Total: ${currentOrder.total.toFixed(2)}
+                  </div>
                 </div>
               </div>
             )}
           </div>
           <DialogFooter>
+            <Button variant="outline" onClick={() => handlePrintOrder(currentOrder!)}>
+              <Printer className="mr-2 h-4 w-4" />
+              Print Receipt
+            </Button>
             <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Order Dialog */}
+      <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Print Order</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="dark:text-white">Ready to print order #{currentOrder?.orderNumber}?</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPrintDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handlePrintPreview}>
+              <Printer className="mr-2 h-4 w-4" />
+              Print Preview
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -528,7 +693,6 @@ const Orders = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Order Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -544,7 +708,6 @@ const Orders = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Order Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
