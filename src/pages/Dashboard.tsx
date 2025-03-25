@@ -3,12 +3,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell
+  LineChart, Line, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 import { 
   Calendar, ArrowUpRight, TrendingUp, Users, ShoppingBag, DollarSign, 
   CreditCard, Calendar as CalendarIcon, Clock, CreditCard as CreditCardIcon,
-  Utensils, Coffee, Wallet, Smartphone
+  Utensils, Coffee, Wallet, Smartphone, ArrowUpCircle, ArrowDownCircle
 } from 'lucide-react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -18,6 +18,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { bookings, generateOrderNumber } from '@/data/mockData';
 import { format, addDays, startOfDay } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 // Sample data for charts
 const salesData = [
@@ -28,6 +29,17 @@ const salesData = [
   { name: 'May', sales: 1890 },
   { name: 'Jun', sales: 2390 },
   { name: 'Jul', sales: 3490 },
+];
+
+// Sample data for income vs expense chart
+const financeData = [
+  { name: 'Jan', income: 9800, expense: 7500 },
+  { name: 'Feb', income: 8900, expense: 6500 },
+  { name: 'Mar', income: 11500, expense: 8800 },
+  { name: 'Apr', income: 10200, expense: 7900 },
+  { name: 'May', income: 9100, expense: 6200 },
+  { name: 'Jun', income: 12600, expense: 9100 },
+  { name: 'Jul', income: 13800, expense: 10200 },
 ];
 
 const categoryData = [
@@ -164,6 +176,47 @@ const Dashboard: React.FC = () => {
             </Card>
           </div>
           
+          {/* Income vs Expense cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-6">
+            <Card className="shadow-sm">
+              <CardContent className="flex items-center justify-between p-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Income</p>
+                  <h3 className="text-2xl font-bold">$65,890</h3>
+                  <div className="flex items-center mt-1">
+                    <span className="text-xs font-medium text-green-500 flex items-center">
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      8.3%
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-1">vs last month</span>
+                  </div>
+                </div>
+                <div className="h-12 w-12 bg-green-500/10 rounded-full flex items-center justify-center">
+                  <ArrowUpCircle className="h-6 w-6 text-green-500" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="shadow-sm">
+              <CardContent className="flex items-center justify-between p-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Expenses</p>
+                  <h3 className="text-2xl font-bold">$48,230</h3>
+                  <div className="flex items-center mt-1">
+                    <span className="text-xs font-medium text-red-500 flex items-center">
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      4.1%
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-1">vs last month</span>
+                  </div>
+                </div>
+                <div className="h-12 w-12 bg-red-500/10 rounded-full flex items-center justify-center">
+                  <ArrowDownCircle className="h-6 w-6 text-red-500" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
           {/* Charts row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <Card className="shadow-sm lg:col-span-2">
@@ -238,6 +291,112 @@ const Dashboard: React.FC = () => {
               </CardContent>
             </Card>
           </div>
+          
+          {/* Income vs Expense Chart */}
+          <Card className="shadow-sm mb-6">
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <CardTitle>Income vs Expenses</CardTitle>
+                <Tabs defaultValue="monthly" onValueChange={(v) => console.log(v)}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                    <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                    <TabsTrigger value="yearly">Yearly</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+              <CardDescription>
+                Compare income and expenses over time
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ChartContainer
+                  config={{
+                    income: { color: "#22c55e" },
+                    expense: { color: "#ef4444" }
+                  }}
+                >
+                  <AreaChart
+                    data={financeData}
+                    margin={{
+                      top: 10,
+                      right: 30,
+                      left: 0,
+                      bottom: 0,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <ChartTooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="rounded-lg border bg-background p-2 shadow-sm">
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="flex flex-col">
+                                  <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                    Income
+                                  </span>
+                                  <span className="font-bold text-green-500">
+                                    ${payload[0].value}
+                                  </span>
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                    Expense
+                                  </span>
+                                  <span className="font-bold text-red-500">
+                                    ${payload[1].value}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        }
+                        return null
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="income"
+                      stackId="1"
+                      stroke="#22c55e"
+                      fill="#22c55e30"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="expense"
+                      stackId="2"
+                      stroke="#ef4444"
+                      fill="#ef444430"
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              </div>
+              <div className="flex justify-between mt-4">
+                <div className="flex items-center">
+                  <div className="h-8 w-8 bg-green-500/10 rounded-full flex items-center justify-center mr-2">
+                    <ArrowUpCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Total Income</p>
+                    <p className="text-xs text-muted-foreground">$65,890 this month</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <div className="h-8 w-8 bg-red-500/10 rounded-full flex items-center justify-center mr-2">
+                    <ArrowDownCircle className="h-4 w-4 text-red-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Total Expenses</p>
+                    <p className="text-xs text-muted-foreground">$48,230 this month</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           
           {/* Popular items and recent orders */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
