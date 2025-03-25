@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,99 +24,26 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@/components/ui/toggle-group';
-import { Plus, Search, Phone, Mail, MapPin, Edit, Trash2, Grid, List, AlertCircle } from 'lucide-react';
+import { Plus, Search, Phone, Mail, MapPin, Edit, Trash2, Grid, List, AlertCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-
-// Sample customer data
-const customersData = [
-  { 
-    id: 1, 
-    name: 'Ahmed Mohamed', 
-    phone: '+252 61 1234567', 
-    email: 'ahmed@example.com', 
-    address: 'Mogadishu, Somalia', 
-    totalOrders: 24, 
-    totalSpent: 560,
-    pendingPayments: [
-      { id: 'p1', amount: 45.75, date: '2023-10-12', description: 'Order #12458' }
-    ]
-  },
-  { 
-    id: 2, 
-    name: 'Fatima Hussein', 
-    phone: '+252 61 7654321', 
-    email: 'fatima@example.com', 
-    address: 'Hargeisa, Somalia', 
-    totalOrders: 18, 
-    totalSpent: 420,
-    pendingPayments: []
-  },
-  { 
-    id: 3, 
-    name: 'Omar Jama', 
-    phone: '+252 63 1122334', 
-    email: 'omar@example.com', 
-    address: 'Kismayo, Somalia', 
-    totalOrders: 12, 
-    totalSpent: 380,
-    pendingPayments: [
-      { id: 'p2', amount: 28.50, date: '2023-10-15', description: 'Order #12301' }
-    ]
-  },
-  { 
-    id: 4, 
-    name: 'Amina Abdi', 
-    phone: '+252 62 9988776', 
-    email: 'amina@example.com', 
-    address: 'Bosaso, Somalia', 
-    totalOrders: 8, 
-    totalSpent: 240,
-    pendingPayments: []
-  },
-  { 
-    id: 5, 
-    name: 'Mohammed Ali', 
-    phone: '+252 64 5566778', 
-    email: 'mohammed@example.com', 
-    address: 'Baidoa, Somalia', 
-    totalOrders: 15, 
-    totalSpent: 320,
-    pendingPayments: []
-  },
-];
+import { Customer, createCustomer, deleteCustomer, getCustomers, updateCustomer } from '@/services/SupabaseService';
 
 // Customer form interface
 interface CustomerFormData {
   name: string;
-  phone: string;
-  email: string;
-  address: string;
-}
-
-// Customer interface
-interface Customer {
-  id: number;
-  name: string;
-  phone: string;
-  email: string;
-  address: string;
-  totalOrders: number;
-  totalSpent: number;
-  pendingPayments: {
-    id: string;
-    amount: number;
-    date: string;
-    description: string;
-  }[];
+  phone: string | null;
+  email: string | null;
+  address: string | null;
 }
 
 const Customers = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [customers, setCustomers] = useState<Customer[]>(customersData);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -124,16 +51,33 @@ const Customers = () => {
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
   const [formData, setFormData] = useState<CustomerFormData>({
     name: '',
-    phone: '',
-    email: '',
-    address: ''
+    phone: null,
+    email: null,
+    address: null
   });
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+      const data = await getCustomers();
+      setCustomers(data);
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      toast.error('Failed to load customers');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredCustomers = customers.filter(
     customer => 
       customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.phone.includes(searchTerm) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+      (customer.phone && customer.phone.includes(searchTerm)) ||
+      (customer.email && customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleSearch = (term: string) => {
@@ -144,23 +88,24 @@ const Customers = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value || null
     }));
   };
 
-  const handleAddCustomer = () => {
-    const newCustomer: Customer = {
-      id: customers.length + 1,
-      ...formData,
-      totalOrders: 0,
-      totalSpent: 0,
-      pendingPayments: []
-    };
-    
-    setCustomers([...customers, newCustomer]);
-    setIsAddDialogOpen(false);
-    setFormData({ name: '', phone: '', email: '', address: '' });
-    toast.success(`${newCustomer.name} added successfully`);
+  const handleAddCustomer = async () => {
+    try {
+      if (!formData.name) {
+        toast.error('Customer name is required');
+        return;
+      }
+      
+      await createCustomer(formData);
+      fetchCustomers();
+      setIsAddDialogOpen(false);
+      setFormData({ name: '', phone: null, email: null, address: null });
+    } catch (error) {
+      console.error('Error adding customer:', error);
+    }
   };
 
   const handleEditClick = (customer: Customer) => {
@@ -174,18 +119,21 @@ const Customers = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdateCustomer = () => {
+  const handleUpdateCustomer = async () => {
     if (!currentCustomer) return;
     
-    const updatedCustomers = customers.map(customer => 
-      customer.id === currentCustomer.id 
-        ? { ...customer, ...formData }
-        : customer
-    );
-    
-    setCustomers(updatedCustomers);
-    setIsEditDialogOpen(false);
-    toast.success(`${formData.name} updated successfully`);
+    try {
+      if (!formData.name) {
+        toast.error('Customer name is required');
+        return;
+      }
+      
+      await updateCustomer(currentCustomer.id, formData);
+      fetchCustomers();
+      setIsEditDialogOpen(false);
+    } catch (error) {
+      console.error('Error updating customer:', error);
+    }
   };
 
   const handleDeleteClick = (customer: Customer) => {
@@ -193,22 +141,42 @@ const Customers = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteCustomer = () => {
+  const handleDeleteCustomer = async () => {
     if (!currentCustomer) return;
     
-    const updatedCustomers = customers.filter(customer => customer.id !== currentCustomer.id);
-    setCustomers(updatedCustomers);
-    setIsDeleteDialogOpen(false);
-    toast.success(`${currentCustomer.name} deleted successfully`);
+    try {
+      await deleteCustomer(currentCustomer.id);
+      fetchCustomers();
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Error deleting customer:', error);
+    }
   };
 
-  const handleViewCustomerDetails = (customerId: number) => {
+  const handleViewCustomerDetails = (customerId: string) => {
     navigate(`/customer/${customerId}`);
   };
 
   const getTotalPendingAmount = (customer: Customer) => {
-    return customer.pendingPayments.reduce((sum, payment) => sum + payment.amount, 0);
+    return (customer.pendingPayments || []).reduce((sum, payment) => sum + payment.amount, 0);
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
+        <SidebarNavigation />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header onSearch={handleSearch} />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-gray-500 dark:text-gray-400">Loading customers...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
@@ -232,7 +200,7 @@ const Customers = () => {
               </ToggleGroup>
               
               <Button className="gap-2" onClick={() => {
-                setFormData({ name: '', phone: '', email: '', address: '' });
+                setFormData({ name: '', phone: null, email: null, address: null });
                 setIsAddDialogOpen(true);
               }}>
                 <Plus size={16} />
@@ -253,7 +221,23 @@ const Customers = () => {
             </div>
           </div>
           
-          {viewMode === 'grid' ? (
+          {filteredCustomers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 bg-white dark:bg-gray-800 rounded-lg shadow">
+              <div className="text-center">
+                <h3 className="text-lg font-medium mb-2 dark:text-white">No customers found</h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-4">
+                  {searchTerm ? 'Try a different search term or' : 'Get started by'} adding your first customer
+                </p>
+                <Button onClick={() => {
+                  setFormData({ name: '', phone: null, email: null, address: null });
+                  setIsAddDialogOpen(true);
+                }}>
+                  <Plus size={16} className="mr-2" />
+                  Add Customer
+                </Button>
+              </div>
+            </div>
+          ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCustomers.map(customer => (
                 <Card key={customer.id} className="overflow-hidden bg-white dark:bg-gray-800">
@@ -264,24 +248,30 @@ const Customers = () => {
                       </Avatar>
                       <div>
                         <div className="font-bold dark:text-white">{customer.name}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">Customer #{customer.id}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">Customer</div>
                       </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                        <Phone size={16} />
-                        <span>{customer.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                        <Mail size={16} />
-                        <span>{customer.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                        <MapPin size={16} />
-                        <span>{customer.address}</span>
-                      </div>
+                      {customer.phone && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                          <Phone size={16} />
+                          <span>{customer.phone}</span>
+                        </div>
+                      )}
+                      {customer.email && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                          <Mail size={16} />
+                          <span>{customer.email}</span>
+                        </div>
+                      )}
+                      {customer.address && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                          <MapPin size={16} />
+                          <span>{customer.address}</span>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4 mb-4">
@@ -295,7 +285,7 @@ const Customers = () => {
                       </div>
                     </div>
                     
-                    {customer.pendingPayments.length > 0 && (
+                    {customer.pendingPayments && customer.pendingPayments.length > 0 && (
                       <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg mb-4">
                         <div className="flex items-center gap-2 mb-1">
                           <AlertCircle size={16} className="text-yellow-600 dark:text-yellow-400" />
@@ -353,27 +343,30 @@ const Customers = () => {
                           </Avatar>
                           <div>
                             <div className="font-medium dark:text-white">{customer.name}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">#{customer.id}</div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
-                          <div className="flex items-center gap-1 text-sm dark:text-gray-300">
-                            <Phone size={14} />
-                            <span>{customer.phone}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-sm dark:text-gray-300">
-                            <Mail size={14} />
-                            <span>{customer.email}</span>
-                          </div>
+                          {customer.phone && (
+                            <div className="flex items-center gap-1 text-sm dark:text-gray-300">
+                              <Phone size={14} />
+                              <span>{customer.phone}</span>
+                            </div>
+                          )}
+                          {customer.email && (
+                            <div className="flex items-center gap-1 text-sm dark:text-gray-300">
+                              <Mail size={14} />
+                              <span>{customer.email}</span>
+                            </div>
+                          )}
                         </div>
                       </TableCell>
-                      <TableCell className="dark:text-gray-300">{customer.address}</TableCell>
+                      <TableCell className="dark:text-gray-300">{customer.address || '-'}</TableCell>
                       <TableCell className="dark:text-gray-300">{customer.totalOrders}</TableCell>
                       <TableCell className="dark:text-gray-300">${customer.totalSpent}</TableCell>
                       <TableCell>
-                        {customer.pendingPayments.length > 0 ? (
+                        {customer.pendingPayments && customer.pendingPayments.length > 0 ? (
                           <Badge variant="outline" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
                             ${getTotalPendingAmount(customer).toFixed(2)}
                           </Badge>
@@ -413,12 +406,13 @@ const Customers = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <label htmlFor="name" className="dark:text-white">Full Name</label>
+              <label htmlFor="name" className="dark:text-white">Full Name <span className="text-red-500">*</span></label>
               <Input
                 id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
+                required
               />
             </div>
             <div className="grid gap-2">
@@ -426,7 +420,7 @@ const Customers = () => {
               <Input
                 id="phone"
                 name="phone"
-                value={formData.phone}
+                value={formData.phone || ''}
                 onChange={handleInputChange}
               />
             </div>
@@ -436,7 +430,7 @@ const Customers = () => {
                 id="email"
                 name="email"
                 type="email"
-                value={formData.email}
+                value={formData.email || ''}
                 onChange={handleInputChange}
               />
             </div>
@@ -445,7 +439,7 @@ const Customers = () => {
               <Input
                 id="address"
                 name="address"
-                value={formData.address}
+                value={formData.address || ''}
                 onChange={handleInputChange}
               />
             </div>
@@ -464,12 +458,13 @@ const Customers = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <label htmlFor="edit-name" className="dark:text-white">Full Name</label>
+              <label htmlFor="edit-name" className="dark:text-white">Full Name <span className="text-red-500">*</span></label>
               <Input
                 id="edit-name"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
+                required
               />
             </div>
             <div className="grid gap-2">
@@ -477,7 +472,7 @@ const Customers = () => {
               <Input
                 id="edit-phone"
                 name="phone"
-                value={formData.phone}
+                value={formData.phone || ''}
                 onChange={handleInputChange}
               />
             </div>
@@ -487,7 +482,7 @@ const Customers = () => {
                 id="edit-email"
                 name="email"
                 type="email"
-                value={formData.email}
+                value={formData.email || ''}
                 onChange={handleInputChange}
               />
             </div>
@@ -496,7 +491,7 @@ const Customers = () => {
               <Input
                 id="edit-address"
                 name="address"
-                value={formData.address}
+                value={formData.address || ''}
                 onChange={handleInputChange}
               />
             </div>

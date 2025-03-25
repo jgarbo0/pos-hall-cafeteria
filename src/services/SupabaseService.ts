@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { 
   MenuItem, 
@@ -442,6 +441,170 @@ export const getPopularItems = async (): Promise<{id: string; name: string; cate
   }
 };
 
+// Customers
+export interface Customer {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  totalOrders?: number;
+  totalSpent?: number;
+  pendingPayments?: {
+    id: string;
+    amount: number;
+    date: string;
+    description: string;
+  }[];
+}
+
+export const getCustomers = async (): Promise<Customer[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('*')
+      .order('name');
+    
+    if (error) throw error;
+    
+    // For now, we'll add mock data for totalOrders, totalSpent, and pendingPayments
+    // In a real app, you would calculate these from orders tables
+    return data.map(customer => ({
+      id: customer.id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      address: customer.address,
+      totalOrders: Math.floor(Math.random() * 20) + 1,
+      totalSpent: Math.floor(Math.random() * 500) + 100,
+      pendingPayments: Math.random() > 0.7 ? [
+        {
+          id: 'p' + Math.floor(Math.random() * 1000),
+          amount: Math.floor(Math.random() * 50) + 10,
+          date: new Date().toISOString().split('T')[0],
+          description: 'Order #' + Math.floor(Math.random() * 10000)
+        }
+      ] : []
+    }));
+  } catch (error) {
+    console.error('Error fetching customers:', error);
+    toast.error('Failed to fetch customers');
+    throw error;
+  }
+};
+
+export const getCustomerById = async (id: string): Promise<Customer | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null; // Customer not found
+      }
+      throw error;
+    }
+    
+    return {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      address: data.address,
+      totalOrders: Math.floor(Math.random() * 20) + 1,
+      totalSpent: Math.floor(Math.random() * 500) + 100,
+      pendingPayments: Math.random() > 0.7 ? [
+        {
+          id: 'p' + Math.floor(Math.random() * 1000),
+          amount: Math.floor(Math.random() * 50) + 10,
+          date: new Date().toISOString().split('T')[0],
+          description: 'Order #' + Math.floor(Math.random() * 10000)
+        }
+      ] : []
+    };
+  } catch (error) {
+    console.error('Error fetching customer:', error);
+    toast.error('Failed to fetch customer details');
+    throw error;
+  }
+};
+
+export const createCustomer = async (customer: Omit<Customer, 'id'>): Promise<Customer> => {
+  try {
+    const { data, error } = await supabase
+      .from('customers')
+      .insert({
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        address: customer.address
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    toast.success(`Customer ${customer.name} created successfully`);
+    
+    return {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      address: data.address,
+      totalOrders: 0,
+      totalSpent: 0,
+      pendingPayments: []
+    };
+  } catch (error) {
+    console.error('Error creating customer:', error);
+    toast.error('Failed to create customer');
+    throw error;
+  }
+};
+
+export const updateCustomer = async (id: string, customer: Partial<Customer>): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('customers')
+      .update({
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        address: customer.address
+      })
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    toast.success(`Customer ${customer.name} updated successfully`);
+  } catch (error) {
+    console.error('Error updating customer:', error);
+    toast.error('Failed to update customer');
+    throw error;
+  }
+};
+
+export const deleteCustomer = async (id: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('customers')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    toast.success('Customer deleted successfully');
+  } catch (error) {
+    console.error('Error deleting customer:', error);
+    toast.error('Failed to delete customer');
+    throw error;
+  }
+};
+
 export default {
   getMenuItems,
   createMenuItem,
@@ -454,5 +617,11 @@ export default {
   createTransaction,
   getHallBookings,
   createHallBooking,
-  getPopularItems
+  getPopularItems,
+  getCustomers,
+  getCustomerById,
+  createCustomer,
+  updateCustomer,
+  deleteCustomer
 };
+
