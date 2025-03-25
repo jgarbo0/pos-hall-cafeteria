@@ -35,6 +35,8 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>): Prom
     payment_method: transaction.paymentMethod // Convert paymentMethod to payment_method
   };
 
+  console.log('Adding transaction to database:', dbTransaction);
+
   const { data, error } = await supabase
     .from('transactions')
     .insert([dbTransaction])
@@ -86,16 +88,25 @@ export const addHallBookingIncome = async (hallBooking: Omit<HallBookingIncome, 
       ? hallBooking.date 
       : new Date(hallBooking.date).toISOString().split('T')[0];
 
+    // Ensure amount is a number
+    const amount = Number(hallBooking.amount);
+    
+    if (isNaN(amount)) {
+      console.error('Invalid amount value for hall booking:', hallBooking.amount);
+      throw new Error('Invalid amount value');
+    }
+
     // 1. Record the hall booking income as a transaction
     const transaction = {
       date: bookingDate,
       description: `Hall booking: ${hallBooking.purpose} for ${hallBooking.customerName}`,
-      amount: Number(hallBooking.amount),
+      amount: amount,
       type: 'income' as const,
       category: 'Hall Rental',
       paymentMethod: 'Cash' // Default payment method, can be updated if needed
     };
     
+    console.log('Creating transaction for hall booking:', transaction);
     await addTransaction(transaction);
     
   } catch (error) {

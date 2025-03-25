@@ -247,11 +247,35 @@ const HallBookingForm = ({
         if (error) throw error;
       } else {
         // Insert new booking
-        const { error } = await supabase
+        const { error, data: insertedData } = await supabase
           .from('hall_bookings')
-          .insert(bookingData);
+          .insert(bookingData)
+          .select()
+          .single();
           
         if (error) throw error;
+        
+        // Add hall booking income to track it in finances
+        try {
+          const hallBookingIncome = {
+            date: format(data.date, 'yyyy-MM-dd'),
+            customerName: data.customerName,
+            purpose: data.purpose,
+            attendees: data.attendees,
+            amount: totalAmount
+          };
+          
+          console.log('Recording hall booking as income:', hallBookingIncome);
+          
+          // Import this function from the FinanceService
+          const { addHallBookingIncome } = await import('@/services/FinanceService');
+          await addHallBookingIncome(hallBookingIncome);
+          
+          console.log('Hall booking income recorded successfully');
+        } catch (financeError) {
+          console.error('Error recording hall booking income:', financeError);
+          // We still want to continue even if this fails
+        }
       }
       
       // Clear localStorage
