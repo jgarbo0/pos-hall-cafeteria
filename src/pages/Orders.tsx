@@ -341,6 +341,10 @@ const Orders = () => {
     toast.success('Orders refreshed');
   };
 
+  const displayCustomerName = (customerName?: string): string => {
+    return customerName && customerName.trim() !== '' ? customerName : 'Walk-in Customer';
+  };
+
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <SidebarNavigation />
@@ -434,7 +438,7 @@ const Orders = () => {
                     filteredOrders.map((order) => (
                       <TableRow key={order.id} className="dark:border-gray-700">
                         <TableCell className="font-medium dark:text-white">{order.orderNumber}</TableCell>
-                        <TableCell className="dark:text-gray-300">{order.customerName || 'Walk-in Customer'}</TableCell>
+                        <TableCell className="dark:text-gray-300">{displayCustomerName(order.customerName)}</TableCell>
                         <TableCell className="dark:text-gray-300">{order.orderType}</TableCell>
                         <TableCell className="dark:text-gray-300">
                           {order.tableNumber ? `Table ${order.tableNumber}` : 'N/A'}
@@ -507,7 +511,7 @@ const Orders = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Customer</p>
-                    <p className="font-medium dark:text-white">{currentOrder.customerName || 'Walk-in Customer'}</p>
+                    <p className="font-medium dark:text-white">{displayCustomerName(currentOrder.customerName)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Date</p>
