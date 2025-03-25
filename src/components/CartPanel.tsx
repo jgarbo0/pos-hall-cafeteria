@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, CreditCard, Clock } from 'lucide-react';
 import { CartItem, Customer } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,7 +13,7 @@ interface CartPanelProps {
   onRemoveItem: (id: string) => void;
   onUpdateQuantity: (id: string, quantity: number) => void;
   onClearCart: () => void;
-  onPlaceOrder: () => void;
+  onPlaceOrder: (paymentStatus: 'paid' | 'pending') => void;
   orderNumber: string;
   tableNumber: number;
   customers?: Customer[];
@@ -42,6 +42,8 @@ const CartPanel: React.FC<CartPanelProps> = ({
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const tax = subtotal * 0.1; // 10% tax
   const total = subtotal + tax;
+
+  const isWalkInCustomer = selectedCustomer === 'Walk-in Customer';
 
   return (
     <div className="w-96 bg-white dark:bg-gray-800 border-l dark:border-gray-700 flex flex-col h-full">
@@ -179,13 +181,33 @@ const CartPanel: React.FC<CartPanelProps> = ({
             <span className="dark:text-white">${total.toFixed(2)}</span>
           </div>
         </div>
-        <Button
-          className="w-full bg-emerald-600 hover:bg-emerald-700"
-          disabled={items.length === 0}
-          onClick={onPlaceOrder}
-        >
-          Place Order
-        </Button>
+        
+        {isWalkInCustomer ? (
+          <Button
+            className="w-full bg-emerald-600 hover:bg-emerald-700"
+            disabled={items.length === 0}
+            onClick={() => onPlaceOrder('paid')}
+          >
+            <CreditCard className="mr-2 h-4 w-4" /> Pay Now
+          </Button>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700"
+              disabled={items.length === 0}
+              onClick={() => onPlaceOrder('paid')}
+            >
+              <CreditCard className="mr-2 h-4 w-4" /> Pay Now
+            </Button>
+            <Button
+              className="bg-amber-500 hover:bg-amber-600"
+              disabled={items.length === 0}
+              onClick={() => onPlaceOrder('pending')}
+            >
+              <Clock className="mr-2 h-4 w-4" /> Pay Later
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

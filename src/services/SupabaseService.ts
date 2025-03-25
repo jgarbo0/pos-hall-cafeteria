@@ -138,7 +138,8 @@ export const createOrder = async (
   orderType: string, 
   tableNumber: number | null, 
   cartItems: CartItem[],
-  customerName: string = 'Walk-in Customer'
+  customerName: string = 'Walk-in Customer',
+  paymentStatus: 'paid' | 'pending' = 'paid'
 ): Promise<Order> => {
   try {
     // Calculate totals
@@ -156,8 +157,9 @@ export const createOrder = async (
         subtotal: subtotal,
         tax: tax,
         total: total,
-        status: 'processing',
-        customer_name: customerName
+        status: 'completed',
+        customer_name: customerName,
+        payment_status: paymentStatus
       })
       .select()
       .single();
@@ -190,6 +192,7 @@ export const createOrder = async (
       tax: orderData.tax,
       total: orderData.total,
       status: orderData.status as 'processing' | 'completed' | 'cancelled',
+      paymentStatus: orderData.payment_status as 'paid' | 'pending',
       timestamp: orderData.timestamp
     };
   } catch (error) {
@@ -243,7 +246,7 @@ export const getOrders = async (): Promise<Order[]> => {
         price: item.price,
         image: item.menu_items.image || 'https://images.unsplash.com/photo-1506084868230-bb9d95c24759?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80',
         category: item.menu_items.category_id,
-        available: item.menu_items.available || 0, // Add the missing available property
+        available: item.menu_items.available || 0,
         notes: item.notes,
         spicyLevel: item.spicy_level
       }));
@@ -379,7 +382,7 @@ export const createHallBooking = async (booking: Omit<HallBooking, 'id'>): Promi
         total_amount: booking.totalAmount,
         notes: booking.notes,
         hall_id: booking.hallId,
-        table_id: booking.tableId ? String(booking.tableId) : null, // Convert tableId to string
+        table_id: booking.tableId ? String(booking.tableId) : null,
         package_id: booking.packageId
       })
       .select()
@@ -432,8 +435,8 @@ export const getPopularItems = async (): Promise<{id: string; name: string; cate
       id: item.id,
       name: item.title,
       category: item.categories?.name || 'Uncategorized',
-      sales: Math.floor(Math.random() * 100) + 20, // Random number between 20-120
-      growth: Math.floor(Math.random() * 30) + 5 // Random number between 5-35
+      sales: Math.floor(Math.random() * 100) + 20,
+      growth: Math.floor(Math.random() * 30) + 5
     }));
   } catch (error) {
     console.error('Error fetching popular items:', error);
@@ -624,4 +627,3 @@ export default {
   updateCustomer,
   deleteCustomer
 };
-

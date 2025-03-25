@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -28,10 +27,8 @@ const Index = () => {
   const { t } = useLanguage();
   
   useEffect(() => {
-    // Set document title
     document.title = "Doob Café - Menu";
     
-    // Fetch menu items, categories, and customers
     fetchMenuItems();
     fetchCategories();
     fetchCustomers();
@@ -69,7 +66,6 @@ const Index = () => {
       const data = await getCategories();
       
       if (data) {
-        // Add 'all' category
         const allCategories: Category[] = [
           { id: 'all', name: 'All Items' },
           ...data
@@ -86,12 +82,10 @@ const Index = () => {
     if (menuItems.length > 0) {
       let result = [...menuItems];
       
-      // Apply category filter
       if (activeCategory !== 'all') {
         result = result.filter(item => item.category === activeCategory);
       }
       
-      // Apply search term filter
       if (searchTerm.trim()) {
         const term = searchTerm.toLowerCase();
         result = result.filter(item => 
@@ -114,16 +108,13 @@ const Index = () => {
   
   const handleAddToCart = (item: MenuItem, quantity: number) => {
     setCartItems(prev => {
-      // Check if item already exists in cart
       const existingItemIndex = prev.findIndex(cartItem => cartItem.id === item.id);
       
       if (existingItemIndex > -1) {
-        // Update quantity if item exists
         const newCartItems = [...prev];
         newCartItems[existingItemIndex].quantity += quantity;
         return newCartItems;
       } else {
-        // Add new item to cart
         return [...prev, { ...item, quantity }];
       }
     });
@@ -155,14 +146,13 @@ const Index = () => {
     setSelectedCustomer(customerId);
   };
   
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = async (paymentStatus: 'paid' | 'pending') => {
     if (cartItems.length === 0) {
       toast.error("Your cart is empty!");
       return;
     }
     
     try {
-      // Get customer name from selected customer
       let customerName = 'Walk-in Customer';
       if (selectedCustomer !== 'Walk-in Customer') {
         const selectedCustomerObj = customers.find(c => c.id === selectedCustomer);
@@ -171,18 +161,21 @@ const Index = () => {
         }
       }
       
-      // Insert order to database using the service
       const orderId = await createOrder(
         orderNumber, 
         orderType, 
         orderType === 'Dine In' ? tableNumber : null, 
         cartItems, 
-        customerName
+        customerName,
+        paymentStatus
       );
       
-      toast.success("Order placed successfully!");
+      const paymentMessage = paymentStatus === 'paid' 
+        ? "Order completed and payment received!" 
+        : "Order completed with pending payment.";
       
-      // Reset cart and generate new order number/table number
+      toast.success(paymentMessage);
+      
       setCartItems([]);
       setOrderNumber(generateOrderNumber());
       setTableNumber(generateTableNumber());
