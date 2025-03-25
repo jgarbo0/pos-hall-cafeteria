@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -13,21 +13,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CardTitle, Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-  Legend
-} from 'recharts';
 import { 
   Calendar as CalendarIcon, 
   Plus, 
@@ -48,7 +33,7 @@ import {
   Navigation,
   Package
 } from 'lucide-react';
-import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
+import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval, formatISO, parseISO } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
@@ -70,10 +55,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
+import HallBookingFinanceWidget from '@/components/finance/HallBookingFinanceWidget';
+import HallBookingIncomesList from '@/components/finance/HallBookingIncomesList';
+import { supabase } from '@/integrations/supabase/client';
 
 type Transaction = {
   id: string;
@@ -238,6 +226,61 @@ const generateWeeklyData = () => {
   });
 };
 
+const fetchHallBookings = async () => {
+  const { data, error } = await supabase
+    .from('hall_bookings')
+    .select('*')
+    .order('date', { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error('Error fetching hall bookings:', error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+const generateHallBookingFinanceData = (bookings: any[]) => {
+  const today = new Date();
+  const startDate = subDays(today, 6);
+  
+  const dateRange = eachDayOfInterval({
+    start: startDate,
+    end: today
+  });
+  
+  return dateRange.map(date => {
+    const formattedDate = format(date, 'dd MMM');
+    const dateStr = format(date, 'yyyy-MM-dd');
+    
+    const dayBookings = bookings.filter(booking => 
+      booking.date.substring(0, 10) === dateStr
+    );
+    
+    const income = dayBookings.reduce((sum, booking) => sum + parseFloat(booking.total_amount || 0), 0);
+    
+    const expense = income * (Math.random() * 0.4 + 0.1);
+    
+    return {
+      name: formattedDate,
+      income: parseFloat(income.toFixed(2)),
+      expense: parseFloat(expense.toFixed(2))
+    };
+  });
+};
+
+const formatBookingsForIncomeList = (bookings: any[]) => {
+  return bookings.map(booking => ({
+    id: booking.id,
+    date: booking.date,
+    customerName: booking.customer_name,
+    purpose: booking.purpose,
+    attendees: booking.attendees,
+    amount: parseFloat(booking.total_amount || 0)
+  }));
+};
+
 const Finance = () => {
   const [transactions, setTransactions] = useState<Transaction[]>(dummyTransactions);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -260,6 +303,12 @@ const Finance = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailType, setDetailType] = useState('');
   const [detailTitle, setDetailTitle] = useState('');
+  const [hallBookings, setHallBookings] = useState<any[]>([]);
+  const [hallBookingFinanceData, setHallBookingFinanceData] = useState<any[]>([]);
+  const [hallBookingIncomes, setHallBookingIncomes] = useState<any[]>([]);
+  const [hallDetailModalOpen, setHallDetailModalOpen] = useState(false);
+  const [selectedHallBooking, setSelectedHallBooking] = useState<string | null>(null);
+  const [isLoadingHallData, setIsLoadingHallData] = useState(true);
 
   const dailyExpenseData = generateDailyExpenseData();
   const weeklyChartData = generateWeeklyData();
@@ -325,6 +374,38 @@ const Finance = () => {
   const renderIcon = (IconComponent: React.ComponentType<any>, color: string) => {
     return <IconComponent color={color} size={20} />;
   };
+
+  const handleViewHallBookingDetails = (id: string) => {
+    setSelectedHallBooking(id);
+    setHallDetailModalOpen(true);
+  };
+
+  useEffect(() => {
+    const loadHallBookingsData = async () => {
+      try {
+        setIsLoadingHallData(true);
+        const bookingsData = await fetchHallBookings();
+        setHallBookings(bookingsData);
+        
+        const financeData = generateHallBookingFinanceData(bookingsData);
+        setHallBookingFinanceData(financeData);
+        
+        const formattedBookings = formatBookingsForIncomeList(bookingsData);
+        setHallBookingIncomes(formattedBookings);
+        
+        setIsLoadingHallData(false);
+      } catch (error) {
+        console.error('Error loading hall bookings data:', error);
+        toast.error('Failed to load hall bookings data');
+        setIsLoadingHallData(false);
+      }
+    };
+    
+    loadHallBookingsData();
+  }, []);
+
+  const totalHallIncome = hallBookingIncomes.reduce((sum, booking) => sum + booking.amount, 0);
+  const totalHallExpense = totalHallIncome * 0.3;
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
@@ -1182,6 +1263,124 @@ const Finance = () => {
           </div>
           <DialogFooter>
             <Button onClick={() => setShowDetailModal(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={hallDetailModalOpen} onOpenChange={setHallDetailModalOpen}>
+        <DialogContent className="dark:bg-gray-800 dark:border-gray-700 dark:text-white sm:max-w-[625px]">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedHallBooking === 'all' 
+                ? 'Hall Booking Finance Details' 
+                : 'Booking Details'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            {selectedHallBooking === 'all' ? (
+              <div className="space-y-4">
+                <p>Financial breakdown for all hall bookings.</p>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart 
+                      data={hallBookingFinanceData}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => [`$${value}`, '']} />
+                      <Area
+                        type="monotone"
+                        dataKey="income"
+                        stackId="1"
+                        stroke="#4ade80"
+                        fill="#4ade8033"
+                        name="Income"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="expense"
+                        stackId="2"
+                        stroke="#ef4444"
+                        fill="#ef444433"
+                        name="Expense"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Total Bookings</p>
+                    <p className="text-lg font-bold">{hallBookings.length}</p>
+                  </div>
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Total Revenue</p>
+                    <p className="text-lg font-bold text-green-500">{formatCurrency(totalHallIncome)}</p>
+                  </div>
+                  <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                    <p className="text-sm font-medium">Net Profit</p>
+                    <p className="text-lg font-bold text-blue-500">{formatCurrency(totalHallIncome - totalHallExpense)}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {isLoadingHallData ? (
+                  <div className="flex justify-center items-center h-40">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+                  </div>
+                ) : (
+                  <>
+                    {hallBookingIncomes.find(b => b.id === selectedHallBooking) ? (
+                      <div>
+                        {(() => {
+                          const booking = hallBookingIncomes.find(b => b.id === selectedHallBooking);
+                          if (!booking) return null;
+                          
+                          return (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                                <p className="text-sm font-medium">Date</p>
+                                <p className="text-lg font-bold">{format(new Date(booking.date), 'dd MMM yyyy')}</p>
+                              </div>
+                              <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                                <p className="text-sm font-medium">Amount</p>
+                                <p className="text-lg font-bold text-green-500">{formatCurrency(booking.amount)}</p>
+                              </div>
+                              <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                                <p className="text-sm font-medium">Customer</p>
+                                <p className="text-lg font-bold">{booking.customerName}</p>
+                              </div>
+                              <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
+                                <p className="text-sm font-medium">Attendees</p>
+                                <p className="text-lg font-bold">{booking.attendees}</p>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                        
+                        <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3 mt-4">
+                          <p className="text-sm font-medium">Purpose</p>
+                          <p className="text-md">
+                            {hallBookingIncomes.find(b => b.id === selectedHallBooking)?.purpose || 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p>Booking details not found.</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setHallDetailModalOpen(false)}>
               Close
             </Button>
           </DialogFooter>
