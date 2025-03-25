@@ -81,6 +81,7 @@ const paymentMethodsData = [
 const paymentMethods = [
   { 
     name: 'Zaad', 
+    value: 45,  // Added the missing 'value' property to match PaymentMethod interface
     percentage: 45, 
     icon: <Smartphone className="h-4 w-4 text-blue-500" />,
     bgColorClass: 'bg-blue-500/10',
@@ -88,6 +89,7 @@ const paymentMethods = [
   },
   { 
     name: 'Cash', 
+    value: 30,  // Added the missing 'value' property to match PaymentMethod interface
     percentage: 30, 
     icon: <DollarSignIcon className="h-4 w-4 text-green-500" />,
     bgColorClass: 'bg-green-500/10',
@@ -95,6 +97,7 @@ const paymentMethods = [
   },
   { 
     name: 'Edahb', 
+    value: 25,  // Added the missing 'value' property to match PaymentMethod interface
     percentage: 25, 
     icon: <Wallet className="h-4 w-4 text-orange-500" />,
     bgColorClass: 'bg-orange-500/10',
