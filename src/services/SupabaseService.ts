@@ -6,7 +6,8 @@ import {
   Category, 
   FinancialTransaction, 
   Product, 
-  HallBooking 
+  HallBooking,
+  Customer 
 } from '@/types';
 import { toast } from 'sonner';
 
@@ -215,7 +216,8 @@ export const getOrders = async (): Promise<Order[]> => {
         total,
         status,
         timestamp,
-        customer_name
+        customer_name,
+        payment_status
       `)
       .order('timestamp', { ascending: false });
     
@@ -261,6 +263,7 @@ export const getOrders = async (): Promise<Order[]> => {
         tax: order.tax,
         total: order.total,
         status: order.status as 'processing' | 'completed' | 'cancelled',
+        paymentStatus: order.payment_status as 'paid' | 'pending',
         timestamp: order.timestamp
       });
     }
@@ -627,3 +630,4 @@ export default {
   updateCustomer,
   deleteCustomer
 };
+

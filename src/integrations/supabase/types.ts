@@ -206,6 +206,7 @@ export type Database = {
           id: string
           order_number: string
           order_type: string
+          payment_status: string | null
           status: string
           subtotal: number
           table_number: number | null
@@ -218,6 +219,7 @@ export type Database = {
           id?: string
           order_number: string
           order_type: string
+          payment_status?: string | null
           status: string
           subtotal: number
           table_number?: number | null
@@ -230,6 +232,7 @@ export type Database = {
           id?: string
           order_number?: string
           order_type?: string
+          payment_status?: string | null
           status?: string
           subtotal?: number
           table_number?: number | null
