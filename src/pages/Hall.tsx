@@ -119,39 +119,43 @@ const Hall = () => {
     toast.success('Hall details updated successfully!');
   };
   
-  const getInitialBookingData = () => {
+  const getInitialBookingData = (): HallBooking | undefined => {
     const storedDate = localStorage.getItem('selectedBookingDate');
     const storedTime = localStorage.getItem('selectedBookingTime');
     
-    let initialData: Partial<HallBooking> | undefined = undefined;
-    
-    if (selectedBooking) {
+    if (selectedBooking && !selectedBooking.startsWith('new-')) {
       const foundBooking = fullBookings.find(b => b.id === selectedBooking);
       if (foundBooking) {
-        initialData = { ...foundBooking };
+        return foundBooking;
       }
     }
     
     if (selectedBooking?.startsWith('new-') && storedDate && storedTime) {
-      initialData = {
-        ...(initialData || {}),
+      const newBooking: HallBooking = {
         id: selectedBooking,
         customerName: '',
         customerPhone: '',
         purpose: '',
-        attendees: 1,
-        status: 'pending',
-        totalAmount: 0,
-        notes: '',
         date: storedDate,
         startTime: storedTime,
         endTime: '10:00',
-        hallId: selectedHall
+        attendees: 1,
+        additionalServices: [],
+        status: 'pending',
+        totalAmount: 0,
+        notes: '',
+        hallId: selectedHall,
+        guests: {
+          total: 1,
+          children: 0,
+          family: 0,
+          group: 0,
+          single: 0,
+          staff: 0
+        }
       };
-    }
-    
-    if (initialData && 'id' in initialData) {
-      return initialData as HallBooking;
+      
+      return newBooking;
     }
     
     return undefined;
