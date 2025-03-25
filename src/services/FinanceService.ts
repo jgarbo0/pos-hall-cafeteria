@@ -20,14 +20,24 @@ export const getTransactions = async (): Promise<Transaction[]> => {
     amount: item.amount,
     type: item.type as 'income' | 'expense',
     category: item.category,
-    payment_method: item.payment_method
+    paymentMethod: item.payment_method
   }));
 };
 
 export const addTransaction = async (transaction: Omit<Transaction, 'id'>): Promise<Transaction> => {
+  // Transform the transaction object to match the database column names
+  const dbTransaction = {
+    date: transaction.date,
+    description: transaction.description,
+    amount: transaction.amount,
+    type: transaction.type,
+    category: transaction.category,
+    payment_method: transaction.paymentMethod // Convert paymentMethod to payment_method
+  };
+
   const { data, error } = await supabase
     .from('transactions')
-    .insert([transaction])
+    .insert([dbTransaction])
     .select()
     .single();
 
@@ -43,7 +53,7 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>): Prom
     amount: data.amount,
     type: data.type as 'income' | 'expense',
     category: data.category,
-    payment_method: data.payment_method
+    paymentMethod: data.payment_method
   };
 };
 

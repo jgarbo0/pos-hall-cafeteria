@@ -20,9 +20,11 @@ interface AddTransactionModalProps {
     type: 'income' | 'expense';
     category: string;
     date: Date;
+    paymentMethod?: string;
   };
   onNewTransactionChange: (transaction: any) => void;
   onAddTransaction: () => void;
+  paymentMethods?: { id: string; name: string }[];
 }
 
 const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
@@ -30,7 +32,8 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   onOpenChange,
   newTransaction,
   onNewTransactionChange,
-  onAddTransaction
+  onAddTransaction,
+  paymentMethods = []
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -108,6 +111,36 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                     <SelectItem value="Venue Booking">Venue Booking</SelectItem>
                     <SelectItem value="Catering">Catering</SelectItem>
                     <SelectItem value="Other">Other</SelectItem>
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="paymentMethod" className="dark:text-gray-300">Payment Method</Label>
+            <Select 
+              value={newTransaction.paymentMethod}
+              onValueChange={(value) => 
+                onNewTransactionChange({...newTransaction, paymentMethod: value})
+              }
+            >
+              <SelectTrigger id="paymentMethod" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <SelectValue placeholder="Select payment method" />
+              </SelectTrigger>
+              <SelectContent className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                {paymentMethods.length > 0 ? (
+                  paymentMethods.map(method => (
+                    <SelectItem key={method.id} value={method.name}>
+                      {method.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <>
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="Card">Card</SelectItem>
+                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="Mobile Payment">Mobile Payment</SelectItem>
                   </>
                 )}
               </SelectContent>

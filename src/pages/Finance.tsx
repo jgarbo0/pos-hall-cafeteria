@@ -23,7 +23,7 @@ import HallBookingIncomesList from '@/components/finance/HallBookingIncomesList'
 import { formatCurrency } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Transaction, ExpenseCategory, SavingGoal, Subscription, HallBookingIncome } from '@/types/finance';
-import { getTransactions, addTransaction, getHallBookingIncomes } from '@/services/FinanceService';
+import { getTransactions, addTransaction, getHallBookingIncomes, getPaymentMethods } from '@/services/FinanceService';
 
 const COLORS = {
   purple: '#9b87f5',
@@ -59,12 +59,14 @@ const Finance = () => {
     type: 'income' | 'expense';
     category: string;
     date: Date;
+    paymentMethod?: string;
   }>({
     description: '',
     amount: '',
     type: 'expense',
     category: 'Grocery',
     date: new Date(),
+    paymentMethod: 'Cash'
   });
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -78,6 +80,7 @@ const Finance = () => {
   const [isLoadingHallData, setIsLoadingHallData] = useState(true);
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
   const [expenseCategories, setExpenseCategories] = useState<ExpenseCategoryWithIcon[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<{id: string, name: string}[]>([]);
 
   const generateDailyExpenseData = (transactionsData: Transaction[]) => {
     const today = new Date();
@@ -249,9 +252,20 @@ const Finance = () => {
     }
   };
 
+  const fetchPaymentMethods = async () => {
+    try {
+      const methods = await getPaymentMethods();
+      setPaymentMethods(methods);
+    } catch (error) {
+      console.error('Error fetching payment methods:', error);
+      toast.error('Failed to load payment methods');
+    }
+  };
+
   useEffect(() => {
     fetchTransactions();
     fetchHallBookings();
+    fetchPaymentMethods();
   }, []);
 
   useEffect(() => {
@@ -302,7 +316,8 @@ const Finance = () => {
         description: newTransaction.description,
         amount: amount,
         type: newTransaction.type,
-        category: newTransaction.category
+        category: newTransaction.category,
+        paymentMethod: newTransaction.paymentMethod
       };
 
       const addedTransaction = await addTransaction(transaction);
@@ -315,6 +330,7 @@ const Finance = () => {
         type: 'expense',
         category: 'Grocery',
         date: new Date(),
+        paymentMethod: 'Cash'
       });
 
       toast.success(`${newTransaction.type === 'income' ? 'Income' : 'Expense'} added successfully!`);
@@ -688,6 +704,7 @@ const Finance = () => {
         newTransaction={newTransaction}
         onNewTransactionChange={setNewTransaction}
         onAddTransaction={handleAddTransaction}
+        paymentMethods={paymentMethods}
       />
 
       <DetailDialog 

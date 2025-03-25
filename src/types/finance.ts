@@ -8,6 +8,7 @@ export interface Transaction extends FinancialTransaction {
   amount: number;
   type: 'income' | 'expense';
   category: string;
+  paymentMethod?: string; // Using camelCase for the TypeScript interface
 }
 
 export interface ExpenseCategory {
