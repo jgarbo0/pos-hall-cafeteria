@@ -15,7 +15,7 @@ const MenuCategories: React.FC<MenuCategoriesProps> = ({
   onCategoryChange
 }) => {
   return (
-    <div className="w-full overflow-x-auto py-4 px-6 no-scrollbar">
+    <div className="w-full overflow-x-auto py-4 px-6 no-scrollbar bg-gray-50 dark:bg-gray-900">
       <div className="flex space-x-2 min-w-max animate-fadeIn">
         <button
           className={cn(

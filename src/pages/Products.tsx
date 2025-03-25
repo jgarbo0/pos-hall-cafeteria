@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Edit, Trash } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from '@/components/ui/toggle-group';
+import { Plus, Edit, Trash, Image, List, Grid, Upload } from 'lucide-react';
 import { menuItems, categories } from '@/data/mockData';
 import { MenuItem } from '@/types';
 import { toast } from "sonner";
@@ -38,6 +47,9 @@ const Products = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<MenuItem | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [editFormData, setEditFormData] = useState({
     title: '',
     price: 0,
@@ -126,8 +138,26 @@ const Products = () => {
     toast.success(`${newProduct.title} added successfully`);
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // In a real app, this would upload to a server
+      // For now, we'll create an object URL
+      const imageUrl = URL.createObjectURL(file);
+      setEditFormData(prev => ({
+        ...prev,
+        image: imageUrl
+      }));
+      toast.success('Image uploaded successfully');
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <SidebarNavigation />
       
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -135,9 +165,18 @@ const Products = () => {
         
         <div className="flex-1 overflow-auto p-6">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Product Management</h1>
+            <h1 className="text-2xl font-bold dark:text-white">Product Management</h1>
             
             <div className="flex items-center gap-4">
+              <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'list')}>
+                <ToggleGroupItem value="grid" aria-label="Grid view">
+                  <Grid className="h-4 w-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem value="list" aria-label="List view">
+                  <List className="h-4 w-4" />
+                </ToggleGroupItem>
+              </ToggleGroup>
+
               <Select 
                 value={filterCategory} 
                 onValueChange={setFilterCategory}
@@ -177,7 +216,7 @@ const Products = () => {
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                      <label htmlFor="title">Product Name</label>
+                      <label htmlFor="title" className="dark:text-white">Product Name</label>
                       <Input 
                         id="title" 
                         name="title"
@@ -186,7 +225,7 @@ const Products = () => {
                       />
                     </div>
                     <div className="grid gap-2">
-                      <label htmlFor="price">Price</label>
+                      <label htmlFor="price" className="dark:text-white">Price</label>
                       <Input 
                         id="price" 
                         name="price"
@@ -197,7 +236,7 @@ const Products = () => {
                       />
                     </div>
                     <div className="grid gap-2">
-                      <label htmlFor="available">Available Quantity</label>
+                      <label htmlFor="available" className="dark:text-white">Available Quantity</label>
                       <Input 
                         id="available" 
                         name="available"
@@ -207,7 +246,7 @@ const Products = () => {
                       />
                     </div>
                     <div className="grid gap-2">
-                      <label htmlFor="category">Category</label>
+                      <label htmlFor="category" className="dark:text-white">Category</label>
                       <Select 
                         value={editFormData.category}
                         onValueChange={handleCategoryChange}
@@ -225,13 +264,41 @@ const Products = () => {
                       </Select>
                     </div>
                     <div className="grid gap-2">
-                      <label htmlFor="image">Image URL</label>
-                      <Input 
-                        id="image" 
-                        name="image"
-                        value={editFormData.image}
-                        onChange={handleEditFormChange}
-                      />
+                      <label className="dark:text-white">Product Image</label>
+                      <div className="flex gap-2">
+                        <Input 
+                          id="image" 
+                          name="image"
+                          value={editFormData.image}
+                          onChange={handleEditFormChange}
+                          placeholder="Image URL"
+                          className="flex-1"
+                        />
+                        <Button 
+                          variant="outline" 
+                          type="button" 
+                          onClick={triggerFileInput}
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Upload
+                        </Button>
+                        <input 
+                          type="file" 
+                          ref={fileInputRef} 
+                          onChange={handleImageUpload} 
+                          className="hidden" 
+                          accept="image/*"
+                        />
+                      </div>
+                      {editFormData.image && (
+                        <div className="mt-2">
+                          <img 
+                            src={editFormData.image} 
+                            alt="Product preview" 
+                            className="h-32 w-32 object-cover rounded-md" 
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex justify-end">
@@ -248,7 +315,7 @@ const Products = () => {
                     <DialogTitle>Confirm Delete</DialogTitle>
                   </DialogHeader>
                   <div className="py-4">
-                    <p>Are you sure you want to delete {currentProduct?.title}?</p>
+                    <p className="dark:text-white">Are you sure you want to delete {currentProduct?.title}?</p>
                   </div>
                   <div className="flex justify-end space-x-2">
                     <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
@@ -263,49 +330,87 @@ const Products = () => {
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Available</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProducts.map(product => (
-                  <TableRow key={product.id}>
-                    <TableCell>
-                      <img 
-                        src={product.image} 
-                        alt={product.title} 
-                        className="h-10 w-10 rounded-md object-cover"
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{product.title}</TableCell>
-                    <TableCell>
-                      {categories.find(c => c.id === product.category)?.name || product.category}
-                    </TableCell>
-                    <TableCell>${product.price.toFixed(2)}</TableCell>
-                    <TableCell>{product.available}</TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="icon" onClick={() => handleEditClick(product)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="icon" onClick={() => handleDeleteClick(product)}>
-                          <Trash className="h-4 w-4" />
-                        </Button>
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProducts.map(product => (
+                <Card key={product.id} className="overflow-hidden bg-white dark:bg-gray-800">
+                  <div className="h-48 overflow-hidden">
+                    <img 
+                      src={product.image} 
+                      alt={product.title} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold text-lg dark:text-white">{product.title}</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {categories.find(c => c.id === product.category)?.name || product.category}
+                        </p>
                       </div>
-                    </TableCell>
+                      <p className="text-blue-500 font-bold">${product.price.toFixed(2)}</p>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">Available: {product.available}</p>
+                  </CardContent>
+                  <CardFooter className="p-4 pt-0 flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleEditClick(product)}>
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleDeleteClick(product)} className="text-red-500">
+                      <Trash className="h-4 w-4 mr-1" />
+                      Delete
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Image</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Available</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredProducts.map(product => (
+                    <TableRow key={product.id}>
+                      <TableCell>
+                        <img 
+                          src={product.image} 
+                          alt={product.title} 
+                          className="h-10 w-10 rounded-md object-cover"
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium dark:text-white">{product.title}</TableCell>
+                      <TableCell className="dark:text-gray-300">
+                        {categories.find(c => c.id === product.category)?.name || product.category}
+                      </TableCell>
+                      <TableCell className="dark:text-gray-300">${product.price.toFixed(2)}</TableCell>
+                      <TableCell className="dark:text-gray-300">{product.available}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="icon" onClick={() => handleEditClick(product)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="icon" onClick={() => handleDeleteClick(product)}>
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </div>
       </div>
     </div>
