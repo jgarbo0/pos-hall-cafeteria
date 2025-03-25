@@ -231,7 +231,7 @@ export const getOrders = async (): Promise<Order[]> => {
           price,
           notes,
           spicy_level,
-          menu_items(id, title, price, image, description, category_id)
+          menu_items(id, title, price, image, description, category_id, available)
         `)
         .eq('order_id', order.id);
       
@@ -242,8 +242,9 @@ export const getOrders = async (): Promise<Order[]> => {
         title: item.menu_items.title,
         quantity: item.quantity,
         price: item.price,
-        image: item.menu_items.image,
+        image: item.menu_items.image || 'https://images.unsplash.com/photo-1506084868230-bb9d95c24759?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80',
         category: item.menu_items.category_id,
+        available: item.menu_items.available || 0, // Add the missing available property
         notes: item.notes,
         spicyLevel: item.spicy_level
       }));
@@ -379,7 +380,7 @@ export const createHallBooking = async (booking: Omit<HallBooking, 'id'>): Promi
         total_amount: booking.totalAmount,
         notes: booking.notes,
         hall_id: booking.hallId,
-        table_id: booking.tableId,
+        table_id: booking.tableId ? String(booking.tableId) : null, // Convert tableId to string
         package_id: booking.packageId
       })
       .select()
