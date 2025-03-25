@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -183,6 +184,7 @@ const Orders = () => {
             ${currentOrder.tableNumber ? `<div><strong>Table:</strong> ${currentOrder.tableNumber}</div>` : ''}
             <div><strong>Status:</strong> ${currentOrder.status}</div>
             <div><strong>Payment:</strong> ${currentOrder.paymentStatus || 'Paid'}</div>
+            <div><strong>Customer:</strong> ${currentOrder.customerName || 'Walk-in Customer'}</div>
           </div>
           
           <table>
@@ -341,6 +343,7 @@ const Orders = () => {
     toast.success('Orders refreshed');
   };
 
+  // This function should display the customer name from the database, falling back to "Walk-in Customer" only if null or empty
   const displayCustomerName = (customerName?: string): string => {
     return customerName && customerName.trim() !== '' ? customerName : 'Walk-in Customer';
   };

@@ -229,10 +229,17 @@ const CartPanel: React.FC<CartPanelProps> = ({
     }, 500);
   };
 
+  // This function ensures we display the actual customer name or 'Walk-in Customer' as a fallback
   const getCustomerName = (customerId: string) => {
     if (customerId === 'Walk-in Customer') return 'Walk-in Customer';
     const customer = customers.find(c => c.id === customerId);
-    return customer ? customer.name : 'Unknown Customer';
+    return customer ? customer.name : 'Walk-in Customer';
+  };
+
+  // This function ensures we display the customer name from the database 
+  // for recent orders, falling back to "Walk-in Customer" only if needed
+  const displayOrderCustomerName = (customerName?: string): string => {
+    return customerName && customerName.trim() !== '' ? customerName : 'Walk-in Customer';
   };
 
   return (
@@ -459,7 +466,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-300 flex justify-between">
                       <span>Customer:</span>
-                      <span className="font-medium">{order.customerName}</span>
+                      <span className="font-medium">{displayOrderCustomerName(order.customerName)}</span>
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-300 flex justify-between">
                       <span>Type:</span>

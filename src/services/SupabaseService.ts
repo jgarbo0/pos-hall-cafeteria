@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { 
   MenuItem, 
@@ -194,7 +195,8 @@ export const createOrder = async (
       total: orderData.total,
       status: orderData.status as 'processing' | 'completed' | 'cancelled',
       paymentStatus: orderData.payment_status as 'paid' | 'pending',
-      timestamp: orderData.timestamp
+      timestamp: orderData.timestamp,
+      customerName: orderData.customer_name
     };
   } catch (error) {
     console.error('Error creating order:', error);
@@ -264,7 +266,8 @@ export const getOrders = async (): Promise<Order[]> => {
         total: order.total,
         status: order.status as 'processing' | 'completed' | 'cancelled',
         paymentStatus: order.payment_status as 'paid' | 'pending',
-        timestamp: order.timestamp
+        timestamp: order.timestamp,
+        customerName: order.customer_name
       });
     }
     
