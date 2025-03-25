@@ -1,4 +1,3 @@
-
 export const menuItems = [
   {
     id: "1",
@@ -6,7 +5,9 @@ export const menuItems = [
     available: 18,
     price: 1.57,
     image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "appetizers"
+    category: "appetizers",
+    popular: true,
+    description: "A refreshing salad with fresh basil, tomatoes, and mozzarella cheese."
   },
   {
     id: "2",
@@ -14,7 +15,8 @@ export const menuItems = [
     available: 18,
     price: 2.00,
     image: "https://images.unsplash.com/photo-1564093497595-593b96d80180?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "appetizers"
+    category: "appetizers",
+    description: "Mixed greens with seasonal berries, feta cheese, and balsamic vinaigrette."
   },
   {
     id: "3",
@@ -22,7 +24,9 @@ export const menuItems = [
     available: 18,
     price: 2.82,
     image: "https://images.unsplash.com/photo-1473093226795-af9932fe5856?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "main"
+    category: "main",
+    popular: true,
+    description: "Spinach linguine pasta with garlic, olive oil, and Parmesan cheese."
   },
   {
     id: "4",
@@ -30,7 +34,8 @@ export const menuItems = [
     available: 18,
     price: 2.65,
     image: "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "appetizers"
+    category: "appetizers",
+    description: "Fresh Filipino spring rolls with vegetables and a sweet sauce."
   },
   {
     id: "5",
@@ -38,7 +43,9 @@ export const menuItems = [
     available: 18,
     price: 3.62,
     image: "https://images.unsplash.com/photo-1569058242567-93de6f36f8eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "main"
+    category: "main",
+    popular: true,
+    description: "Flavorful curry noodles with garlic, vegetables, and your choice of protein."
   },
   {
     id: "6",
@@ -46,7 +53,8 @@ export const menuItems = [
     available: 18,
     price: 3.20,
     image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "main"
+    category: "main",
+    description: "Tender sirloin steak cooked to perfection, served with seasonal vegetables."
   },
   {
     id: "7",
@@ -54,7 +62,9 @@ export const menuItems = [
     available: 12,
     price: 9.99,
     image: "https://images.unsplash.com/photo-1547496502-affa22d38842?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "main"
+    category: "main",
+    popular: true,
+    description: "Traditional Somali beef dish with cubed meat, peppers, and spices."
   },
   {
     id: "8",
@@ -62,7 +72,8 @@ export const menuItems = [
     available: 20,
     price: 5.50,
     image: "https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "main"
+    category: "main",
+    description: "Fragrant Somali spiced rice with raisins, cinnamon, and cardamom."
   },
   {
     id: "9",
@@ -70,7 +81,9 @@ export const menuItems = [
     available: 15,
     price: 2.99,
     image: "https://images.unsplash.com/photo-1581513700725-2c808ca6a08a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "appetizers"
+    category: "appetizers",
+    popular: true,
+    description: "Crispy pastry triangles filled with spiced meat or vegetables."
   },
   {
     id: "10",
@@ -78,7 +91,8 @@ export const menuItems = [
     available: 18,
     price: 3.50,
     image: "https://images.unsplash.com/photo-1554520735-0a6b8b6ce8b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "dessert"
+    category: "dessert",
+    description: "Sweet Somali crepe-like pancake served with honey or sugar."
   },
   {
     id: "11",
@@ -86,7 +100,8 @@ export const menuItems = [
     available: 25,
     price: 2.00,
     image: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "beverages"
+    category: "beverages",
+    description: "Traditional spiced Somali tea with cardamom, cinnamon, and cloves."
   },
   {
     id: "12",
@@ -94,7 +109,9 @@ export const menuItems = [
     available: 8,
     price: 5.99,
     image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
-    category: "cake"
+    category: "cake",
+    popular: true,
+    description: "Delicious sponge cake flavored with cardamom and vanilla."
   }
 ];
 
@@ -115,7 +132,6 @@ export const generateTableNumber = () => {
   return Math.floor(1 + Math.random() * 50);
 };
 
-// Hall booking data
 export const bookings = [
   {
     id: '1',

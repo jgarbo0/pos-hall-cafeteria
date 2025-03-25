@@ -21,6 +21,9 @@ const Index = () => {
   const { t } = useLanguage();
   
   useEffect(() => {
+    // Set document title
+    document.title = "Doob Café - Menu";
+    
     let result = [...menuItems];
     
     // Apply category filter
@@ -84,6 +87,12 @@ const Index = () => {
   };
   
   const handlePlaceOrder = () => {
+    if (cartItems.length === 0) {
+      toast.error("Your cart is empty!");
+      return;
+    }
+    
+    toast.success("Order placed successfully!");
     setCartItems([]);
     setOrderNumber(generateOrderNumber());
     setTableNumber(generateTableNumber());
@@ -96,7 +105,7 @@ const Index = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header onSearch={handleSearch} />
         
-        {/* New Hero Section */}
+        {/* Hero Section */}
         <div className="w-full bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-900 dark:to-gray-900 py-6 px-6">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 animate-fade-in">
@@ -127,18 +136,27 @@ const Index = () => {
         </div>
         
         <MenuCategories 
-          categories={categories}
+          categories={categories.filter(c => c.id !== 'all')}
           activeCategory={activeCategory}
           onCategoryChange={handleCategoryChange}
         />
         
         <div className="flex-1 overflow-y-auto bg-gray-100 dark:bg-gray-800">
           <div className="max-w-7xl mx-auto py-6 px-4">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">{activeCategory === 'all' ? 'All Menu Items' : `${categories.find(c => c.id === activeCategory)?.name || ''} Menu`}</h2>
-            <MenuGrid 
-              items={filteredItems}
-              onAddToCart={handleAddToCart}
-            />
+            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+              {activeCategory === 'all' ? 'All Menu Items' : `${categories.find(c => c.id === activeCategory)?.name || ''} Menu`}
+            </h2>
+            {filteredItems.length > 0 ? (
+              <MenuGrid 
+                items={filteredItems}
+                onAddToCart={handleAddToCart}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-lg text-gray-500 dark:text-gray-400">No menu items found</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Try changing your filters or search term</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
