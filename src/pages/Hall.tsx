@@ -66,7 +66,7 @@ const fullBookings: HallBooking[] = bookings.map(booking => ({
 }));
 
 // Hall data with availability range
-const hallsData: Hall[] = [
+const hallsData: HallType[] = [
   {
     id: 1,
     name: 'Hall One',
@@ -105,7 +105,7 @@ const Hall = () => {
     setActiveTab('edit');
   };
 
-  const handleSaveHall = (updatedHall: Hall) => {
+  const handleSaveHall = (updatedHall: HallType) => {
     // In a real app, you would save this to your backend
     console.log('Updated hall:', updatedHall);
     setEditingHall(false);
