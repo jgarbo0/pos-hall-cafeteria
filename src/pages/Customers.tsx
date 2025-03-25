@@ -24,17 +24,68 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@/components/ui/toggle-group';
-import { Plus, Search, Phone, Mail, MapPin, Edit, Trash2, Grid, List } from 'lucide-react';
+import { Plus, Search, Phone, Mail, MapPin, Edit, Trash2, Grid, List, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 // Sample customer data
 const customersData = [
-  { id: 1, name: 'Ahmed Mohamed', phone: '+252 61 1234567', email: 'ahmed@example.com', address: 'Mogadishu, Somalia', totalOrders: 24, totalSpent: 560 },
-  { id: 2, name: 'Fatima Hussein', phone: '+252 61 7654321', email: 'fatima@example.com', address: 'Hargeisa, Somalia', totalOrders: 18, totalSpent: 420 },
-  { id: 3, name: 'Omar Jama', phone: '+252 63 1122334', email: 'omar@example.com', address: 'Kismayo, Somalia', totalOrders: 12, totalSpent: 380 },
-  { id: 4, name: 'Amina Abdi', phone: '+252 62 9988776', email: 'amina@example.com', address: 'Bosaso, Somalia', totalOrders: 8, totalSpent: 240 },
-  { id: 5, name: 'Mohammed Ali', phone: '+252 64 5566778', email: 'mohammed@example.com', address: 'Baidoa, Somalia', totalOrders: 15, totalSpent: 320 },
+  { 
+    id: 1, 
+    name: 'Ahmed Mohamed', 
+    phone: '+252 61 1234567', 
+    email: 'ahmed@example.com', 
+    address: 'Mogadishu, Somalia', 
+    totalOrders: 24, 
+    totalSpent: 560,
+    pendingPayments: [
+      { id: 'p1', amount: 45.75, date: '2023-10-12', description: 'Order #12458' }
+    ]
+  },
+  { 
+    id: 2, 
+    name: 'Fatima Hussein', 
+    phone: '+252 61 7654321', 
+    email: 'fatima@example.com', 
+    address: 'Hargeisa, Somalia', 
+    totalOrders: 18, 
+    totalSpent: 420,
+    pendingPayments: []
+  },
+  { 
+    id: 3, 
+    name: 'Omar Jama', 
+    phone: '+252 63 1122334', 
+    email: 'omar@example.com', 
+    address: 'Kismayo, Somalia', 
+    totalOrders: 12, 
+    totalSpent: 380,
+    pendingPayments: [
+      { id: 'p2', amount: 28.50, date: '2023-10-15', description: 'Order #12301' }
+    ]
+  },
+  { 
+    id: 4, 
+    name: 'Amina Abdi', 
+    phone: '+252 62 9988776', 
+    email: 'amina@example.com', 
+    address: 'Bosaso, Somalia', 
+    totalOrders: 8, 
+    totalSpent: 240,
+    pendingPayments: []
+  },
+  { 
+    id: 5, 
+    name: 'Mohammed Ali', 
+    phone: '+252 64 5566778', 
+    email: 'mohammed@example.com', 
+    address: 'Baidoa, Somalia', 
+    totalOrders: 15, 
+    totalSpent: 320,
+    pendingPayments: []
+  },
 ];
 
 // Customer form interface
@@ -54,9 +105,16 @@ interface Customer {
   address: string;
   totalOrders: number;
   totalSpent: number;
+  pendingPayments: {
+    id: string;
+    amount: number;
+    date: string;
+    description: string;
+  }[];
 }
 
 const Customers = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [customers, setCustomers] = useState<Customer[]>(customersData);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -95,7 +153,8 @@ const Customers = () => {
       id: customers.length + 1,
       ...formData,
       totalOrders: 0,
-      totalSpent: 0
+      totalSpent: 0,
+      pendingPayments: []
     };
     
     setCustomers([...customers, newCustomer]);
@@ -141,6 +200,14 @@ const Customers = () => {
     setCustomers(updatedCustomers);
     setIsDeleteDialogOpen(false);
     toast.success(`${currentCustomer.name} deleted successfully`);
+  };
+
+  const handleViewCustomerDetails = (customerId: number) => {
+    navigate(`/customer/${customerId}`);
+  };
+
+  const getTotalPendingAmount = (customer: Customer) => {
+    return customer.pendingPayments.reduce((sum, payment) => sum + payment.amount, 0);
   };
 
   return (
@@ -228,7 +295,27 @@ const Customers = () => {
                       </div>
                     </div>
                     
+                    {customer.pendingPayments.length > 0 && (
+                      <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg mb-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <AlertCircle size={16} className="text-yellow-600 dark:text-yellow-400" />
+                          <div className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
+                            Pending Payment
+                          </div>
+                        </div>
+                        <div className="text-lg font-bold text-yellow-700 dark:text-yellow-300">
+                          ${getTotalPendingAmount(customer).toFixed(2)}
+                        </div>
+                        <div className="text-xs text-yellow-600 dark:text-yellow-400">
+                          {customer.pendingPayments.length} pending invoice{customer.pendingPayments.length > 1 ? 's' : ''}
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="w-full gap-1" onClick={() => handleViewCustomerDetails(customer.id)}>
+                        View Details
+                      </Button>
                       <Button variant="outline" size="sm" className="w-full gap-1" onClick={() => handleEditClick(customer)}>
                         <Edit size={14} />
                         Edit
@@ -252,6 +339,7 @@ const Customers = () => {
                     <TableHead>Location</TableHead>
                     <TableHead>Orders</TableHead>
                     <TableHead>Spent</TableHead>
+                    <TableHead>Pending</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -285,7 +373,19 @@ const Customers = () => {
                       <TableCell className="dark:text-gray-300">{customer.totalOrders}</TableCell>
                       <TableCell className="dark:text-gray-300">${customer.totalSpent}</TableCell>
                       <TableCell>
+                        {customer.pendingPayments.length > 0 ? (
+                          <Badge variant="outline" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                            ${getTotalPendingAmount(customer).toFixed(2)}
+                          </Badge>
+                        ) : (
+                          <span className="text-sm text-gray-500 dark:text-gray-400">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <div className="flex space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => handleViewCustomerDetails(customer.id)}>
+                            View Details
+                          </Button>
                           <Button variant="outline" size="sm" onClick={() => handleEditClick(customer)}>
                             <Edit className="h-4 w-4 mr-1" />
                             Edit
