@@ -9,7 +9,6 @@ import { MenuItem, CartItem } from '@/types';
 import { menuItems, categories, generateOrderNumber, generateTableNumber } from '@/data/mockData';
 import { toast } from 'sonner';
 import { useLanguage } from '@/context/LanguageContext';
-import { Calendar, Clock, Utensils, Award } from 'lucide-react';
 
 const Index = () => {
   const [filteredItems, setFilteredItems] = useState<MenuItem[]>(menuItems);
@@ -104,36 +103,6 @@ const Index = () => {
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header onSearch={handleSearch} />
-        
-        {/* Hero Section */}
-        <div className="w-full bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-900 dark:to-gray-900 py-6 px-6">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 animate-fade-in">
-              Welcome to Doob Café
-            </h1>
-            <p className="text-blue-100 mb-4 max-w-lg animate-fade-in">
-              Founded in 2025, Hargeisa, Somaliland - A modern café experience with delicious food and a welcoming atmosphere.
-            </p>
-            <div className="flex flex-wrap gap-4 text-white my-4">
-              <div className="flex items-center">
-                <Calendar className="h-5 w-5 mr-2" />
-                <span>Open Daily</span>
-              </div>
-              <div className="flex items-center">
-                <Clock className="h-5 w-5 mr-2" />
-                <span>7:00 AM - 10:00 PM</span>
-              </div>
-              <div className="flex items-center">
-                <Utensils className="h-5 w-5 mr-2" />
-                <span>International Cuisine</span>
-              </div>
-              <div className="flex items-center">
-                <Award className="h-5 w-5 mr-2" />
-                <span>Award Winning</span>
-              </div>
-            </div>
-          </div>
-        </div>
         
         <MenuCategories 
           categories={categories.filter(c => c.id !== 'all')}
