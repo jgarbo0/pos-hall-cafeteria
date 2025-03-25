@@ -292,7 +292,7 @@ const Dashboard: React.FC = () => {
             </Card>
           </div>
           
-          {/* Income vs Expense Chart */}
+          {/* Income vs Expense Chart - With fixed height to prevent overlap */}
           <Card className="shadow-sm mb-6">
             <CardHeader className="pb-2">
               <div className="flex justify-between items-center">
@@ -310,7 +310,8 @@ const Dashboard: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-80">
+              {/* Fixed height container to prevent chart from expanding too much */}
+              <div className="h-64"> {/* Changed from h-80 to h-64 to reduce height */}
                 <ChartContainer
                   config={{
                     income: { color: "#22c55e" },
