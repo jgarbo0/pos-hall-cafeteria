@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Trash2, Plus, Minus, ShoppingBag, CreditCard, Clock, Printer, ClipboardList } from 'lucide-react';
 import { CartItem, Customer, Order } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
