@@ -12,6 +12,7 @@ import RolesPermissions from '@/components/settings/RolesPermissions';
 import NotificationSettings from '@/components/settings/NotificationSettings';
 import AppearanceSettings from '@/components/settings/AppearanceSettings';
 import CustomerSettings from '@/components/settings/CustomerSettings';
+import PermissionsManagement from '@/components/settings/PermissionsManagement';
 
 const Settings = () => {
   const { t } = useLanguage();
@@ -53,6 +54,7 @@ const Settings = () => {
               <TabsTrigger value="general" className="dark:data-[state=active]:bg-gray-700 dark:text-white">General</TabsTrigger>
               <TabsTrigger value="users" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Users</TabsTrigger>
               <TabsTrigger value="roles" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Roles & Permissions</TabsTrigger>
+              <TabsTrigger value="permissions" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Access Control</TabsTrigger>
               <TabsTrigger value="notifications" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Notifications</TabsTrigger>
               <TabsTrigger value="appearance" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Appearance</TabsTrigger>
               <TabsTrigger value="customers" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Customers</TabsTrigger>
@@ -68,6 +70,10 @@ const Settings = () => {
             
             <TabsContent value="roles">
               <RolesPermissions />
+            </TabsContent>
+            
+            <TabsContent value="permissions">
+              <PermissionsManagement />
             </TabsContent>
             
             <TabsContent value="notifications">
