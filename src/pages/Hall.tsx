@@ -6,16 +6,17 @@ import HallBookingForm from '@/components/HallBookingForm';
 import HallBookingCalendar from '@/components/HallBookingCalendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { bookings } from '@/data/mockData';
+import { TableItem, ServicePackage, HallBooking } from '@/types';
 
-// Mock data for tables and packages
-const mockTables = [
+// Mock data for tables and packages with proper typing
+const mockTables: TableItem[] = [
   { id: 1, name: 'Table 1', seats: 4, status: 'available' },
   { id: 2, name: 'Table 2', seats: 6, status: 'available' },
   { id: 3, name: 'Table 3', seats: 8, status: 'occupied' },
   { id: 4, name: 'Table 4', seats: 4, status: 'available' },
 ];
 
-const mockPackages = [
+const mockPackages: ServicePackage[] = [
   {
     id: 'pkg1',
     name: 'Basic Package',
@@ -38,6 +39,16 @@ const mockPackages = [
     items: ['Premium decoration', 'Advanced lighting system', 'Full beverage service', 'Professional sound system', 'Basic video recording']
   }
 ];
+
+// Extended mock bookings to match the HallBooking type
+const fullBookings: HallBooking[] = bookings.map(booking => ({
+  ...booking,
+  customerPhone: '123-456-7890', // Adding required fields
+  additionalServices: [],
+  status: 'pending' as const,
+  totalAmount: 0,
+  notes: ''
+}));
 
 const Hall = () => {
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
@@ -68,7 +79,7 @@ const Hall = () => {
             
             <TabsContent value="new">
               <HallBookingForm 
-                initialData={selectedBooking ? bookings.find(b => b.id === selectedBooking) : undefined}
+                initialData={selectedBooking ? fullBookings.find(b => b.id === selectedBooking) : undefined}
                 onClearSelection={() => setSelectedBooking(null)}
                 tables={mockTables}
                 packages={mockPackages}
