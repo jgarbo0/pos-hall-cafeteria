@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -36,18 +36,20 @@ import {
   ToggleGroupItem,
 } from '@/components/ui/toggle-group';
 import { Plus, Edit, Trash, Image, List, Grid, Upload } from 'lucide-react';
-import { menuItems, categories } from '@/data/mockData';
-import { MenuItem } from '@/types';
+import { MenuItem, Category } from '@/types';
 import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
 
 const Products = () => {
-  const [products, setProducts] = useState<MenuItem[]>(menuItems);
+  const [products, setProducts] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<MenuItem | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isLoading, setIsLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [editFormData, setEditFormData] = useState({
@@ -55,8 +57,82 @@ const Products = () => {
     price: 0,
     available: 0,
     category: '',
-    image: ''
+    description: '',
+    image: '',
+    popular: false
   });
+
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select(`
+          id,
+          title,
+          price,
+          available,
+          popular,
+          description,
+          image,
+          category_id,
+          categories(id, name)
+        `)
+        .order('title');
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        const formattedItems: MenuItem[] = data.map(item => ({
+          id: item.id,
+          title: item.title,
+          price: item.price,
+          available: item.available,
+          image: item.image || 'https://images.unsplash.com/photo-1506084868230-bb9d95c24759?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80',
+          category: item.category_id,
+          popular: item.popular || false,
+          description: item.description
+        }));
+        setProducts(formattedItems);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Failed to load products');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name');
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        // Add 'all' category for filtering
+        setCategories([
+          { id: 'all', name: 'All Categories' },
+          ...data
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast.error('Failed to load categories');
+    }
+  };
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -75,7 +151,9 @@ const Products = () => {
       price: product.price,
       available: product.available,
       category: product.category,
-      image: product.image
+      description: product.description || '',
+      image: product.image,
+      popular: product.popular || false
     });
     setIsEditDialogOpen(true);
   };
@@ -85,12 +163,21 @@ const Products = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditFormData(prev => ({
-      ...prev,
-      [name]: name === 'price' || name === 'available' ? parseFloat(value) : value
-    }));
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target as HTMLInputElement;
+    
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setEditFormData(prev => ({
+        ...prev,
+        [name]: checked
+      }));
+    } else {
+      setEditFormData(prev => ({
+        ...prev,
+        [name]: name === 'price' || name === 'available' ? parseFloat(value) : value
+      }));
+    }
   };
 
   const handleCategoryChange = (value: string) => {
@@ -100,42 +187,152 @@ const Products = () => {
     }));
   };
 
-  const handleUpdateProduct = () => {
-    if (!currentProduct) return;
-    
-    const updatedProducts = products.map(product => 
-      product.id === currentProduct.id 
-        ? { ...product, ...editFormData }
-        : product
-    );
-    
-    setProducts(updatedProducts);
-    setIsEditDialogOpen(false);
-    toast.success(`${editFormData.title} updated successfully`);
+  const handlePopularChange = (value: boolean) => {
+    setEditFormData(prev => ({
+      ...prev,
+      popular: value
+    }));
   };
 
-  const handleDeleteProduct = () => {
+  const handleUpdateProduct = async () => {
     if (!currentProduct) return;
     
-    const updatedProducts = products.filter(product => product.id !== currentProduct.id);
-    setProducts(updatedProducts);
-    setIsDeleteDialogOpen(false);
-    toast.success(`${currentProduct.title} deleted successfully`);
+    try {
+      const { error } = await supabase
+        .from('menu_items')
+        .update({
+          title: editFormData.title,
+          price: editFormData.price,
+          available: editFormData.available,
+          category_id: editFormData.category,
+          description: editFormData.description,
+          image: editFormData.image,
+          popular: editFormData.popular
+        })
+        .eq('id', currentProduct.id);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setProducts(prevProducts => 
+        prevProducts.map(product => 
+          product.id === currentProduct.id 
+            ? { 
+                ...product, 
+                title: editFormData.title,
+                price: editFormData.price,
+                available: editFormData.available,
+                category: editFormData.category,
+                description: editFormData.description,
+                image: editFormData.image,
+                popular: editFormData.popular
+              }
+            : product
+        )
+      );
+      
+      setIsEditDialogOpen(false);
+      toast.success(`${editFormData.title} updated successfully`);
+    } catch (error) {
+      console.error('Error updating product:', error);
+      toast.error('Failed to update product');
+    }
   };
 
-  const handleAddNewProduct = () => {
-    const newProduct: MenuItem = {
-      id: `${products.length + 1}`,
-      title: editFormData.title,
-      price: editFormData.price,
-      available: editFormData.available,
-      category: editFormData.category,
-      image: editFormData.image || 'https://images.unsplash.com/photo-1506084868230-bb9d95c24759?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80'
-    };
+  const handleDeleteProduct = async () => {
+    if (!currentProduct) return;
     
-    setProducts([...products, newProduct]);
-    setIsEditDialogOpen(false);
-    toast.success(`${newProduct.title} added successfully`);
+    try {
+      // First, check if the product is referenced in any order
+      const { data, error: checkError } = await supabase
+        .from('order_items')
+        .select('id')
+        .eq('menu_item_id', currentProduct.id)
+        .limit(1);
+      
+      if (checkError) throw checkError;
+      
+      // If product is in orders, don't delete but maybe mark as unavailable
+      if (data && data.length > 0) {
+        // Update product instead of deleting
+        const { error: updateError } = await supabase
+          .from('menu_items')
+          .update({ available: 0 })
+          .eq('id', currentProduct.id);
+        
+        if (updateError) throw updateError;
+        
+        setProducts(prevProducts => 
+          prevProducts.map(product => 
+            product.id === currentProduct.id 
+              ? { ...product, available: 0 }
+              : product
+          )
+        );
+        
+        toast.success(`${currentProduct.title} marked as unavailable as it exists in orders`);
+      } else {
+        // Safe to delete
+        const { error: deleteError } = await supabase
+          .from('menu_items')
+          .delete()
+          .eq('id', currentProduct.id);
+        
+        if (deleteError) throw deleteError;
+        
+        setProducts(prevProducts => 
+          prevProducts.filter(product => product.id !== currentProduct.id)
+        );
+        
+        toast.success(`${currentProduct.title} deleted successfully`);
+      }
+      
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Failed to delete product');
+    }
+  };
+
+  const handleAddNewProduct = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .insert({
+          title: editFormData.title,
+          price: editFormData.price,
+          available: editFormData.available,
+          category_id: editFormData.category,
+          description: editFormData.description || null,
+          image: editFormData.image || 'https://images.unsplash.com/photo-1506084868230-bb9d95c24759?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80',
+          popular: editFormData.popular || false
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Update local state with new product
+      setProducts(prev => [
+        ...prev,
+        {
+          id: data.id,
+          title: data.title,
+          price: data.price,
+          available: data.available,
+          category: data.category_id,
+          image: data.image,
+          popular: data.popular,
+          description: data.description
+        }
+      ]);
+      
+      setIsEditDialogOpen(false);
+      toast.success(`${data.title} added successfully`);
+    } catch (error) {
+      console.error('Error adding product:', error);
+      toast.error('Failed to add product');
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -185,7 +382,6 @@ const Products = () => {
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
                   {categories.map(category => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
@@ -202,8 +398,10 @@ const Products = () => {
                       title: '',
                       price: 0,
                       available: 0,
-                      category: 'main',
-                      image: ''
+                      category: categories.length > 1 ? categories[1].id : '',
+                      description: '',
+                      image: '',
+                      popular: false
                     });
                   }}>
                     <Plus className="mr-2 h-4 w-4" />
@@ -255,13 +453,36 @@ const Products = () => {
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
-                          {categories.map(category => (
+                          {categories.filter(c => c.id !== 'all').map(category => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <label htmlFor="description" className="dark:text-white">Description</label>
+                      <Input 
+                        id="description" 
+                        name="description"
+                        value={editFormData.description}
+                        onChange={handleEditFormChange}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <label className="dark:text-white">Popular Item</label>
+                      <div className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          id="popular"
+                          name="popular"
+                          checked={editFormData.popular}
+                          onChange={(e) => handlePopularChange(e.target.checked)}
+                          className="mr-2"
+                        />
+                        <label htmlFor="popular" className="dark:text-white">Mark as popular</label>
+                      </div>
                     </div>
                     <div className="grid gap-2">
                       <label className="dark:text-white">Product Image</label>
@@ -330,7 +551,11 @@ const Products = () => {
             </div>
           </div>
           
-          {viewMode === 'grid' ? (
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProducts.map(product => (
                 <Card key={product.id} className="overflow-hidden bg-white dark:bg-gray-800">

@@ -5,42 +5,125 @@ import Header from '@/components/Header';
 import MenuCategories from '@/components/MenuCategories';
 import MenuGrid from '@/components/MenuGrid';
 import CartPanel from '@/components/CartPanel';
-import { MenuItem, CartItem } from '@/types';
-import { menuItems, categories, generateOrderNumber, generateTableNumber } from '@/data/mockData';
+import { MenuItem, CartItem, Category } from '@/types';
+import { generateOrderNumber, generateTableNumber } from '@/data/mockData';
 import { toast } from 'sonner';
 import { useLanguage } from '@/context/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
-  const [filteredItems, setFilteredItems] = useState<MenuItem[]>(menuItems);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [filteredItems, setFilteredItems] = useState<MenuItem[]>([]);
   const [activeCategory, setActiveCategory] = useState('all');
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [orderNumber, setOrderNumber] = useState(generateOrderNumber());
   const [tableNumber, setTableNumber] = useState(generateTableNumber());
+  const [isLoading, setIsLoading] = useState(true);
   const { t } = useLanguage();
   
   useEffect(() => {
     // Set document title
     document.title = "Doob Café - Menu";
     
-    let result = [...menuItems];
-    
-    // Apply category filter
-    if (activeCategory !== 'all') {
-      result = result.filter(item => item.category === activeCategory);
+    // Fetch menu items and categories
+    fetchMenuItems();
+    fetchCategories();
+  }, []);
+  
+  const fetchMenuItems = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select(`
+          id,
+          title,
+          price,
+          available,
+          popular,
+          description,
+          image,
+          categories(id, name)
+        `)
+        .order('title');
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        const formattedItems: MenuItem[] = data.map(item => ({
+          id: item.id,
+          title: item.title,
+          price: item.price,
+          available: item.available,
+          image: item.image || 'https://images.unsplash.com/photo-1506084868230-bb9d95c24759?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80',
+          category: item.categories?.id || '',
+          popular: item.popular || false,
+          description: item.description
+        }));
+        setMenuItems(formattedItems);
+        setFilteredItems(formattedItems);
+      }
+    } catch (error) {
+      console.error('Error fetching menu items:', error);
+      toast.error('Failed to load menu items');
+    } finally {
+      setIsLoading(false);
     }
-    
-    // Apply search term filter
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(item => 
-        item.title.toLowerCase().includes(term) || 
-        item.category.toLowerCase().includes(term)
-      );
+  };
+  
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name');
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        // Add 'all' category
+        const allCategories: Category[] = [
+          { id: 'all', name: 'All Items' },
+          ...data.map(category => ({
+            id: category.id,
+            name: category.name
+          }))
+        ];
+        setCategories(allCategories);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast.error('Failed to load categories');
     }
-    
-    setFilteredItems(result);
-  }, [activeCategory, searchTerm]);
+  };
+  
+  useEffect(() => {
+    if (menuItems.length > 0) {
+      let result = [...menuItems];
+      
+      // Apply category filter
+      if (activeCategory !== 'all') {
+        result = result.filter(item => item.category === activeCategory);
+      }
+      
+      // Apply search term filter
+      if (searchTerm.trim()) {
+        const term = searchTerm.toLowerCase();
+        result = result.filter(item => 
+          item.title.toLowerCase().includes(term) || 
+          (item.description && item.description.toLowerCase().includes(term))
+        );
+      }
+      
+      setFilteredItems(result);
+    }
+  }, [activeCategory, searchTerm, menuItems]);
   
   const handleCategoryChange = (categoryId: string) => {
     setActiveCategory(categoryId);
@@ -85,16 +168,60 @@ const Index = () => {
     setCartItems([]);
   };
   
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (cartItems.length === 0) {
       toast.error("Your cart is empty!");
       return;
     }
     
-    toast.success("Order placed successfully!");
-    setCartItems([]);
-    setOrderNumber(generateOrderNumber());
-    setTableNumber(generateTableNumber());
+    try {
+      // Calculate totals
+      const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const tax = subtotal * 0.1; // 10% tax
+      const total = subtotal + tax;
+      
+      // Insert order to database
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          order_number: orderNumber,
+          order_type: 'Dine In', // This should be dynamic based on user selection
+          table_number: tableNumber, // This should be conditional based on order type
+          subtotal: subtotal,
+          tax: tax,
+          total: total,
+          status: 'processing',
+          customer_name: 'Walk-in Customer' // This should be dynamic based on selected customer
+        })
+        .select('id')
+        .single();
+      
+      if (orderError) throw orderError;
+      
+      // Insert order items
+      const orderItems = cartItems.map(item => ({
+        order_id: orderData.id,
+        menu_item_id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+        notes: item.notes || null,
+        spicy_level: item.spicyLevel || null
+      }));
+      
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+      
+      if (itemsError) throw itemsError;
+      
+      toast.success("Order placed successfully!");
+      setCartItems([]);
+      setOrderNumber(generateOrderNumber());
+      setTableNumber(generateTableNumber());
+    } catch (error) {
+      console.error('Error placing order:', error);
+      toast.error('Failed to place order. Please try again.');
+    }
   };
 
   return (
@@ -105,7 +232,7 @@ const Index = () => {
         <Header onSearch={handleSearch} />
         
         <MenuCategories 
-          categories={categories.filter(c => c.id !== 'all')}
+          categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={handleCategoryChange}
         />
@@ -115,7 +242,11 @@ const Index = () => {
             <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
               {activeCategory === 'all' ? 'All Menu Items' : `${categories.find(c => c.id === activeCategory)?.name || ''} Menu`}
             </h2>
-            {filteredItems.length > 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : filteredItems.length > 0 ? (
               <MenuGrid 
                 items={filteredItems}
                 onAddToCart={handleAddToCart}

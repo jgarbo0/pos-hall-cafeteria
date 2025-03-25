@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MenuItem } from '@/types';
 import { Minus, Plus, Check, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface MenuGridProps {
   items: MenuItem[];
@@ -16,6 +18,11 @@ interface MenuGridProps {
 const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(items);
+
+  useEffect(() => {
+    setMenuItems(items);
+  }, [items]);
 
   const getQuantity = (itemId: string) => {
     return quantities[itemId] || 1;
@@ -50,7 +57,7 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
     onAddToCart(item, quantity);
   };
   
-  if (items.length === 0) {
+  if (menuItems.length === 0) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="text-center">
@@ -63,7 +70,7 @@ const MenuGrid: React.FC<MenuGridProps> = ({ items, onAddToCart }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
-      {items.map((item) => (
+      {menuItems.map((item) => (
         <Card 
           key={item.id} 
           className={cn(
