@@ -1,3 +1,4 @@
+
 export const menuItems = [
   {
     id: "1",
@@ -42,7 +43,7 @@ export const menuItems = [
     title: "Curry Garlic Noodles",
     available: 18,
     price: 3.62,
-    image: "https://images.unsplash.com/photo-1569058242567-93de6f36f8eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
+    image: "https://images.unsplash.com/photo-1607330289024-1535c6b4e1c1?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
     category: "main",
     popular: true,
     description: "Flavorful curry noodles with garlic, vegetables, and your choice of protein."
@@ -80,7 +81,7 @@ export const menuItems = [
     title: "Sambusa",
     available: 15,
     price: 2.99,
-    image: "https://images.unsplash.com/photo-1581513700725-2c808ca6a08a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
+    image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=500&q=80",
     category: "appetizers",
     popular: true,
     description: "Crispy pastry triangles filled with spiced meat or vegetables."
