@@ -72,7 +72,23 @@ const CartPanel: React.FC<CartPanelProps> = ({
       if (error) throw error;
       
       if (data) {
-        setRecentOrders(data as Order[]);
+        // Transform the data to match the Order interface
+        const transformedOrders: Order[] = data.map(order => ({
+          id: order.id,
+          items: [], // We don't fetch items here for performance reasons
+          orderType: order.order_type as 'Dine In' | 'Take Away',
+          tableNumber: order.table_number,
+          orderNumber: order.order_number,
+          subtotal: order.subtotal,
+          tax: order.tax,
+          total: order.total,
+          status: order.status as 'processing' | 'completed' | 'cancelled',
+          paymentStatus: order.payment_status as 'paid' | 'pending',
+          timestamp: order.timestamp,
+          customerName: order.customer_name || 'Walk-in Customer'
+        }));
+        
+        setRecentOrders(transformedOrders);
       }
     } catch (error) {
       console.error('Error fetching recent orders:', error);
