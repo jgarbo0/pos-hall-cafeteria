@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -288,9 +289,19 @@ const Finance = () => {
     return transaction.type === transactionType;
   });
 
-  const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
+  // Calculate total income including both regular transactions and hall bookings
+  const calculateTotalIncome = () => {
+    const transactionsIncome = transactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    // We're not adding hall booking income separately here anymore since they are
+    // already recorded as transactions through the integrated system
+    
+    return transactionsIncome;
+  };
+
+  const totalIncome = calculateTotalIncome();
     
   const totalExpense = transactions
     .filter(t => t.type === 'expense')
@@ -403,20 +414,25 @@ const Finance = () => {
   const todayFinancials = calculateTodayFinancials();
 
   const calculateTopIncomeCategories = () => {
-    const categories = [...new Set(transactions
+    // Group transactions by category and sum amounts
+    const incomeByCategory = transactions
       .filter(t => t.type === 'income')
-      .map(t => t.category))];
+      .reduce((acc, t) => {
+        const category = t.category;
+        if (!acc[category]) {
+          acc[category] = 0;
+        }
+        acc[category] += t.amount;
+        return acc;
+      }, {} as Record<string, number>);
     
-    const categorySums = categories.map(category => {
-      return {
-        name: category,
-        total: transactions
-          .filter(t => t.type === 'income' && t.category === category)
-          .reduce((sum, t) => sum + t.amount, 0)
-      };
-    });
+    // Convert to array of { name, total } objects
+    const categoryTotals = Object.entries(incomeByCategory).map(([name, total]) => ({
+      name,
+      total
+    }));
     
-    return categorySums.sort((a, b) => b.total - a.total).slice(0, 2);
+    return categoryTotals.sort((a, b) => b.total - a.total).slice(0, 2);
   };
 
   const topIncomeCategories = calculateTopIncomeCategories();

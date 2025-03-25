@@ -23,7 +23,7 @@ const FinanceSummaryCards: React.FC<FinanceSummaryCardsProps> = ({
       <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
-            Revenue
+            Total Revenue
           </CardTitle>
           <Button 
             variant="outline" 
@@ -36,14 +36,14 @@ const FinanceSummaryCards: React.FC<FinanceSummaryCardsProps> = ({
         </CardHeader>
         <CardContent>
           <div className="text-xs text-muted-foreground dark:text-gray-400 mt-1">
-            Sales from 1-10 Apr, 2024
+            All income (Sales + Hall Bookings)
           </div>
           <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-2">
             ${totalIncome.toFixed(2)}
           </div>
           <div className="flex items-center text-xs text-green-500 dark:text-green-400 mt-1">
             <TrendingUp className="mr-1 h-3 w-3" />
-            <span>2.5% vs last week</span>
+            <span>Combines all income sources</span>
           </div>
           <div className="h-[120px] mt-4">
             <ResponsiveContainer width="100%" height="100%">
@@ -84,14 +84,14 @@ const FinanceSummaryCards: React.FC<FinanceSummaryCardsProps> = ({
         </CardHeader>
         <CardContent>
           <div className="text-xs text-muted-foreground dark:text-gray-400 mt-1">
-            From 1 - 8 Apr, 2024
+            From last 7 days
           </div>
           <div className="text-2xl font-bold dark:text-white mt-2">
             ${totalExpense.toFixed(2)}
           </div>
           <div className="flex items-center text-xs text-red-500 dark:text-red-400 mt-1">
             <TrendingDown className="mr-1 h-3 w-3" />
-            <span>1.5% vs last week</span>
+            <span>All expenses combined</span>
           </div>
           <div className="h-[120px] mt-4">
             <ResponsiveContainer width="100%" height="100%">
@@ -131,7 +131,7 @@ const FinanceSummaryCards: React.FC<FinanceSummaryCardsProps> = ({
         </CardHeader>
         <CardContent>
           <div className="text-xs text-muted-foreground dark:text-gray-400 mt-1">
-            Data from 1-12 Apr, 2024
+            Total Income - Total Expenses
           </div>
           <div className="flex flex-col items-center justify-center mt-4">
             <div className="relative inline-flex items-center justify-center">
@@ -154,14 +154,14 @@ const FinanceSummaryCards: React.FC<FinanceSummaryCardsProps> = ({
                   r="64"
                   cx="80"
                   cy="80"
-                  strokeDasharray={`${(2 * Math.PI * 64) * (totalIncome - totalExpense) / 1200} ${2 * Math.PI * 64}`}
+                  strokeDasharray={`${(2 * Math.PI * 64) * (totalIncome - totalExpense) / Math.max(1200, totalIncome)} ${2 * Math.PI * 64}`}
                   strokeDashoffset="0"
                   transform="rotate(-90 80 80)"
                 />
               </svg>
               <div className="absolute flex flex-col items-center justify-center">
                 <span className="text-4xl font-bold dark:text-white">${(totalIncome - totalExpense).toFixed(2)}</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">of $1,200</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Net Profit</span>
               </div>
             </div>
           </div>

@@ -78,6 +78,45 @@ export const getHallBookingIncomes = async (): Promise<HallBookingIncome[]> => {
   }));
 };
 
+export const addHallBookingIncome = async (hallBooking: HallBookingIncome): Promise<void> => {
+  try {
+    // 1. First, record the hall booking income as a transaction
+    const transaction = {
+      date: typeof hallBooking.date === 'string' ? hallBooking.date : new Date(hallBooking.date).toISOString().split('T')[0],
+      description: `Hall booking: ${hallBooking.purpose} for ${hallBooking.customerName}`,
+      amount: hallBooking.amount,
+      type: 'income' as const,
+      category: 'Hall Rental',
+      paymentMethod: 'Cash' // Default payment method, can be updated if needed
+    };
+    
+    await addTransaction(transaction);
+    
+  } catch (error) {
+    console.error('Error adding hall booking income:', error);
+    throw error;
+  }
+};
+
+export const addSalesIncome = async (orderTotal: number, orderNumber: string, customerName: string): Promise<void> => {
+  try {
+    const transaction = {
+      date: new Date().toISOString().split('T')[0],
+      description: `Sales income: Order #${orderNumber} from ${customerName}`,
+      amount: orderTotal,
+      type: 'income' as const,
+      category: 'Food Sales',
+      paymentMethod: 'Cash' // Default payment method, can be updated if needed
+    };
+    
+    await addTransaction(transaction);
+    
+  } catch (error) {
+    console.error('Error adding sales income:', error);
+    throw error;
+  }
+};
+
 export const getPaymentMethods = async () => {
   const { data, error } = await supabase
     .from('payment_methods')

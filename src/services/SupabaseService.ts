@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { 
   MenuItem, 
@@ -183,6 +182,11 @@ export const createOrder = async (
       .insert(orderItems);
     
     if (itemsError) throw itemsError;
+    
+    // Record income in transactions table for financial reporting
+    // We import the function here to avoid circular dependency
+    const { addSalesIncome } = await import('@/services/FinanceService');
+    await addSalesIncome(total, orderNumber, customerName);
     
     return {
       id: orderData.id,
@@ -395,6 +399,18 @@ export const createHallBooking = async (booking: Omit<HallBooking, 'id'>): Promi
       .single();
     
     if (error) throw error;
+    
+    // Record the hall booking income in the transactions table for financial reporting
+    // We import the function here to avoid circular dependency
+    const { addHallBookingIncome } = await import('@/services/FinanceService');
+    await addHallBookingIncome({
+      id: data.id,
+      date: data.date,
+      customerName: data.customer_name,
+      purpose: data.purpose,
+      attendees: data.attendees,
+      amount: data.total_amount
+    });
     
     return {
       id: data.id,
