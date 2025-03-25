@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -321,6 +320,10 @@ const Finance = () => {
     setDetailType(type);
     setDetailTitle(title);
     setShowDetailModal(true);
+  };
+
+  const renderIcon = (IconComponent: React.ComponentType<any>, color: string) => {
+    return <IconComponent color={color} size={20} />;
   };
 
   return (
@@ -718,10 +721,7 @@ const Finance = () => {
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: `${subscription.color}20` }}
                       >
-                        {/* Fix: remove className from React.createElement and move it to a style property */}
-                        {React.createElement(subscription.icon, {
-                          style: { width: "20px", height: "20px", color: subscription.color }
-                        })}
+                        {renderIcon(subscription.icon, subscription.color)}
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium dark:text-white">{subscription.name}</div>
@@ -749,10 +749,7 @@ const Finance = () => {
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: `${goal.color}20` }}
                       >
-                        {/* Fix: remove className from React.createElement and move it to a style property */}
-                        {React.createElement(goal.icon, {
-                          style: { width: "20px", height: "20px", color: goal.color }
-                        })}
+                        {renderIcon(goal.icon, goal.color)}
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium dark:text-white">{goal.name}</div>
