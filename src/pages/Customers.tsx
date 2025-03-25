@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -29,9 +28,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Customer, createCustomer, deleteCustomer, getCustomers, updateCustomer } from '@/services/SupabaseService';
+import { createCustomer, deleteCustomer, getCustomers, updateCustomer } from '@/services/SupabaseService';
+import { Customer } from '@/types';
 
-// Customer form interface
 interface CustomerFormData {
   name: string;
   phone: string | null;
@@ -398,7 +397,6 @@ const Customers = () => {
         </div>
       </div>
 
-      {/* Add Customer Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -450,7 +448,6 @@ const Customers = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Customer Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -502,7 +499,6 @@ const Customers = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Customer Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -522,3 +518,4 @@ const Customers = () => {
 };
 
 export default Customers;
+

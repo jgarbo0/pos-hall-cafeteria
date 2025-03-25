@@ -4,12 +4,12 @@ import Header from '@/components/Header';
 import MenuCategories from '@/components/MenuCategories';
 import MenuGrid from '@/components/MenuGrid';
 import CartPanel from '@/components/CartPanel';
-import { MenuItem, CartItem, Category } from '@/types';
+import { MenuItem, CartItem, Category, Customer } from '@/types';
 import { generateOrderNumber, generateTableNumber } from '@/data/mockData';
 import { toast } from 'sonner';
 import { useLanguage } from '@/context/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { getMenuItems, getCategories, createOrder, getCustomers, Customer } from '@/services/SupabaseService';
+import { getMenuItems, getCategories, createOrder, getCustomers } from '@/services/SupabaseService';
 
 const Index = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
