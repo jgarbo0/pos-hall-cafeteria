@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -75,6 +74,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 type Transaction = {
   id: string;
@@ -712,11 +712,15 @@ const Finance = () => {
                         </div>
                       </div>
                     </div>
-                    <Progress 
-                      value={(goal.currentAmount/goal.targetAmount)*100} 
-                      className="h-1.5 bg-gray-200 dark:bg-gray-700" 
-                      style={{ color: goal.color }}
-                    />
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full" 
+                        style={{ 
+                          width: `${(goal.currentAmount/goal.targetAmount)*100}%`,
+                          backgroundColor: goal.color 
+                        }}
+                      ></div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -768,87 +772,4 @@ const Finance = () => {
                       <div 
                         className="h-3 w-3 rounded-full" 
                         style={{ 
-                          backgroundColor: index === 0 ? COLORS.green : 
-                                          index === 1 ? COLORS.purple : 
-                                          index === 2 ? COLORS.pink : COLORS.orange 
-                        }}
-                      ></div>
-                      <span className="text-xs dark:text-gray-400">{category}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recent Transactions */}
-            <Card className="dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
-                  Recent Transactions
-                </CardTitle>
-                <Select 
-                  value={transactionType} 
-                  onValueChange={(value: any) => setTransactionType(value)}
-                >
-                  <SelectTrigger className="w-[140px] h-8 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <SelectValue placeholder="Filter by type" />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <SelectItem value="all">All Transactions</SelectItem>
-                    <SelectItem value="income">Income Only</SelectItem>
-                    <SelectItem value="expense">Expenses Only</SelectItem>
-                  </SelectContent>
-                </Select>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="dark:border-gray-700">
-                      <TableHead className="dark:text-gray-300 w-[100px]">Date</TableHead>
-                      <TableHead className="dark:text-gray-300">Description</TableHead>
-                      <TableHead className="dark:text-gray-300">Category</TableHead>
-                      <TableHead className="dark:text-gray-300 text-right">Amount</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTransactions.slice(0, 6).map(transaction => (
-                      <TableRow key={transaction.id} className="dark:border-gray-700">
-                        <TableCell className="dark:text-gray-300 w-[100px]">
-                          {format(new Date(transaction.date), 'MMM dd')}
-                        </TableCell>
-                        <TableCell className="font-medium dark:text-gray-300">{transaction.description}</TableCell>
-                        <TableCell className="dark:text-gray-300">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            transaction.type === 'income' 
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
-                              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                          }`}>
-                            {transaction.category}
-                          </span>
-                        </TableCell>
-                        <TableCell className={`text-right font-medium ${
-                          transaction.type === 'income' 
-                            ? 'text-green-600 dark:text-green-400' 
-                            : 'text-red-600 dark:text-red-400'
-                        }`}>
-                          {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-              <CardFooter className="flex justify-center pt-2">
-                <Button variant="outline" size="sm" className="text-xs dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
-                  View All Transactions
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default Finance;
+                          backgroundColor: index === 0 ? COLORS
