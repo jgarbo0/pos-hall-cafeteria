@@ -30,6 +30,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import { timeSlots } from '@/data/mockData';
 import { cn } from '@/lib/utils';
+import { supabase } from "@/integrations/supabase/client";
 
 // Define form schema
 const formSchema = z.object({
@@ -85,7 +86,12 @@ const HallBookingForm = ({
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [totalAmount, setTotalAmount] = useState<number>(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Check for localStorage values from calendar selection
+  const storedDate = localStorage.getItem('selectedBookingDate');
+  const storedTime = localStorage.getItem('selectedBookingTime');
+  
   // Initialize default values for guests if none provided
   const defaultGuests = {
     total: 1,
@@ -130,6 +136,9 @@ const HallBookingForm = ({
       group: 0,
       single: 0,
       staff: 0,
+      // Use stored date/time if available
+      date: storedDate ? new Date(storedDate) : undefined,
+      startTime: storedTime || "",
     }
   });
 
@@ -179,36 +188,87 @@ const HallBookingForm = ({
     form.setValue('packageId', packageId);
   };
 
-  const onFormSubmit = (data: FormValues) => {
-    // Create a new booking object
-    const newBooking: HallBooking = {
-      id: initialData?.id || `BK${Math.floor(1000 + Math.random() * 9000)}`, // Use existing ID or generate new one
-      customerName: data.customerName,
-      customerPhone: data.customerPhone,
-      date: format(data.date, 'yyyy-MM-dd'),
-      startTime: data.startTime,
-      endTime: data.endTime,
-      purpose: data.purpose,
-      attendees: data.attendees,
-      hallId: data.hallId,
-      packageId: data.packageId,
-      additionalServices: selectedServices,
-      status: initialData?.status || 'pending',
-      notes: data.notes || "",
-      totalAmount: totalAmount,
-      guests: {
-        total: data.totalGuests,
-        children: data.children,
-        family: data.family,
-        group: data.group,
-        single: data.single,
-        staff: data.staff
+  const onFormSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
+    try {
+      // Create a new booking object for UI/state
+      const newBooking: HallBooking = {
+        id: initialData?.id || `BK${Math.floor(1000 + Math.random() * 9000)}`,
+        customerName: data.customerName,
+        customerPhone: data.customerPhone,
+        date: format(data.date, 'yyyy-MM-dd'),
+        startTime: data.startTime,
+        endTime: data.endTime,
+        purpose: data.purpose,
+        attendees: data.attendees,
+        hallId: data.hallId,
+        packageId: data.packageId,
+        additionalServices: selectedServices,
+        status: initialData?.status || 'pending',
+        notes: data.notes || "",
+        totalAmount: totalAmount,
+        guests: {
+          total: data.totalGuests,
+          children: data.children,
+          family: data.family,
+          group: data.group,
+          single: data.single,
+          staff: data.staff
+        }
+      };
+      
+      // Insert or update the booking in Supabase
+      const isUpdate = initialData?.id && !initialData.id.startsWith('new-');
+      
+      // Prepare data for Supabase (snake_case)
+      const bookingData = {
+        customer_name: data.customerName,
+        customer_phone: data.customerPhone,
+        date: format(data.date, 'yyyy-MM-dd'),
+        start_time: data.startTime,
+        end_time: data.endTime,
+        purpose: data.purpose,
+        attendees: data.attendees,
+        hall_id: data.hallId,
+        package_id: data.packageId,
+        additional_services: selectedServices,
+        status: initialData?.status || 'pending',
+        notes: data.notes || "",
+        total_amount: totalAmount
+      };
+      
+      if (isUpdate) {
+        // Update existing booking
+        const { error } = await supabase
+          .from('hall_bookings')
+          .update(bookingData)
+          .eq('id', initialData.id);
+          
+        if (error) throw error;
+      } else {
+        // Insert new booking
+        const { error } = await supabase
+          .from('hall_bookings')
+          .insert(bookingData);
+          
+        if (error) throw error;
       }
-    };
-    
-    if (onSubmit) {
-      onSubmit(newBooking);
-      toast.success(`Booking ${initialData ? 'updated' : 'created'} successfully!`);
+      
+      // Clear localStorage
+      localStorage.removeItem('selectedBookingDate');
+      localStorage.removeItem('selectedBookingTime');
+      
+      // Call the onSubmit callback
+      if (onSubmit) {
+        onSubmit(newBooking);
+      }
+      
+      toast.success(`Booking ${isUpdate ? 'updated' : 'created'} successfully!`);
+    } catch (error) {
+      console.error("Error saving booking:", error);
+      toast.error("Failed to save booking. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -601,8 +661,8 @@ const HallBookingForm = ({
             </div>
           </div>
           
-          <Button type="submit" className="w-full">
-            {initialData ? 'Update Booking' : 'Create Booking'}
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : initialData ? 'Update Booking' : 'Create Booking'}
           </Button>
         </form>
       </Form>

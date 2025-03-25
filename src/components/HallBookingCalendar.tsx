@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Clock, Check } from "lucide-react";
 import { HallBooking } from '@/types';
 import { toast } from 'sonner';
+import { supabase } from "@/integrations/supabase/client";
 
 interface HallBookingCalendarProps {
   onSelectBooking: (bookingId: string) => void;
@@ -31,12 +32,6 @@ const mockServices = [
   { id: 'microphone', name: 'Microphone Set' },
 ];
 
-// Type assertion for bookings to ensure type safety
-const typedBookings = bookings as (HallBooking & {
-  additionalServices?: string[];
-  notes?: string;
-})[];
-
 const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooking, hallId = 1 }) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -44,6 +39,53 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
   const [viewingMonth, setViewingMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
+  const [hallBookings, setHallBookings] = useState<HallBooking[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch bookings from database
+  useEffect(() => {
+    const fetchBookings = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('hall_bookings')
+          .select('*')
+          .eq('hall_id', hallId);
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          // Convert database records to HallBooking type
+          const formattedBookings: HallBooking[] = data.map(item => ({
+            id: item.id,
+            date: item.date,
+            startTime: item.start_time,
+            endTime: item.end_time,
+            customerName: item.customer_name,
+            customerPhone: item.customer_phone,
+            purpose: item.purpose,
+            attendees: item.attendees,
+            additionalServices: item.additional_services || [],
+            status: item.status as 'pending' | 'confirmed' | 'canceled',
+            totalAmount: item.total_amount,
+            notes: item.notes || '',
+            hallId: item.hall_id,
+            packageId: item.package_id
+          }));
+          setHallBookings(formattedBookings);
+        }
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+        toast.error('Failed to load bookings');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, [hallId]);
 
   // Determine the days to display in the calendar grid
   const getDaysInMonth = () => {
@@ -56,8 +98,15 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
 
   // Get bookings for the selected date
   const getBookingsForDate = (dateStr: string) => {
-    return typedBookings.filter(booking => {
-      // Safely access hallId property, treating bookings as having optional hallId
+    // First check the database bookings
+    if (hallBookings.length > 0) {
+      return hallBookings.filter(booking => {
+        return booking.date === dateStr && (!hallId || booking.hallId === hallId);
+      });
+    }
+    
+    // Fallback to mock data if needed
+    return bookings.filter(booking => {
       const bookingHallId = (booking as any).hallId;
       return booking.date === dateStr && (!hallId || bookingHallId === hallId);
     });

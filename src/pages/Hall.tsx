@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -13,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useLanguage } from '@/context/LanguageContext';
+import { supabase } from "@/integrations/supabase/client";
 
 const mockTables: TableItem[] = [
   { id: 1, name: 'Table 1', seats: 4, status: 'available' },
@@ -87,7 +89,54 @@ const Hall = () => {
   const [selectedHall, setSelectedHall] = useState<number>(1);
   const [editingHall, setEditingHall] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('calendar');
+  const [bookingData, setBookingData] = useState<HallBooking[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { t } = useLanguage();
+  
+  // Fetch bookings from Supabase when the component mounts or hall selection changes
+  useEffect(() => {
+    const fetchBookings = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('hall_bookings')
+          .select('*')
+          .eq('hall_id', selectedHall);
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          // Convert database records to HallBooking type
+          const formattedBookings: HallBooking[] = data.map(item => ({
+            id: item.id,
+            date: item.date,
+            startTime: item.start_time,
+            endTime: item.end_time,
+            customerName: item.customer_name,
+            customerPhone: item.customer_phone,
+            purpose: item.purpose,
+            attendees: item.attendees,
+            additionalServices: item.additional_services || [],
+            status: item.status as 'pending' | 'confirmed' | 'canceled',
+            totalAmount: item.total_amount,
+            notes: item.notes || '',
+            hallId: item.hall_id,
+            packageId: item.package_id
+          }));
+          setBookingData(formattedBookings);
+        }
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+        toast.error('Failed to load bookings');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, [selectedHall]);
   
   useEffect(() => {
     const storedDate = localStorage.getItem('selectedBookingDate');
@@ -124,13 +173,21 @@ const Hall = () => {
     const storedTime = localStorage.getItem('selectedBookingTime');
     
     if (selectedBooking && !selectedBooking.startsWith('new-')) {
-      const foundBooking = fullBookings.find(b => b.id === selectedBooking);
+      // If this is an existing booking from the database
+      const foundBooking = bookingData.find(b => b.id === selectedBooking);
       if (foundBooking) {
         return foundBooking;
+      }
+      
+      // Fallback to mock data if needed
+      const mockBooking = fullBookings.find(b => b.id === selectedBooking);
+      if (mockBooking) {
+        return mockBooking;
       }
     }
     
     if (selectedBooking?.startsWith('new-') && storedDate && storedTime) {
+      // This is a new booking with date and time selected from the calendar
       const newBooking: HallBooking = {
         id: selectedBooking,
         customerName: '',
@@ -138,7 +195,7 @@ const Hall = () => {
         purpose: '',
         date: storedDate,
         startTime: storedTime,
-        endTime: '10:00',
+        endTime: '',
         attendees: 1,
         additionalServices: [],
         status: 'pending',
@@ -161,14 +218,106 @@ const Hall = () => {
     return undefined;
   };
   
-  const handleSubmitBooking = (booking: any) => {
-    console.log('Booking submitted:', booking);
-    toast.success('Booking saved successfully!');
-    
-    localStorage.removeItem('selectedBookingDate');
-    localStorage.removeItem('selectedBookingTime');
-    
-    setActiveTab('calendar');
+  const handleSubmitBooking = async (booking: HallBooking) => {
+    try {
+      // If this is a new booking (from calendar selection)
+      if (booking.id.startsWith('new-')) {
+        // Remove the temporary ID
+        const { id, ...bookingWithoutId } = booking;
+        
+        // Convert to snake_case for Supabase
+        const bookingData = {
+          customer_name: booking.customerName,
+          customer_phone: booking.customerPhone,
+          purpose: booking.purpose,
+          date: booking.date,
+          start_time: booking.startTime,
+          end_time: booking.endTime,
+          attendees: booking.attendees,
+          additional_services: booking.additionalServices,
+          status: booking.status,
+          total_amount: booking.totalAmount,
+          notes: booking.notes,
+          hall_id: booking.hallId,
+          package_id: booking.packageId
+        };
+        
+        // Insert into Supabase
+        const { data, error } = await supabase
+          .from('hall_bookings')
+          .insert(bookingData)
+          .select();
+        
+        if (error) throw error;
+        
+        toast.success('Booking saved successfully!');
+      } else {
+        // This is an update to an existing booking
+        const bookingData = {
+          customer_name: booking.customerName,
+          customer_phone: booking.customerPhone,
+          purpose: booking.purpose,
+          date: booking.date,
+          start_time: booking.startTime,
+          end_time: booking.endTime,
+          attendees: booking.attendees,
+          additional_services: booking.additionalServices,
+          status: booking.status,
+          total_amount: booking.totalAmount,
+          notes: booking.notes,
+          hall_id: booking.hallId,
+          package_id: booking.packageId
+        };
+        
+        const { error } = await supabase
+          .from('hall_bookings')
+          .update(bookingData)
+          .eq('id', booking.id);
+        
+        if (error) throw error;
+        
+        toast.success('Booking updated successfully!');
+      }
+      
+      // Clean up localStorage
+      localStorage.removeItem('selectedBookingDate');
+      localStorage.removeItem('selectedBookingTime');
+      
+      // Return to calendar view
+      setActiveTab('calendar');
+      
+      // Refetch bookings to update the list
+      const { data, error } = await supabase
+        .from('hall_bookings')
+        .select('*')
+        .eq('hall_id', selectedHall);
+      
+      if (error) throw error;
+      
+      if (data) {
+        // Convert database records to HallBooking type
+        const formattedBookings: HallBooking[] = data.map(item => ({
+          id: item.id,
+          date: item.date,
+          startTime: item.start_time,
+          endTime: item.end_time,
+          customerName: item.customer_name,
+          customerPhone: item.customer_phone,
+          purpose: item.purpose,
+          attendees: item.attendees,
+          additionalServices: item.additional_services || [],
+          status: item.status as 'pending' | 'confirmed' | 'canceled',
+          totalAmount: item.total_amount,
+          notes: item.notes || '',
+          hallId: item.hall_id,
+          packageId: item.package_id
+        }));
+        setBookingData(formattedBookings);
+      }
+    } catch (error) {
+      console.error('Error saving booking:', error);
+      toast.error('Failed to save booking');
+    }
   };
   
   return (
