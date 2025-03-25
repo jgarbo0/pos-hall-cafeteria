@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -7,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { 
   PiggyBank, Car, Home, Laptop, 
   Music, Youtube, Navigation,
-  TrendingUp, TrendingDown, PieChart
+  TrendingUp, TrendingDown, PieChart,
+  LucideIcon
 } from 'lucide-react';
 import { format, subDays, eachDayOfInterval } from 'date-fns';
 import { toast } from 'sonner';
@@ -34,6 +34,18 @@ const COLORS = {
   pink: '#f472b6',
   teal: '#2dd4bf',
 };
+
+interface ExpenseCategoryWithIcon extends ExpenseCategory {
+  icon: LucideIcon;
+}
+
+interface SavingGoalWithIcon extends SavingGoal {
+  icon: LucideIcon;
+}
+
+interface SubscriptionWithIcon extends Subscription {
+  icon: LucideIcon;
+}
 
 const dummyTransactions: Transaction[] = [
   {
@@ -86,14 +98,14 @@ const dummyTransactions: Transaction[] = [
   }
 ];
 
-const expenseCategories: ExpenseCategory[] = [
+const expenseCategories: ExpenseCategoryWithIcon[] = [
   { name: 'Grocery', value: 48, color: COLORS.purple, icon: PieChart },
   { name: 'Food & Drink', value: 32, color: COLORS.green, icon: PieChart },
   { name: 'Shopping', value: 13, color: COLORS.pink, icon: PieChart },
   { name: 'Dhaweeye', value: 7, color: COLORS.orange, icon: PieChart },
 ];
 
-const savingGoals: SavingGoal[] = [
+const savingGoals: SavingGoalWithIcon[] = [
   { id: '1', name: 'Net Income', currentAmount: 1052.98, targetAmount: 1200, color: COLORS.green, icon: PiggyBank },
   { id: '2', name: 'Least Selling Item', currentAmount: 17567, targetAmount: 83000, color: COLORS.purple, icon: Car },
   { id: '3', name: 'Most Recurring Expense', currentAmount: 12367, targetAmount: 325000, color: COLORS.orange, icon: Home },
@@ -101,7 +113,7 @@ const savingGoals: SavingGoal[] = [
   { id: '5', name: 'Dhaweeye', currentAmount: 12367, targetAmount: 25000, color: COLORS.blue, icon: Navigation },
 ];
 
-const subscriptions: Subscription[] = [
+const subscriptions: SubscriptionWithIcon[] = [
   { id: '1', name: 'Most Sales Item', amount: 5.99, date: 'Apr 03, 2024', icon: Music, color: '#1DB954' },
   { id: '2', name: 'Most Rented Hall', amount: 13.99, date: 'Apr 03, 2024', icon: Youtube, color: '#FF0000' },
 ];
@@ -554,3 +566,5 @@ const Finance = () => {
 };
 
 export default Finance;
+
+

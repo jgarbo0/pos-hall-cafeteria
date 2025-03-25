@@ -1,5 +1,6 @@
 
 import { FinancialTransaction } from './index';
+import { LucideIcon } from 'lucide-react';
 
 export interface Transaction extends FinancialTransaction {
   id: string;
@@ -14,7 +15,7 @@ export interface ExpenseCategory {
   name: string;
   value: number;
   color: string;
-  icon: React.ComponentType;
+  icon: React.ComponentType | LucideIcon;
 }
 
 export interface SavingGoal {
@@ -23,7 +24,7 @@ export interface SavingGoal {
   currentAmount: number;
   targetAmount: number;
   color: string;
-  icon: React.ComponentType;
+  icon: React.ComponentType | LucideIcon;
 }
 
 export interface Subscription {
@@ -31,7 +32,7 @@ export interface Subscription {
   name: string;
   amount: number;
   date: string;
-  icon: React.ComponentType;
+  icon: React.ComponentType | LucideIcon;
   color: string;
 }
 
