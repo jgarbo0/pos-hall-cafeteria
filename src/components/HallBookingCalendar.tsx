@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isToday, parseISO } from "date-fns";
 import { bookings, timeSlots } from "@/data/mockData";
 import { 
   Popover,
@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
+import { HallBooking } from '@/types';
 
 interface HallBookingCalendarProps {
   onSelectBooking: (bookingId: string) => void;
@@ -28,6 +29,12 @@ const mockServices = [
   { id: 'projector', name: 'Projector' },
   { id: 'microphone', name: 'Microphone Set' },
 ];
+
+// Type assertion for bookings to ensure type safety
+const typedBookings = bookings as (HallBooking & {
+  additionalServices?: string[];
+  notes?: string;
+})[];
 
 const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooking, hallId = 1 }) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -47,7 +54,7 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
 
   // Get bookings for the selected date
   const getBookingsForDate = (dateStr: string) => {
-    return bookings.filter(booking => {
+    return typedBookings.filter(booking => {
       // Safely access hallId property, treating bookings as having optional hallId
       const bookingHallId = (booking as any).hallId;
       return booking.date === dateStr && (!hallId || bookingHallId === hallId);
@@ -57,6 +64,21 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
   // Check if a date has any bookings
   const hasBookings = (dateStr: string) => {
     return getBookingsForDate(dateStr).length > 0;
+  };
+
+  // Get available time slots for the selected date
+  const getAvailableTimeSlots = () => {
+    if (!selectedDate) return timeSlots;
+    
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    const dateBookings = getBookingsForDate(dateStr);
+    
+    // Filter out time slots that are already booked
+    return timeSlots.filter(timeSlot => {
+      return !dateBookings.some(booking => 
+        timeSlot >= booking.startTime && timeSlot < booking.endTime
+      );
+    });
   };
 
   // Check if a time slot has a booking on the selected date
@@ -94,6 +116,9 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
     ? getBookingsForDate(format(selectedDate, 'yyyy-MM-dd')) 
     : [];
 
+  const availableTimeSlots = getAvailableTimeSlots();
+  const hasAvailableTimeSlots = availableTimeSlots.length > 0;
+
   // Find the selected hall details
   const selectedHallData = {
     id: hallId,
@@ -104,45 +129,38 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
 
   // Get services for the first booking on the selected date (for demo purposes)
   const firstBooking = selectedDateBookings[0];
-  // Safely access additionalServices property, treating it as optional
-  const firstBookingAdditionalServices = firstBooking ? (firstBooking as any).additionalServices || [] : [];
-  const bookingServices = firstBooking 
+  // Safely access additionalServices property
+  const bookingServices = firstBooking && firstBooking.additionalServices 
     ? mockServices.filter(service => 
-        firstBookingAdditionalServices.includes(service.id)
+        firstBooking.additionalServices?.includes(service.id)
       )
     : [];
 
-  // Handle the createBooking action (this was the undefined setActiveTab)
+  // Handle the createBooking action
   const handleCreateBooking = () => {
-    // Instead of using undefined setActiveTab, we'll just call onSelectBooking with a new random ID
-    // which will trigger the parent component to show the booking form
-    if (firstBooking) {
-      handleSelectBooking(firstBooking.id);
-    } else {
-      // Generate a temporary ID for a new booking
-      const tempId = `new-${Date.now()}`;
-      handleSelectBooking(tempId);
-    }
+    // Generate a temporary ID for a new booking
+    const tempId = `new-${Date.now()}`;
+    handleSelectBooking(tempId);
   };
 
   return (
     <div className="h-full">
       <div className="flex flex-col md:flex-row gap-6 h-full">
-        <div className="w-full md:w-2/3 bg-white rounded-lg shadow-sm p-6">
+        <div className="w-full md:w-2/3 bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
           <div className="mb-4">
-            <h2 className="text-lg font-medium mb-2">Booked dates</h2>
+            <h2 className="text-lg font-medium mb-2 dark:text-gray-200">Booked dates</h2>
             {/* Month Navigation */}
             <div className="flex items-center justify-between mb-6">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={handlePrevMonth}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 dark:text-gray-300 dark:border-gray-700"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               
-              <span className="text-base font-medium">
+              <span className="text-base font-medium dark:text-gray-200">
                 {format(viewingMonth, 'MMMM - yyyy')}
               </span>
               
@@ -150,7 +168,7 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
                 variant="outline" 
                 size="sm" 
                 onClick={handleNextMonth}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 dark:text-gray-300 dark:border-gray-700"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -159,7 +177,7 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
             {/* Calendar Header (Days of Week) */}
             <div className="grid grid-cols-7 gap-1 mb-2">
               {daysOfWeek.map(day => (
-                <div key={day} className="text-center py-2 text-sm font-medium">
+                <div key={day} className="text-center py-2 text-sm font-medium dark:text-gray-300">
                   {day}
                 </div>
               ))}
@@ -168,31 +186,31 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
             {/* Calendar Grid */}
             <div className="grid grid-cols-7 gap-1">
               {Array.from({ length: new Date(viewingMonth.getFullYear(), viewingMonth.getMonth(), 1).getDay() || 7 - 1 }).map((_, i) => (
-                <div key={`empty-${i}`} className="h-16 border bg-gray-50 rounded-md opacity-50"></div>
+                <div key={`empty-${i}`} className="h-16 border dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-md opacity-50"></div>
               ))}
               
               {daysInMonth.map(day => {
                 const dateStr = format(day, 'yyyy-MM-dd');
                 const isBooked = hasBookings(dateStr);
                 const isSelected = selectedDate && format(selectedDate, 'yyyy-MM-dd') === dateStr;
-                const isToday = format(new Date(), 'yyyy-MM-dd') === dateStr;
+                const isTodayDate = isToday(day);
                 
                 return (
                   <div 
                     key={dateStr}
                     onClick={() => handleDateClick(day)}
-                    className={`h-16 border rounded-md flex flex-col justify-start p-1 cursor-pointer transition-colors
-                      ${isSelected ? 'ring-2 ring-primary bg-blue-50' : ''}
-                      ${isBooked ? 'bg-pink-100' : 'hover:bg-gray-50'}
-                      ${isToday ? 'border-blue-500' : ''}
+                    className={`h-16 border dark:border-gray-700 rounded-md flex flex-col justify-start p-1 cursor-pointer transition-colors
+                      ${isSelected ? 'ring-2 ring-primary bg-blue-50 dark:bg-blue-900/30' : ''}
+                      ${isBooked ? 'bg-pink-100 dark:bg-pink-900/30' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}
+                      ${isTodayDate ? 'border-blue-500' : ''}
                     `}
                   >
-                    <div className={`text-right p-1 text-sm ${isToday ? 'font-bold' : ''}`}>
+                    <div className={`text-right p-1 text-sm ${isTodayDate ? 'font-bold' : ''} dark:text-gray-200`}>
                       {format(day, 'd')}
                     </div>
                     {isBooked && (
                       <div className="mt-auto">
-                        <Badge variant="outline" className="bg-primary/10 text-[10px] w-full flex justify-center">
+                        <Badge variant="outline" className="bg-primary/10 dark:bg-primary/20 text-[10px] w-full flex justify-center">
                           Booked
                         </Badge>
                       </div>
@@ -207,7 +225,7 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
         <div className="w-full md:w-1/3 space-y-6">
           {/* Selected Hall Card */}
           {selectedDate && (
-            <Card className="bg-white shadow-sm overflow-hidden">
+            <Card className="bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
               <CardContent className="p-0">
                 <div className="relative h-32 bg-gradient-to-r from-blue-400 to-blue-600 overflow-hidden">
                   <img 
@@ -221,91 +239,101 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
                   </div>
                 </div>
                 
-                <div className="p-4 space-y-4">
+                <div className="p-4 space-y-4 dark:text-gray-200">
                   {selectedDateBookings.length > 0 ? (
                     <>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-500">Total Guests</p>
-                          <div className="flex items-center justify-between border rounded-md p-2">
-                            <span className="font-medium">120</span>
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-500">Children</p>
-                          <div className="flex items-center justify-between border rounded-md p-2">
-                            <span className="font-medium">32</span>
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-500">Family</p>
-                          <div className="flex items-center justify-between border rounded-md p-2">
-                            <span className="font-medium">90</span>
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-500">Group</p>
-                          <div className="flex items-center justify-between border rounded-md p-2">
-                            <span className="font-medium">14</span>
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-500">Single</p>
-                          <div className="flex items-center justify-between border rounded-md p-2">
-                            <span className="font-medium">16</span>
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-500">No. of Staff</p>
-                          <div className="flex items-center justify-between border rounded-md p-2">
-                            <span className="font-medium">20</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <p className="text-sm text-gray-500">Reception Status</p>
-                        <div className="flex items-center justify-between border rounded-md p-2">
-                          <Badge className="bg-green-500">Active</Badge>
-                        </div>
-                      </div>
-                      
-                      {/* Services Selected */}
-                      <div className="space-y-1">
-                        <p className="text-sm text-gray-500">Services Selected</p>
-                        <div className="flex flex-wrap gap-2">
-                          {bookingServices.length > 0 ? (
-                            bookingServices.map(service => (
-                              <Badge key={service.id} variant="outline" className="bg-blue-50">
-                                {service.name}
+                      <h3 className="font-medium text-lg">Bookings for this date:</h3>
+                      <div className="space-y-3">
+                        {selectedDateBookings.map((booking) => (
+                          <div key={booking.id} className="border dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onClick={() => handleSelectBooking(booking.id)}>
+                            <div className="flex justify-between">
+                              <div className="font-medium">{booking.customerName}</div>
+                              <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/30">
+                                {booking.purpose}
                               </Badge>
-                            ))
-                          ) : (
-                            <div className="text-sm text-gray-400 italic">No services selected</div>
-                          )}
-                        </div>
+                            </div>
+                            <div className="flex items-center mt-2 text-sm text-gray-500 dark:text-gray-400">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {booking.startTime} - {booking.endTime}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 mt-3">
+                              <div className="text-xs text-gray-500 dark:text-gray-400">Guests</div>
+                              <div className="text-xs font-medium text-right">{booking.attendees}</div>
+                            </div>
+                            {booking.additionalServices && booking.additionalServices.length > 0 && (
+                              <div className="mt-2">
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Services:</div>
+                                <div className="flex flex-wrap gap-1">
+                                  {booking.additionalServices.map(service => (
+                                    <Badge key={service} variant="outline" className="text-[10px] bg-gray-50 dark:bg-gray-800">
+                                      {service}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {booking.notes && (
+                              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                <span className="font-medium">Notes:</span> {booking.notes}
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
                       
-                      {/* Notes */}
-                      <div className="space-y-1">
-                        <p className="text-sm text-gray-500">Notes</p>
-                        <div className="border rounded-md p-2 min-h-[60px] text-sm">
-                          {firstBooking && (firstBooking as any).notes ? (firstBooking as any).notes : "No notes available"}
+                      {hasAvailableTimeSlots && (
+                        <div className="pt-3 border-t dark:border-gray-700 mt-4">
+                          <div className="flex justify-between items-center mb-3">
+                            <h4 className="font-medium">Available Time Slots:</h4>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{availableTimeSlots.length} slots</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {availableTimeSlots.slice(0, 5).map(slot => (
+                              <Badge key={slot} variant="outline" className="bg-green-50 dark:bg-green-900/30">
+                                {slot}
+                              </Badge>
+                            ))}
+                            {availableTimeSlots.length > 5 && (
+                              <Badge variant="outline" className="bg-gray-50 dark:bg-gray-800">
+                                +{availableTimeSlots.length - 5} more
+                              </Badge>
+                            )}
+                          </div>
+                          <Button 
+                            className="w-full mt-4" 
+                            onClick={handleCreateBooking}
+                          >
+                            Create New Booking
+                          </Button>
                         </div>
-                      </div>
-                      
-                      {/* Edit Booking Button */}
-                      <Button 
-                        className="w-full mt-4" 
-                        onClick={() => firstBooking && handleSelectBooking(firstBooking.id)}
-                      >
-                        Edit Booking
-                      </Button>
+                      )}
                     </>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-6">
-                      <p className="text-gray-500 mb-4">No bookings for this date</p>
-                      <Button onClick={handleCreateBooking}>Create Booking</Button>
+                      <p className="text-gray-500 dark:text-gray-400 mb-4">No bookings for this date</p>
+                      <div className="space-y-3 w-full">
+                        <div>
+                          <h4 className="font-medium mb-2">Available Time Slots:</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {timeSlots.slice(0, 6).map(slot => (
+                              <Badge key={slot} variant="outline" className="bg-green-50 dark:bg-green-900/30">
+                                {slot}
+                              </Badge>
+                            ))}
+                            {timeSlots.length > 6 && (
+                              <Badge variant="outline" className="bg-gray-50 dark:bg-gray-800">
+                                +{timeSlots.length - 6} more
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <Button 
+                          onClick={handleCreateBooking}
+                          className="w-full mt-4"
+                        >
+                          Create Booking
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -314,8 +342,8 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
           )}
           
           {!selectedDate && (
-            <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg border border-dashed">
-              <p className="text-gray-500">Select a date to view details</p>
+            <div className="flex items-center justify-center h-64 bg-gray-50 dark:bg-gray-800 rounded-lg border dark:border-gray-700 border-dashed">
+              <p className="text-gray-500 dark:text-gray-400">Select a date to view details</p>
             </div>
           )}
         </div>

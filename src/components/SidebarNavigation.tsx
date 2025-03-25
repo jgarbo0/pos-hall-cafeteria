@@ -39,15 +39,15 @@ const SidebarNavigation = () => {
 
   return (
     <div className={cn(
-      "bg-white h-screen border-r flex flex-col items-center pt-4 animate-fadeIn transition-all duration-300",
+      "bg-white dark:bg-gray-900 h-screen border-r dark:border-gray-800 flex flex-col items-center pt-4 animate-fadeIn transition-all duration-300",
       isCollapsed ? "w-[70px]" : "w-[240px]"
     )}>
       <div className="p-3 mb-6 flex justify-between w-full">
         <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-lg">S</span>
+          <span className="text-white font-bold text-lg">D</span>
         </div>
         {!isCollapsed && (
-          <span className="text-xl font-semibold ml-2 text-gray-800">Somali POS</span>
+          <span className="text-xl font-semibold ml-2 text-gray-800 dark:text-gray-200">Doob Venue</span>
         )}
         <Button
           variant="ghost"
@@ -69,7 +69,7 @@ const SidebarNavigation = () => {
               isCollapsed ? "justify-center" : "justify-start",
               isActive(item.path) 
                 ? "bg-primary text-white" 
-                : "text-gray-500 hover:text-primary hover:bg-blue-50"
+                : "text-gray-500 dark:text-gray-400 hover:text-primary hover:bg-blue-50 dark:hover:bg-gray-800"
             )}
             style={{ animationDelay: `${index * 0.1}s` }}
           >

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, Bell, Languages, LogOut, User, Settings, Moon, Sun } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -17,11 +17,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from 'react-router-dom';
 import { Switch } from "@/components/ui/switch";
 import { User as UserType, Theme } from '@/types';
+
+// Define available languages
+const availableLanguages = [
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'so', name: 'Somali', flag: '🇸🇴' },
+  { code: 'ar', name: 'Arabic', flag: '🇸🇦' }
+];
+
+// Mock user data
+const predefinedUsers = [
+  { id: '1', name: 'Aisha', email: 'aisha@example.com', role: 'admin', image: '/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png' },
+  { id: '2', name: 'Mohamed', email: 'mohamed@example.com', role: 'cashier', image: null },
+  { id: '3', name: 'Fatima', email: 'fatima@example.com', role: 'manager', image: null }
+];
 
 const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,15 +46,28 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
   ]);
   const [language, setLanguage] = useState('English');
   const [theme, setTheme] = useState<Theme>('light');
-  const [user, setUser] = useState<UserType>({
-    id: '1',
-    name: 'Aisha',
-    email: 'aisha@example.com',
-    role: 'cashier'
-  });
+  const [user, setUser] = useState<UserType>(predefinedUsers[0]);
   
-  const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Initialize theme from localStorage or system preference
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as Theme || 'light';
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+    
+    setTheme(initialTheme);
+    applyTheme(initialTheme);
+  }, []);
+
+  const applyTheme = (newTheme: Theme) => {
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', newTheme);
+  };
   
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -50,36 +77,31 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
 
   const markAllAsRead = () => {
     setNotifications(notifications.map(notification => ({ ...notification, read: true })));
-    toast({
-      title: "Notifications",
-      description: "All notifications marked as read",
-    });
+    toast.success("All notifications marked as read");
   };
 
   const handleLanguageChange = (lang: string) => {
     setLanguage(lang);
-    toast({
-      title: "Language Changed",
-      description: `Language set to ${lang}`,
-    });
+    // In a real app, this would update the app's localization
+    toast.success(`Language set to ${lang}`);
   };
 
   const handleThemeToggle = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
-    toast({
-      title: "Theme Changed",
-      description: `Theme set to ${newTheme} mode`,
-    });
+    applyTheme(newTheme);
+    toast.success(`Theme set to ${newTheme} mode`);
+  };
+
+  const handleUserChange = (selectedUser: UserType) => {
+    setUser(selectedUser);
+    toast.success(`Switched to ${selectedUser.name}'s account (${selectedUser.role})`);
   };
 
   const handleLogout = () => {
-    // In a real app, you would clear auth state here
-    toast({
-      title: "Logged Out",
-      description: "You have been logged out successfully",
-    });
+    // Clear user data and redirect to login
+    localStorage.removeItem('user');
+    toast.success("You have been logged out successfully");
     navigate('/login');
   };
 
@@ -96,7 +118,7 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
             <Input
               type="search"
               placeholder="Search menu here..."
-              className="pl-10 h-10 w-full rounded-full bg-gray-50 border-none focus-visible:ring-1 focus-visible:ring-primary dark:bg-gray-800"
+              className="pl-10 h-10 w-full rounded-full bg-gray-50 border-none focus-visible:ring-1 focus-visible:ring-primary dark:bg-gray-800 dark:text-gray-200 dark:placeholder:text-gray-400"
               value={searchTerm}
               onChange={handleSearch}
             />
@@ -114,27 +136,18 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
                 <Languages className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Select Language</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => handleLanguageChange('English')}
-                className={language === 'English' ? 'bg-blue-50 dark:bg-blue-900' : ''}
-              >
-                <span className="mr-2">🇺🇸</span> English
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleLanguageChange('Somali')}
-                className={language === 'Somali' ? 'bg-blue-50 dark:bg-blue-900' : ''}
-              >
-                <span className="mr-2">🇸🇴</span> Somali
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleLanguageChange('Arabic')}
-                className={language === 'Arabic' ? 'bg-blue-50 dark:bg-blue-900' : ''}
-              >
-                <span className="mr-2">🇸🇦</span> Arabic
-              </DropdownMenuItem>
+            <DropdownMenuContent align="end" className="dark:bg-gray-900 dark:border-gray-700">
+              <DropdownMenuLabel className="dark:text-gray-200">Select Language</DropdownMenuLabel>
+              <DropdownMenuSeparator className="dark:bg-gray-700" />
+              {availableLanguages.map(lang => (
+                <DropdownMenuItem 
+                  key={lang.code}
+                  onClick={() => handleLanguageChange(lang.name)}
+                  className={`${language === lang.name ? 'bg-blue-50 dark:bg-blue-900/30' : ''} dark:text-gray-200 dark:hover:bg-gray-800`}
+                >
+                  <span className="mr-2">{lang.flag}</span> {lang.name}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
           
@@ -149,9 +162,9 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0" align="end">
+            <PopoverContent className="w-80 p-0 dark:bg-gray-900 dark:border-gray-700" align="end">
               <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                <h3 className="font-medium">Notifications</h3>
+                <h3 className="font-medium dark:text-gray-200">Notifications</h3>
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -169,7 +182,7 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
                       className={`p-4 border-b last:border-0 dark:border-gray-700 ${!notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                     >
                       <div className="flex justify-between">
-                        <p className="text-sm font-medium">{notification.text}</p>
+                        <p className="text-sm font-medium dark:text-gray-200">{notification.text}</p>
                         {!notification.read && <span className="w-2 h-2 bg-blue-600 rounded-full"></span>}
                       </div>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{notification.time}</p>
@@ -199,8 +212,8 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
             <DropdownMenuTrigger asChild>
               <div className="flex items-center cursor-pointer">
                 <Avatar className="h-10 w-10 border dark:border-gray-700">
-                  <AvatarImage src="/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png" alt="User" />
-                  <AvatarFallback>AS</AvatarFallback>
+                  <AvatarImage src={user.image || "/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png"} alt={user.name} />
+                  <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="ml-3 hidden md:block">
                   <p className="text-sm font-medium dark:text-gray-200">{user.name}</p>
@@ -208,19 +221,44 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
                 </div>
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-56 dark:bg-gray-900 dark:border-gray-700">
+              <DropdownMenuLabel className="dark:text-gray-200">My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator className="dark:bg-gray-700" />
+              
+              {/* User switching section */}
+              <DropdownMenuLabel className="text-xs text-gray-500 dark:text-gray-400 pt-2">Switch User</DropdownMenuLabel>
+              {predefinedUsers.map(predefinedUser => (
+                <DropdownMenuItem 
+                  key={predefinedUser.id} 
+                  onClick={() => handleUserChange(predefinedUser)}
+                  className={`${user.id === predefinedUser.id ? 'bg-blue-50 dark:bg-blue-900/30' : ''} dark:text-gray-200 dark:hover:bg-gray-800`}
+                >
+                  <div className="flex items-center">
+                    <Avatar className="h-6 w-6 mr-2">
+                      <AvatarFallback className="text-[10px]">{predefinedUser.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="text-sm">{predefinedUser.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{predefinedUser.role}</div>
+                    </div>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+              
+              <DropdownMenuSeparator className="dark:bg-gray-700" />
+              <DropdownMenuItem className="dark:text-gray-200 dark:hover:bg-gray-800">
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem className="dark:text-gray-200 dark:hover:bg-gray-800">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
+              <DropdownMenuSeparator className="dark:bg-gray-700" />
+              <DropdownMenuItem 
+                onClick={handleLogout}
+                className="text-red-600 dark:text-red-400 dark:hover:bg-gray-800"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>
