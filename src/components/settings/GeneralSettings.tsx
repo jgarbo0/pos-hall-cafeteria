@@ -60,7 +60,7 @@ const GeneralSettings: React.FC = () => {
           </div>
           <div className="space-y-2">
             <Label htmlFor="restaurant-address" className="dark:text-gray-300">Address</Label>
-            <Input id="restaurant-address" defaultValue="123 Main Street, Minneapolis, MN 55414" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+            <Input id="restaurant-address" defaultValue="Hargeisa Somaliland, Masalla" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="restaurant-email" className="dark:text-gray-300">Email</Label>

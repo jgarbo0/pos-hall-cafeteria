@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,10 +62,6 @@ const CartPanel = ({
       return;
     }
     
-    // Generate receipt content
-    const receiptContent = generateReceiptContent();
-    
-    // Create a print window
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(`
@@ -99,7 +94,7 @@ const CartPanel = ({
           </head>
           <body>
             <div class="receipt">
-              ${receiptContent}
+              ${generateReceiptContent()}
             </div>
             <script>
               window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 500); }
@@ -123,7 +118,7 @@ const CartPanel = ({
     let content = `
       <div class="header">
         <div class="logo">Doob Venue</div>
-        <div class="address">123 Main Street, Minneapolis, MN 55414</div>
+        <div class="address">Hargeisa Somaliland, Masalla</div>
         <div class="contact">Tel: (555) 123-4567 | info@doobvenue.com</div>
         <div class="divider"></div>
       </div>

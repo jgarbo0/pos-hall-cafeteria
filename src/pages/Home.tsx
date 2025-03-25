@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { useLanguage } from '@/context/LanguageContext';
 const Home = () => {
   const { t } = useLanguage();
   
+  {/* Header */}
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -203,7 +203,7 @@ const Home = () => {
                 <MapPin className="h-10 w-10 text-blue-600 dark:text-blue-400" />
               </div>
               <h3 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">Address</h3>
-              <p className="text-gray-600 dark:text-gray-300">123 Main Street,<br/>Minneapolis, MN 55414</p>
+              <p className="text-gray-600 dark:text-gray-300">Hargeisa Somaliland,<br/>Masalla</p>
             </Card>
             
             <Card className="bg-white dark:bg-gray-800 text-center p-6 shadow-lg">
