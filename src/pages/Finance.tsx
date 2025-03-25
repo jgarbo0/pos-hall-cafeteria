@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -383,7 +384,7 @@ const Finance = () => {
                   ></div>
                 </div>
                 <div className="flex items-center text-xs text-green-500 dark:text-green-400 mt-2">
-                  <TrendingDown className="mr-1 h-3 w-3" />
+                  <TrendingDown size={12} className="mr-1" />
                   <span>21.1% decrease from last month</span>
                 </div>
               </CardContent>
@@ -408,8 +409,8 @@ const Finance = () => {
                           style={{ backgroundColor: `${subscription.color}20` }}
                         >
                           <SubscriptionIcon 
-                            className="h-5 w-5"
-                            style={{ color: subscription.color }} 
+                            size={20}
+                            color={subscription.color}
                           />
                         </div>
                         <div className="flex-1">
@@ -442,8 +443,8 @@ const Finance = () => {
                           style={{ backgroundColor: `${goal.color}20` }}
                         >
                           <GoalIcon 
-                            className="h-5 w-5"
-                            style={{ color: goal.color }} 
+                            size={20}
+                            color={goal.color}
                           />
                         </div>
                         <div className="flex-1">
