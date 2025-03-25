@@ -1,4 +1,3 @@
-
 export interface MenuItem {
   id: string;
   title: string;
@@ -51,19 +50,18 @@ export interface ServicePackage {
 
 export interface HallBooking {
   id: string;
-  customerName: string;
-  customerPhone: string;
   date: string;
   startTime: string;
   endTime: string;
+  customerName: string;
+  customerPhone: string;
   purpose: string;
   attendees: number;
-  tableId?: number;
-  packageId?: string;
   additionalServices: string[];
-  status: 'pending' | 'confirmed' | 'cancelled';
-  notes?: string;
+  status: 'pending' | 'confirmed' | 'canceled';
   totalAmount: number;
+  notes: string;
+  hallId?: number;
 }
 
 export interface FinancialTransaction {
@@ -83,4 +81,3 @@ export interface Product extends MenuItem {
   barcode?: string;
   sku?: string;
 }
-

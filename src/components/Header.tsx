@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,6 +72,15 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
             <Filter className="h-4 w-4" />
             <span>Filter</span>
           </Button>
+        </div>
+        
+        <div className="flex items-center gap-2 mx-4">
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
+            Somali Hall 1
+          </Badge>
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-3 py-1">
+            Somali Hall 2
+          </Badge>
         </div>
         
         <div className="flex items-center ml-4 space-x-4">
