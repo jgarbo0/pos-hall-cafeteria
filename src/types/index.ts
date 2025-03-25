@@ -49,6 +49,18 @@ export interface ServicePackage {
   items: string[];
 }
 
+export type AvailabilityRange = 'day' | 'week' | 'month';
+
+export interface Hall {
+  id: number;
+  name: string;
+  image: string;
+  capacity: number;
+  type: string;
+  availabilityRange: AvailabilityRange;
+  description?: string;
+}
+
 export interface HallBooking {
   id: string;
   date: string;
@@ -65,6 +77,14 @@ export interface HallBooking {
   hallId?: number;
   tableId?: string | number;
   packageId?: string;
+  guests?: {
+    total: number;
+    children: number;
+    family: number;
+    group: number;
+    single: number;
+    staff: number;
+  };
 }
 
 export interface FinancialTransaction {
@@ -84,3 +104,13 @@ export interface Product extends MenuItem {
   barcode?: string;
   sku?: string;
 }
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'cashier' | 'manager';
+  avatar?: string;
+}
+
+export type Theme = 'light' | 'dark';

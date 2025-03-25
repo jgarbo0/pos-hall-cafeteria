@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, Bell, Languages } from 'lucide-react';
+import { Search, Filter, Bell, Languages, LogOut, User, Settings, Moon, Sun } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,15 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from 'react-router-dom';
+import { Switch } from "@/components/ui/switch";
+import { User as UserType, Theme } from '@/types';
 
 const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,7 +31,16 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
     { id: 3, text: "New customer registered", time: "1 hour ago", read: true }
   ]);
   const [language, setLanguage] = useState('English');
+  const [theme, setTheme] = useState<Theme>('light');
+  const [user, setUser] = useState<UserType>({
+    id: '1',
+    name: 'Aisha',
+    email: 'aisha@example.com',
+    role: 'cashier'
+  });
+  
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -50,10 +64,29 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
     });
   };
 
+  const handleThemeToggle = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    toast({
+      title: "Theme Changed",
+      description: `Theme set to ${newTheme} mode`,
+    });
+  };
+
+  const handleLogout = () => {
+    // In a real app, you would clear auth state here
+    toast({
+      title: "Logged Out",
+      description: "You have been logged out successfully",
+    });
+    navigate('/login');
+  };
+
   const unreadCount = notifications.filter(notification => !notification.read).length;
 
   return (
-    <header className="w-full px-6 py-4 bg-white border-b animate-fadeIn">
+    <header className="w-full px-6 py-4 bg-white border-b dark:bg-gray-900 dark:border-gray-800 animate-fadeIn">
       <div className="flex items-center justify-between">
         <div className="flex items-center flex-1 max-w-xl">
           <div className="relative flex-1">
@@ -63,49 +96,51 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
             <Input
               type="search"
               placeholder="Search menu here..."
-              className="pl-10 h-10 w-full rounded-full bg-gray-50 border-none focus-visible:ring-1 focus-visible:ring-primary"
+              className="pl-10 h-10 w-full rounded-full bg-gray-50 border-none focus-visible:ring-1 focus-visible:ring-primary dark:bg-gray-800"
               value={searchTerm}
               onChange={handleSearch}
             />
           </div>
-          <Button variant="outline" size="sm" className="ml-2 gap-2 rounded-full h-10 px-4">
+          <Button variant="outline" size="sm" className="ml-2 gap-2 rounded-full h-10 px-4 dark:text-gray-300 dark:border-gray-700">
             <Filter className="h-4 w-4" />
             <span>Filter</span>
           </Button>
         </div>
         
-        <div className="flex items-center gap-2 mx-4">
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
-            Somali Hall 1
-          </Badge>
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-3 py-1">
-            Somali Hall 2
-          </Badge>
-        </div>
-        
         <div className="flex items-center ml-4 space-x-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="rounded-full">
+              <Button variant="outline" size="icon" className="rounded-full dark:text-gray-300 dark:border-gray-700">
                 <Languages className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleLanguageChange('English')}>
-                English
+              <DropdownMenuLabel>Select Language</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => handleLanguageChange('English')}
+                className={language === 'English' ? 'bg-blue-50 dark:bg-blue-900' : ''}
+              >
+                <span className="mr-2">🇺🇸</span> English
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleLanguageChange('Somali')}>
-                Somali
+              <DropdownMenuItem 
+                onClick={() => handleLanguageChange('Somali')}
+                className={language === 'Somali' ? 'bg-blue-50 dark:bg-blue-900' : ''}
+              >
+                <span className="mr-2">🇸🇴</span> Somali
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleLanguageChange('Arabic')}>
-                Arabic
+              <DropdownMenuItem 
+                onClick={() => handleLanguageChange('Arabic')}
+                className={language === 'Arabic' ? 'bg-blue-50 dark:bg-blue-900' : ''}
+              >
+                <span className="mr-2">🇸🇦</span> Arabic
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="icon" className="rounded-full relative">
+              <Button variant="outline" size="icon" className="rounded-full relative dark:text-gray-300 dark:border-gray-700">
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
@@ -115,13 +150,13 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80 p-0" align="end">
-              <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
                 <h3 className="font-medium">Notifications</h3>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={markAllAsRead}
-                  className="text-xs text-blue-600 hover:text-blue-800"
+                  className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                 >
                   Mark all as read
                 </Button>
@@ -131,32 +166,66 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
                   notifications.map((notification) => (
                     <div 
                       key={notification.id} 
-                      className={`p-4 border-b last:border-0 ${!notification.read ? 'bg-blue-50' : ''}`}
+                      className={`p-4 border-b last:border-0 dark:border-gray-700 ${!notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                     >
                       <div className="flex justify-between">
                         <p className="text-sm font-medium">{notification.text}</p>
                         {!notification.read && <span className="w-2 h-2 bg-blue-600 rounded-full"></span>}
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{notification.time}</p>
                     </div>
                   ))
                 ) : (
-                  <div className="p-4 text-center text-gray-500">No notifications</div>
+                  <div className="p-4 text-center text-gray-500 dark:text-gray-400">No notifications</div>
                 )}
               </div>
             </PopoverContent>
           </Popover>
           
-          <div className="flex items-center">
-            <Avatar className="h-10 w-10 border">
-              <AvatarImage src="/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png" alt="User" />
-              <AvatarFallback>AS</AvatarFallback>
-            </Avatar>
-            <div className="ml-3 hidden md:block">
-              <p className="text-sm font-medium">Aisha</p>
-              <p className="text-xs text-gray-500">Cashier</p>
-            </div>
-          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-full dark:text-gray-300 dark:border-gray-700"
+            onClick={handleThemeToggle}
+          >
+            {theme === 'light' ? (
+              <Moon className="h-5 w-5" />
+            ) : (
+              <Sun className="h-5 w-5" />
+            )}
+          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex items-center cursor-pointer">
+                <Avatar className="h-10 w-10 border dark:border-gray-700">
+                  <AvatarImage src="/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png" alt="User" />
+                  <AvatarFallback>AS</AvatarFallback>
+                </Avatar>
+                <div className="ml-3 hidden md:block">
+                  <p className="text-sm font-medium dark:text-gray-200">{user.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user.role}</p>
+                </div>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

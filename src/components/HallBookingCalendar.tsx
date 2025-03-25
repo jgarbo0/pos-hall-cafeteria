@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,15 @@ interface HallBookingCalendarProps {
 }
 
 const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+// Mock service items to display in the sidebar
+const mockServices = [
+  { id: 'photography', name: 'Photography' },
+  { id: 'videography', name: 'Videography' },
+  { id: 'music', name: 'Music System' },
+  { id: 'projector', name: 'Projector' },
+  { id: 'microphone', name: 'Microphone Set' },
+];
 
 const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooking, hallId = 1 }) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -79,13 +89,26 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
 
   const daysInMonth = getDaysInMonth();
 
+  // Find the selected booking details for the side panel
+  const selectedDateBookings = selectedDate 
+    ? getBookingsForDate(format(selectedDate, 'yyyy-MM-dd')) 
+    : [];
+
   // Find the selected hall details
   const selectedHallData = {
     id: hallId,
-    name: `Somali Hall ${hallId}`,
-    image: '/lovable-uploads/af565575-6616-4b09-8b69-dddf2967d846.png',
+    name: hallId === 1 ? 'Hall One' : 'Hall Two',
+    image: '/lovable-uploads/e6ad9490-8326-48df-9c0d-eb6addb170e7.png',
     date: selectedDate ? format(selectedDate, 'dd MMMM yyyy') : '',
   };
+
+  // Get services for the first booking on the selected date (for demo purposes)
+  const firstBooking = selectedDateBookings[0];
+  const bookingServices = firstBooking 
+    ? mockServices.filter(service => 
+        firstBooking.additionalServices?.includes(service.id)
+      )
+    : [];
 
   return (
     <div className="h-full">
@@ -184,73 +207,92 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
                 </div>
                 
                 <div className="p-4 space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-500">Total Guests</p>
-                      <div className="flex items-center justify-between border rounded-md p-2">
-                        <span className="font-medium">120</span>
+                  {selectedDateBookings.length > 0 ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-500">Total Guests</p>
+                          <div className="flex items-center justify-between border rounded-md p-2">
+                            <span className="font-medium">120</span>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-500">Children</p>
+                          <div className="flex items-center justify-between border rounded-md p-2">
+                            <span className="font-medium">32</span>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-500">Family</p>
+                          <div className="flex items-center justify-between border rounded-md p-2">
+                            <span className="font-medium">90</span>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-500">Group</p>
+                          <div className="flex items-center justify-between border rounded-md p-2">
+                            <span className="font-medium">14</span>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-500">Single</p>
+                          <div className="flex items-center justify-between border rounded-md p-2">
+                            <span className="font-medium">16</span>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-500">No. of Staff</p>
+                          <div className="flex items-center justify-between border rounded-md p-2">
+                            <span className="font-medium">20</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-500">Children</p>
-                      <div className="flex items-center justify-between border rounded-md p-2">
-                        <span className="font-medium">32</span>
+                      
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-500">Reception Status</p>
+                        <div className="flex items-center justify-between border rounded-md p-2">
+                          <Badge className="bg-green-500">Active</Badge>
+                        </div>
                       </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-500">Family</p>
-                      <div className="flex items-center justify-between border rounded-md p-2">
-                        <span className="font-medium">90</span>
+                      
+                      {/* Services Selected */}
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-500">Services Selected</p>
+                        <div className="flex flex-wrap gap-2">
+                          {bookingServices.length > 0 ? (
+                            bookingServices.map(service => (
+                              <Badge key={service.id} variant="outline" className="bg-blue-50">
+                                {service.name}
+                              </Badge>
+                            ))
+                          ) : (
+                            <div className="text-sm text-gray-400 italic">No services selected</div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-500">Group</p>
-                      <div className="flex items-center justify-between border rounded-md p-2">
-                        <span className="font-medium">14</span>
+                      
+                      {/* Notes */}
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-500">Notes</p>
+                        <div className="border rounded-md p-2 min-h-[60px] text-sm">
+                          {firstBooking?.notes || "No notes available"}
+                        </div>
                       </div>
+                      
+                      {/* Edit Booking Button */}
+                      <Button 
+                        className="w-full mt-4" 
+                        onClick={() => firstBooking && handleSelectBooking(firstBooking.id)}
+                      >
+                        Edit Booking
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-6">
+                      <p className="text-gray-500 mb-4">No bookings for this date</p>
+                      <Button onClick={() => setActiveTab('new')}>Create Booking</Button>
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-500">Single</p>
-                      <div className="flex items-center justify-between border rounded-md p-2">
-                        <span className="font-medium">16</span>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-500">No. of Staff</p>
-                      <div className="flex items-center justify-between border rounded-md p-2">
-                        <span className="font-medium">20</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-500">Reception Status</p>
-                    <div className="flex items-center justify-between border rounded-md p-2">
-                      <Badge className="bg-green-500">Active</Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-500">No. of Rooms Available</p>
-                      <div className="flex items-center justify-between border rounded-md p-2">
-                        <span className="font-medium">07</span>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-500">Total Rooms</p>
-                      <div className="flex items-center justify-between border rounded-md p-2">
-                        <span className="font-medium">30</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-500">No. of Rooms Sold out</p>
-                    <div className="flex items-center justify-between border rounded-md p-2 bg-red-100">
-                      <span className="font-medium text-red-600">23</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

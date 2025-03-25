@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -24,12 +25,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ServicePackage, TableItem, HallBooking } from '@/types';
+import { ServicePackage, TableItem, HallBooking, Hall } from '@/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { SheetClose } from '@/components/ui/sheet';
-import { cn } from '@/lib/utils';
 import { toast } from "sonner";
 import { timeSlots } from '@/data/mockData';
+import { cn } from '@/lib/utils';
 
 // Define form schema
 const formSchema = z.object({
@@ -40,10 +40,16 @@ const formSchema = z.object({
   endTime: z.string({ required_error: "Please select end time" }),
   purpose: z.string().min(2, { message: "Purpose is required" }),
   attendees: z.coerce.number().min(1, { message: "Attendees must be at least 1" }),
-  tableId: z.string().optional(),
+  hallId: z.number().optional(),
   packageId: z.string().optional(),
   additionalServices: z.array(z.string()).optional(),
   notes: z.string().optional(),
+  totalGuests: z.coerce.number().min(1, { message: "Total guests must be at least 1" }),
+  children: z.coerce.number().min(0, { message: "Children cannot be negative" }),
+  family: z.coerce.number().min(0, { message: "Family cannot be negative" }),
+  group: z.coerce.number().min(0, { message: "Group cannot be negative" }),
+  single: z.coerce.number().min(0, { message: "Single cannot be negative" }),
+  staff: z.coerce.number().min(0, { message: "Staff cannot be negative" }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -55,6 +61,7 @@ interface HallBookingFormProps {
   tables?: TableItem[];
   packages?: ServicePackage[];
   hallId?: number;
+  halls?: Hall[];
 }
 
 // Available additional services
@@ -72,11 +79,22 @@ const HallBookingForm = ({
   tables = [], 
   packages = [],
   onSubmit,
-  hallId
+  hallId,
+  halls = []
 }: HallBookingFormProps) => {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [totalAmount, setTotalAmount] = useState<number>(0);
+
+  // Initialize default values for guests if none provided
+  const defaultGuests = {
+    total: 1,
+    children: 0,
+    family: 0,
+    group: 0,
+    single: 0,
+    staff: 0
+  };
 
   // Initialize form with initialData if provided
   const form = useForm<FormValues>({
@@ -89,16 +107,29 @@ const HallBookingForm = ({
       startTime: initialData.startTime,
       endTime: initialData.endTime,
       date: new Date(initialData.date),
-      tableId: initialData.tableId?.toString(),
+      hallId: initialData.hallId || hallId,
       packageId: initialData.packageId,
       notes: initialData.notes || "",
       additionalServices: initialData.additionalServices,
+      totalGuests: initialData.guests?.total || initialData.attendees,
+      children: initialData.guests?.children || 0,
+      family: initialData.guests?.family || 0,
+      group: initialData.guests?.group || 0,
+      single: initialData.guests?.single || 0,
+      staff: initialData.guests?.staff || 0,
     } : {
       customerName: "",
       customerPhone: "",
       purpose: "",
       attendees: 1,
+      hallId: hallId,
       additionalServices: [],
+      totalGuests: 1,
+      children: 0,
+      family: 0,
+      group: 0,
+      single: 0,
+      staff: 0,
     }
   });
 
@@ -111,6 +142,29 @@ const HallBookingForm = ({
       }
     }
   }, [initialData]);
+
+  // Calculate total whenever selections change
+  useEffect(() => {
+    let total = 0;
+    
+    // Add package price
+    if (selectedPackage) {
+      const packageObj = packages.find(p => p.id === selectedPackage);
+      if (packageObj) {
+        total += packageObj.price;
+      }
+    }
+    
+    // Add additional services
+    selectedServices.forEach(serviceId => {
+      const service = additionalServices.find(s => s.id === serviceId);
+      if (service) {
+        total += service.price;
+      }
+    });
+    
+    setTotalAmount(total);
+  }, [selectedPackage, selectedServices, packages]);
 
   const handleServiceToggle = (serviceId: string, checked: boolean) => {
     if (checked) {
@@ -136,13 +190,20 @@ const HallBookingForm = ({
       endTime: data.endTime,
       purpose: data.purpose,
       attendees: data.attendees,
-      tableId: data.tableId && data.tableId !== "no-table" ? data.tableId : undefined,
+      hallId: data.hallId,
       packageId: data.packageId,
       additionalServices: selectedServices,
       status: initialData?.status || 'pending',
       notes: data.notes || "",
       totalAmount: totalAmount,
-      hallId: hallId
+      guests: {
+        total: data.totalGuests,
+        children: data.children,
+        family: data.family,
+        group: data.group,
+        single: data.single,
+        staff: data.staff
+      }
     };
     
     if (onSubmit) {
@@ -238,7 +299,6 @@ const HallBookingForm = ({
                           onSelect={field.onChange}
                           disabled={(date) => date < new Date()}
                           initialFocus
-                          className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
@@ -330,34 +390,123 @@ const HallBookingForm = ({
             
             <FormField
               control={form.control}
-              name="tableId"
+              name="hallId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Table (optional)</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormLabel>Hall</FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(parseInt(value))} 
+                    defaultValue={field.value?.toString()}
+                  >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a table" />
+                        <SelectValue placeholder="Select a hall" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem key="no-table" value="no-table">No table needed</SelectItem>
-                      {tables
-                        .filter(table => table.status === 'available')
-                        .map((table) => (
-                          <SelectItem key={table.id} value={table.id.toString()}>
-                            {table.name} ({table.seats} seats)
-                          </SelectItem>
-                        ))}
+                      {halls.map((hall) => (
+                        <SelectItem key={hall.id} value={hall.id.toString()}>
+                          {hall.name} (Capacity: {hall.capacity})
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    Only available tables are shown
+                    Choose the hall for this booking
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            
+            <div className="space-y-4">
+              <h3 className="text-base font-medium">Guest Details</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="totalGuests"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Total Guests</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="children"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Children</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="0" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="family"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Family</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="0" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="group"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Group</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="0" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="single"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Single</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="0" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="staff"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Staff</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="0" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
             
             <div className="space-y-4">
               <FormLabel>Package Selection</FormLabel>
