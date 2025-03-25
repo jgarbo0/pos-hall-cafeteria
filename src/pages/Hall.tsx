@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -13,8 +12,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useLanguage } from '@/context/LanguageContext';
 
-// Mock data for tables and packages with proper typing
 const mockTables: TableItem[] = [
   { id: 1, name: 'Table 1', seats: 4, status: 'available' },
   { id: 2, name: 'Table 2', seats: 6, status: 'available' },
@@ -46,7 +45,6 @@ const mockPackages: ServicePackage[] = [
   }
 ];
 
-// Extended mock bookings to match the HallBooking type
 const fullBookings: HallBooking[] = bookings.map(booking => ({
   ...booking,
   customerPhone: '123-456-7890',
@@ -65,7 +63,6 @@ const fullBookings: HallBooking[] = bookings.map(booking => ({
   }
 }));
 
-// Hall data with availability range
 const hallsData: HallType[] = [
   {
     id: 1,
@@ -90,6 +87,7 @@ const Hall = () => {
   const [selectedHall, setSelectedHall] = useState<number>(1);
   const [editingHall, setEditingHall] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('calendar');
+  const { t } = useLanguage();
   
   const handleSelectBooking = (bookingId: string) => {
     setSelectedBooking(bookingId);
@@ -106,7 +104,6 @@ const Hall = () => {
   };
 
   const handleSaveHall = (updatedHall: HallType) => {
-    // In a real app, you would save this to your backend
     console.log('Updated hall:', updatedHall);
     setEditingHall(false);
     setActiveTab('calendar');
@@ -114,23 +111,22 @@ const Hall = () => {
   };
   
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <SidebarNavigation />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header onSearch={() => {}} />
         
         <div className="flex-1 overflow-y-auto p-6">
-          <h1 className="text-2xl font-bold mb-6">Hall Bookings</h1>
+          <h1 className="text-2xl font-bold mb-6 dark:text-white">Hall Bookings</h1>
           
-          {/* Hall Cards */}
           <div className="mb-6">
-            <h2 className="text-lg font-medium mb-4">My Halls</h2>
+            <h2 className="text-lg font-medium mb-4 dark:text-gray-200">My Halls</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {hallsData.map((hall) => (
                 <Card 
                   key={hall.id} 
-                  className={`cursor-pointer transition-all ${selectedHall === hall.id ? 'ring-2 ring-primary bg-blue-50' : 'bg-blue-50'}`}
+                  className={`cursor-pointer transition-all dark:bg-gray-800 ${selectedHall === hall.id ? 'ring-2 ring-primary bg-blue-50 dark:bg-blue-900/30' : 'bg-blue-50 dark:bg-gray-800'}`}
                   onClick={() => handleSelectHall(hall.id)}
                 >
                   <CardContent className="p-4">
@@ -143,14 +139,14 @@ const Hall = () => {
                         />
                       </div>
                       <div>
-                        <h3 className="font-semibold">{hall.name}</h3>
-                        <div className="text-sm text-gray-500 mt-1">Capacity:</div>
+                        <h3 className="font-semibold dark:text-white">{hall.name}</h3>
+                        <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Capacity:</div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-lg font-bold">{hall.capacity}</span>
-                          <Badge variant="outline">{hall.type}</Badge>
+                          <span className="text-lg font-bold dark:text-white">{hall.capacity}</span>
+                          <Badge variant="outline" className="dark:text-gray-200 dark:border-gray-600">{hall.type}</Badge>
                         </div>
                         <div className="mt-2">
-                          <Badge className="bg-blue-100 text-blue-800 border-none">
+                          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 border-none">
                             {hall.availabilityRange.charAt(0).toUpperCase() + hall.availabilityRange.slice(1)} availability
                           </Badge>
                         </div>
@@ -161,18 +157,18 @@ const Hall = () => {
               ))}
             </div>
             <div className="flex justify-end mt-4">
-              <Button variant="outline" onClick={handleEditHall}>
+              <Button variant="outline" onClick={handleEditHall} className="dark:text-gray-200 dark:border-gray-600">
                 Edit Hall Details
               </Button>
             </div>
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-[calc(100vh-360px)]">
-            <TabsList className="mb-4">
-              <TabsTrigger value="calendar">Calendar View</TabsTrigger>
-              <TabsTrigger value="new">New Booking</TabsTrigger>
-              <TabsTrigger value="packages">Packages</TabsTrigger>
-              {editingHall && <TabsTrigger value="edit">Edit Hall</TabsTrigger>}
+            <TabsList className="mb-4 dark:bg-gray-800">
+              <TabsTrigger value="calendar" className="dark:data-[state=active]:bg-gray-700">Calendar View</TabsTrigger>
+              <TabsTrigger value="new" className="dark:data-[state=active]:bg-gray-700">New Booking</TabsTrigger>
+              <TabsTrigger value="packages" className="dark:data-[state=active]:bg-gray-700">Packages</TabsTrigger>
+              {editingHall && <TabsTrigger value="edit" className="dark:data-[state=active]:bg-gray-700">Edit Hall</TabsTrigger>}
             </TabsList>
             
             <TabsContent value="calendar" className="h-full">
@@ -193,7 +189,6 @@ const Hall = () => {
                 onSubmit={(booking) => {
                   console.log('Booking submitted:', booking);
                   toast.success('Booking saved successfully!');
-                  // Here you would typically save the booking to your database
                 }}
               />
             </TabsContent>

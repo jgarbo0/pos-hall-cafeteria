@@ -1,4 +1,3 @@
-
 import React from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -25,10 +24,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useLanguage } from '@/context/LanguageContext';
+import LanguageSelector from '@/components/LanguageSelector';
 
 const Settings = () => {
+  const { t } = useLanguage();
+  const [theme, setTheme] = React.useState(() => {
+    return localStorage.getItem('theme') || 'light';
+  });
+
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (newTheme === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else if (newTheme === 'system') {
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle('dark', systemPrefersDark);
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <SidebarNavigation />
       
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -36,52 +56,52 @@ const Settings = () => {
         
         <div className="flex-1 overflow-auto p-6">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold">Settings</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl font-bold dark:text-white">Settings</h1>
+            <p className="text-muted-foreground dark:text-gray-400">
               Manage your restaurant settings and preferences
             </p>
           </div>
           
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="mb-6">
-              <TabsTrigger value="general">General</TabsTrigger>
-              <TabsTrigger value="users">Users</TabsTrigger>
-              <TabsTrigger value="billing">Billing</TabsTrigger>
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
-              <TabsTrigger value="appearance">Appearance</TabsTrigger>
+            <TabsList className="mb-6 dark:bg-gray-800">
+              <TabsTrigger value="general" className="dark:data-[state=active]:bg-gray-700">General</TabsTrigger>
+              <TabsTrigger value="users" className="dark:data-[state=active]:bg-gray-700">Users</TabsTrigger>
+              <TabsTrigger value="billing" className="dark:data-[state=active]:bg-gray-700">Billing</TabsTrigger>
+              <TabsTrigger value="notifications" className="dark:data-[state=active]:bg-gray-700">Notifications</TabsTrigger>
+              <TabsTrigger value="appearance" className="dark:data-[state=active]:bg-gray-700">Appearance</TabsTrigger>
             </TabsList>
             
             <TabsContent value="general">
               <div className="grid gap-6">
-                <Card>
+                <Card className="dark:bg-gray-800 dark:border-gray-700">
                   <CardHeader>
-                    <CardTitle>Restaurant Information</CardTitle>
-                    <CardDescription>
+                    <CardTitle className="dark:text-white">Restaurant Information</CardTitle>
+                    <CardDescription className="dark:text-gray-400">
                       Basic information about your restaurant
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="restaurant-name">Restaurant Name</Label>
-                        <Input id="restaurant-name" defaultValue="Somali Delights" />
+                        <Label htmlFor="restaurant-name" className="dark:text-gray-300">Restaurant Name</Label>
+                        <Input id="restaurant-name" defaultValue="Somali Delights" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="restaurant-phone">Phone Number</Label>
-                        <Input id="restaurant-phone" defaultValue="+1 (555) 123-4567" />
+                        <Label htmlFor="restaurant-phone" className="dark:text-gray-300">Phone Number</Label>
+                        <Input id="restaurant-phone" defaultValue="+1 (555) 123-4567" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="restaurant-address">Address</Label>
-                      <Input id="restaurant-address" defaultValue="123 Main Street, Minneapolis, MN 55414" />
+                      <Label htmlFor="restaurant-address" className="dark:text-gray-300">Address</Label>
+                      <Input id="restaurant-address" defaultValue="123 Main Street, Minneapolis, MN 55414" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="restaurant-email">Email</Label>
-                      <Input id="restaurant-email" type="email" defaultValue="contact@somalidelights.com" />
+                      <Label htmlFor="restaurant-email" className="dark:text-gray-300">Email</Label>
+                      <Input id="restaurant-email" type="email" defaultValue="contact@somalidelights.com" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="restaurant-hours">Business Hours</Label>
-                      <Input id="restaurant-hours" defaultValue="Mon-Fri: 9AM-10PM, Sat-Sun: 10AM-11PM" />
+                      <Label htmlFor="restaurant-hours" className="dark:text-gray-300">Business Hours</Label>
+                      <Input id="restaurant-hours" defaultValue="Mon-Fri: 9AM-10PM, Sat-Sun: 10AM-11PM" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                     </div>
                   </CardContent>
                   <CardFooter>
@@ -99,7 +119,7 @@ const Settings = () => {
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="tax-rate">Sales Tax Rate (%)</Label>
-                      <Input id="tax-rate" type="number" step="0.01" defaultValue="8.25" />
+                      <Input id="tax-rate" type="number" step="0.01" defaultValue="8.25" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                     </div>
                     <div className="flex items-center space-x-2">
                       <Switch id="include-tax" defaultChecked />
@@ -121,7 +141,7 @@ const Settings = () => {
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="receipt-footer">Receipt Footer Text</Label>
-                      <Input id="receipt-footer" defaultValue="Thank you for dining with us!" />
+                      <Input id="receipt-footer" defaultValue="Thank you for dining with us!" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                     </div>
                     <div className="flex items-center space-x-2">
                       <Switch id="show-logo" defaultChecked />
@@ -297,21 +317,21 @@ const Settings = () => {
             </TabsContent>
             
             <TabsContent value="appearance">
-              <Card>
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader>
-                  <CardTitle>Appearance Settings</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="dark:text-white">Appearance Settings</CardTitle>
+                  <CardDescription className="dark:text-gray-400">
                     Customize the appearance of your POS system
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="theme">Theme</Label>
-                    <Select defaultValue="light">
-                      <SelectTrigger>
+                    <Label htmlFor="theme" className="dark:text-gray-300">Theme</Label>
+                    <Select value={theme} onValueChange={handleThemeChange}>
+                      <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <SelectValue placeholder="Select theme" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="dark:bg-gray-800">
                         <SelectItem value="light">Light</SelectItem>
                         <SelectItem value="dark">Dark</SelectItem>
                         <SelectItem value="system">System</SelectItem>
@@ -320,7 +340,14 @@ const Settings = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="primary-color">Primary Color</Label>
+                    <Label htmlFor="language" className="dark:text-gray-300">Language</Label>
+                    <div className="py-2">
+                      <LanguageSelector />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="primary-color" className="dark:text-gray-300">Primary Color</Label>
                     <div className="grid grid-cols-5 gap-2">
                       {[
                         { color: 'bg-blue-500', name: 'Blue' },
@@ -339,7 +366,7 @@ const Settings = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="font-size">Font Size</Label>
+                    <Label htmlFor="font-size" className="dark:text-gray-300">Font Size</Label>
                     <Select defaultValue="medium">
                       <SelectTrigger>
                         <SelectValue placeholder="Select font size" />
@@ -354,7 +381,7 @@ const Settings = () => {
                   
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="compact-mode">Compact Mode</Label>
+                      <Label htmlFor="compact-mode" className="dark:text-gray-300">Compact Mode</Label>
                       <Switch id="compact-mode" />
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -364,7 +391,7 @@ const Settings = () => {
                   
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="animations">Interface Animations</Label>
+                      <Label htmlFor="animations" className="dark:text-gray-300">Interface Animations</Label>
                       <Switch id="animations" defaultChecked />
                     </div>
                     <p className="text-sm text-muted-foreground">

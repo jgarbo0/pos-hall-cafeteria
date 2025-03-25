@@ -8,6 +8,7 @@ import CartPanel from '@/components/CartPanel';
 import { MenuItem, CartItem } from '@/types';
 import { menuItems, categories, generateOrderNumber, generateTableNumber } from '@/data/mockData';
 import { toast } from 'sonner';
+import { useLanguage } from '@/context/LanguageContext';
 
 const Index = () => {
   const [filteredItems, setFilteredItems] = useState<MenuItem[]>(menuItems);
@@ -16,6 +17,7 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [orderNumber, setOrderNumber] = useState(generateOrderNumber());
   const [tableNumber, setTableNumber] = useState(generateTableNumber());
+  const { t } = useLanguage();
   
   useEffect(() => {
     let result = [...menuItems];

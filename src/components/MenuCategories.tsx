@@ -26,7 +26,7 @@ const MenuCategories: React.FC<MenuCategoriesProps> = ({
           )}
           onClick={() => onCategoryChange("all")}
         >
-          All Menu
+          All Items
         </button>
         
         {categories.map(category => (
