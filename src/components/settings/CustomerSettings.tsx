@@ -9,6 +9,7 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import { UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Customer {
   id: string;
@@ -19,12 +20,18 @@ interface Customer {
 }
 
 const CustomerSettings: React.FC = () => {
+  const navigate = useNavigate();
+  
   const mockCustomers = [
     { id: 'c1', name: 'Ahmed Mohamed', email: 'ahmed@example.com', totalOrders: 24, totalSpent: 845.50 },
     { id: 'c2', name: 'Fatima Hussein', email: 'fatima@example.com', totalOrders: 18, totalSpent: 620.75 },
     { id: 'c3', name: 'Omar Jama', email: 'omar@example.com', totalOrders: 9, totalSpent: 312.25 },
     { id: 'c4', name: 'Amina Abdi', email: 'amina@example.com', totalOrders: 15, totalSpent: 490.00 },
   ];
+
+  const handleViewCustomerDetails = (customerId: string) => {
+    navigate(`/customer/${customerId}`);
+  };
 
   return (
     <Card className="dark:bg-gray-800 dark:border-gray-700">
@@ -49,7 +56,12 @@ const CustomerSettings: React.FC = () => {
                   <h4 className="font-medium dark:text-white">{customer.name}</h4>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{customer.email}</p>
                 </div>
-                <Button variant="outline" size="sm" className="dark:bg-gray-600 dark:text-white dark:border-gray-600">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="dark:bg-gray-600 dark:text-white dark:border-gray-600"
+                  onClick={() => handleViewCustomerDetails(customer.id)}
+                >
                   View Details
                 </Button>
               </div>

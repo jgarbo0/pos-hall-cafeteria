@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -20,9 +20,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Receipt, CheckCircle, Clock, Eye, Edit, Trash, Plus } from 'lucide-react';
+import { Receipt, CheckCircle, Clock, Eye, Edit, Trash, Plus, Calendar, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { Order, OrderType } from '@/types';
+import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 // Modified mock data to match the Order type exactly
 const initialOrders: Order[] = [
@@ -48,7 +55,7 @@ const initialOrders: Order[] = [
     tax: 3.00,
     total: 18.75,
     status: "completed",
-    timestamp: "2023-10-15 12:45 PM"
+    timestamp: "2023-10-16 12:45 PM"
   },
   {
     id: "ORD-3423",
@@ -60,7 +67,7 @@ const initialOrders: Order[] = [
     tax: 14.54,
     total: 87.20,
     status: "processing",
-    timestamp: "2023-10-15 1:05 PM"
+    timestamp: "2023-10-17 1:05 PM"
   },
   {
     id: "ORD-3424",
@@ -72,7 +79,7 @@ const initialOrders: Order[] = [
     tax: 2.17,
     total: 12.99,
     status: "processing",
-    timestamp: "2023-10-15 1:15 PM"
+    timestamp: format(new Date(), "yyyy-MM-dd h:mm a")
   }
 ];
 
@@ -85,6 +92,8 @@ interface OrderFormData {
   status: "processing" | "completed" | "cancelled";
 }
 
+type DateRange = 'all' | 'today' | 'week' | 'month';
+
 const Orders = () => {
   const [activeTab, setActiveTab] = useState("processing");
   const [orders, setOrders] = useState<Order[]>(initialOrders);
@@ -93,6 +102,7 @@ const Orders = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange>('all');
   const [formData, setFormData] = useState<OrderFormData>({
     tableNumber: null,
     orderType: "Dine In",
@@ -101,10 +111,44 @@ const Orders = () => {
     status: "processing"
   });
   
-  const filteredOrders = orders.filter(order => {
-    if (activeTab === "all") return true;
-    return order.status === activeTab;
-  });
+  const getFilteredOrders = () => {
+    const today = new Date();
+    
+    // First filter by status
+    let filtered = orders.filter(order => {
+      if (activeTab === "all") return true;
+      return order.status === activeTab;
+    });
+    
+    // Then filter by date range
+    if (dateRange !== 'all') {
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.timestamp.split(' ')[0]);
+        
+        if (dateRange === 'today') {
+          return format(orderDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+        }
+        
+        if (dateRange === 'week') {
+          const weekStart = startOfWeek(today);
+          const weekEnd = endOfWeek(today);
+          return isWithinInterval(orderDate, { start: weekStart, end: weekEnd });
+        }
+        
+        if (dateRange === 'month') {
+          const monthStart = startOfMonth(today);
+          const monthEnd = endOfMonth(today);
+          return isWithinInterval(orderDate, { start: monthStart, end: monthEnd });
+        }
+        
+        return true;
+      });
+    }
+    
+    return filtered;
+  };
+
+  const filteredOrders = getFilteredOrders();
 
   const handleViewOrder = (order: Order) => {
     setCurrentOrder(order);
@@ -235,84 +279,110 @@ const Orders = () => {
             </div>
           </div>
           
-          <Tabs defaultValue="processing" onValueChange={setActiveTab}>
-            <TabsList className="mb-6">
-              <TabsTrigger value="processing">Processing</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-              <TabsTrigger value="all">All Orders</TabsTrigger>
-            </TabsList>
+          <div className="flex justify-between items-center mb-6">
+            <Tabs defaultValue="processing" onValueChange={setActiveTab}>
+              <TabsList className="dark:bg-gray-800">
+                <TabsTrigger value="processing" className="dark:data-[state=active]:bg-gray-700">Processing</TabsTrigger>
+                <TabsTrigger value="completed" className="dark:data-[state=active]:bg-gray-700">Completed</TabsTrigger>
+                <TabsTrigger value="all" className="dark:data-[state=active]:bg-gray-700">All Orders</TabsTrigger>
+              </TabsList>
+            </Tabs>
             
-            <TabsContent value={activeTab}>
-              <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="dark:border-gray-700">
-                      <TableHead className="dark:text-gray-300">Order ID</TableHead>
-                      <TableHead className="dark:text-gray-300">Type</TableHead>
-                      <TableHead className="dark:text-gray-300">Table</TableHead>
-                      <TableHead className="dark:text-gray-300">Items</TableHead>
-                      <TableHead className="dark:text-gray-300">Total</TableHead>
-                      <TableHead className="dark:text-gray-300">Date</TableHead>
-                      <TableHead className="dark:text-gray-300">Status</TableHead>
-                      <TableHead className="dark:text-gray-300">Actions</TableHead>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  {dateRange === 'all' ? 'All Time' : 
+                   dateRange === 'today' ? 'Today' : 
+                   dateRange === 'week' ? 'This Week' : 'This Month'}
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => setDateRange('all')}>
+                  All Time
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setDateRange('today')}>
+                  Today
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setDateRange('week')}>
+                  This Week
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setDateRange('month')}>
+                  This Month
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="dark:border-gray-700">
+                  <TableHead className="dark:text-gray-300">Order ID</TableHead>
+                  <TableHead className="dark:text-gray-300">Type</TableHead>
+                  <TableHead className="dark:text-gray-300">Table</TableHead>
+                  <TableHead className="dark:text-gray-300">Items</TableHead>
+                  <TableHead className="dark:text-gray-300">Total</TableHead>
+                  <TableHead className="dark:text-gray-300">Date</TableHead>
+                  <TableHead className="dark:text-gray-300">Status</TableHead>
+                  <TableHead className="dark:text-gray-300">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredOrders.length === 0 ? (
+                  <TableRow className="dark:border-gray-700">
+                    <TableCell colSpan={8} className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      No orders found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredOrders.map((order) => (
+                    <TableRow key={order.id} className="dark:border-gray-700">
+                      <TableCell className="font-medium dark:text-white">{order.id}</TableCell>
+                      <TableCell className="dark:text-gray-300">{order.orderType}</TableCell>
+                      <TableCell className="dark:text-gray-300">
+                        {order.tableNumber ? `Table ${order.tableNumber}` : 'N/A'}
+                      </TableCell>
+                      <TableCell className="dark:text-gray-300">{order.items.length}</TableCell>
+                      <TableCell className="dark:text-gray-300">${order.total.toFixed(2)}</TableCell>
+                      <TableCell className="dark:text-gray-300">{order.timestamp}</TableCell>
+                      <TableCell>
+                        <div className={`flex items-center space-x-1 ${
+                          order.status === 'completed' ? 'text-green-600 dark:text-green-500' : 'text-amber-500'
+                        }`}>
+                          {order.status === 'completed' ? (
+                            <>
+                              <CheckCircle size={16} />
+                              <span>Completed</span>
+                            </>
+                          ) : (
+                            <>
+                              <Clock size={16} />
+                              <span>Processing</span>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline" onClick={() => handleViewOrder(order)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleEditOrder(order)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" className="text-red-500" onClick={() => handleDeleteOrder(order)}>
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredOrders.length === 0 ? (
-                      <TableRow className="dark:border-gray-700">
-                        <TableCell colSpan={8} className="text-center py-8 text-gray-500 dark:text-gray-400">
-                          No orders found
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredOrders.map((order) => (
-                        <TableRow key={order.id} className="dark:border-gray-700">
-                          <TableCell className="font-medium dark:text-white">{order.id}</TableCell>
-                          <TableCell className="dark:text-gray-300">{order.orderType}</TableCell>
-                          <TableCell className="dark:text-gray-300">
-                            {order.tableNumber ? `Table ${order.tableNumber}` : 'N/A'}
-                          </TableCell>
-                          <TableCell className="dark:text-gray-300">{order.items.length}</TableCell>
-                          <TableCell className="dark:text-gray-300">${order.total.toFixed(2)}</TableCell>
-                          <TableCell className="dark:text-gray-300">{order.timestamp}</TableCell>
-                          <TableCell>
-                            <div className={`flex items-center space-x-1 ${
-                              order.status === 'completed' ? 'text-green-600 dark:text-green-500' : 'text-amber-500'
-                            }`}>
-                              {order.status === 'completed' ? (
-                                <>
-                                  <CheckCircle size={16} />
-                                  <span>Completed</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Clock size={16} />
-                                  <span>Processing</span>
-                                </>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button size="sm" variant="outline" onClick={() => handleViewOrder(order)}>
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={() => handleEditOrder(order)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button size="sm" variant="outline" className="text-red-500" onClick={() => handleDeleteOrder(order)}>
-                                <Trash className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-          </Tabs>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
 
@@ -558,4 +628,3 @@ const Orders = () => {
 };
 
 export default Orders;
-

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
 import HallBookingForm from '@/components/HallBookingForm';
@@ -89,6 +90,17 @@ const Hall = () => {
   const [activeTab, setActiveTab] = useState<string>('calendar');
   const { t } = useLanguage();
   
+  useEffect(() => {
+    // Check if we have a selected date and time in localStorage when component mounts
+    const storedDate = localStorage.getItem('selectedBookingDate');
+    const storedTime = localStorage.getItem('selectedBookingTime');
+    
+    // If we're looking at the booking form and have stored date/time, we can use them
+    if (activeTab === 'new' && storedDate && storedTime) {
+      console.log('Using stored date/time for new booking:', storedDate, storedTime);
+    }
+  }, [activeTab]);
+  
   const handleSelectBooking = (bookingId: string) => {
     setSelectedBooking(bookingId);
     setActiveTab('new');
@@ -108,6 +120,42 @@ const Hall = () => {
     setEditingHall(false);
     setActiveTab('calendar');
     toast.success('Hall details updated successfully!');
+  };
+  
+  // Create a bookingData object that includes stored date and time if available
+  const getInitialBookingData = () => {
+    const storedDate = localStorage.getItem('selectedBookingDate');
+    const storedTime = localStorage.getItem('selectedBookingTime');
+    
+    let initialData: Partial<HallBooking> | undefined = undefined;
+    
+    if (selectedBooking) {
+      initialData = fullBookings.find(b => b.id === selectedBooking);
+    }
+    
+    if (selectedBooking?.startsWith('new-') && storedDate && storedTime) {
+      initialData = {
+        ...(initialData || {}),
+        date: storedDate,
+        startTime: storedTime,
+        endTime: '10:00', // Default end time, could be calculated based on start time
+        hallId: selectedHall
+      };
+    }
+    
+    return initialData;
+  };
+  
+  const handleSubmitBooking = (booking: any) => {
+    console.log('Booking submitted:', booking);
+    toast.success('Booking saved successfully!');
+    
+    // Clear stored date and time after submission
+    localStorage.removeItem('selectedBookingDate');
+    localStorage.removeItem('selectedBookingTime');
+    
+    // Return to calendar view
+    setActiveTab('calendar');
   };
   
   return (
@@ -180,16 +228,17 @@ const Hall = () => {
             
             <TabsContent value="new">
               <HallBookingForm 
-                initialData={selectedBooking ? fullBookings.find(b => b.id === selectedBooking) : undefined}
-                onClearSelection={() => setSelectedBooking(null)}
+                initialData={getInitialBookingData()}
+                onClearSelection={() => {
+                  setSelectedBooking(null);
+                  localStorage.removeItem('selectedBookingDate');
+                  localStorage.removeItem('selectedBookingTime');
+                }}
                 tables={mockTables}
                 packages={mockPackages}
                 hallId={selectedHall}
                 halls={hallsData}
-                onSubmit={(booking) => {
-                  console.log('Booking submitted:', booking);
-                  toast.success('Booking saved successfully!');
-                }}
+                onSubmit={handleSubmitBooking}
               />
             </TabsContent>
 

@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Check } from "lucide-react";
 import { HallBooking } from '@/types';
+import { toast } from 'sonner';
 
 interface HallBookingCalendarProps {
   onSelectBooking: (bookingId: string) => void;
@@ -42,6 +43,7 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
   const [viewingMonth, setViewingMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
 
   // Determine the days to display in the calendar grid
   const getDaysInMonth = () => {
@@ -107,6 +109,11 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
 
   const handleDateClick = (day: Date) => {
     setSelectedDate(day);
+    setSelectedTimeSlot(null); // Reset time slot when date changes
+  };
+
+  const handleTimeSlotClick = (timeSlot: string) => {
+    setSelectedTimeSlot(timeSlot);
   };
 
   const daysInMonth = getDaysInMonth();
@@ -138,6 +145,20 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
 
   // Handle the createBooking action
   const handleCreateBooking = () => {
+    if (!selectedDate) {
+      toast.error('Please select a date first');
+      return;
+    }
+    
+    if (!selectedTimeSlot) {
+      toast.error('Please select a time slot first');
+      return;
+    }
+    
+    // Store selected date and time in localStorage to pass to booking form
+    localStorage.setItem('selectedBookingDate', format(selectedDate, 'yyyy-MM-dd'));
+    localStorage.setItem('selectedBookingTime', selectedTimeSlot);
+    
     // Generate a temporary ID for a new booking
     const tempId = `new-${Date.now()}`;
     handleSelectBooking(tempId);
@@ -288,20 +309,28 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
                             <span className="text-xs text-gray-500 dark:text-gray-400">{availableTimeSlots.length} slots</span>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            {availableTimeSlots.slice(0, 5).map(slot => (
-                              <Badge key={slot} variant="outline" className="bg-green-50 dark:bg-green-900/30">
+                            {availableTimeSlots.map(slot => (
+                              <Badge 
+                                key={slot} 
+                                variant="outline" 
+                                className={`cursor-pointer ${
+                                  selectedTimeSlot === slot
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-green-50 dark:bg-green-900/30'
+                                }`}
+                                onClick={() => handleTimeSlotClick(slot)}
+                              >
                                 {slot}
+                                {selectedTimeSlot === slot && (
+                                  <Check className="ml-1 h-3 w-3" />
+                                )}
                               </Badge>
                             ))}
-                            {availableTimeSlots.length > 5 && (
-                              <Badge variant="outline" className="bg-gray-50 dark:bg-gray-800">
-                                +{availableTimeSlots.length - 5} more
-                              </Badge>
-                            )}
                           </div>
                           <Button 
                             className="w-full mt-4" 
                             onClick={handleCreateBooking}
+                            disabled={!selectedTimeSlot}
                           >
                             Create New Booking
                           </Button>
@@ -315,21 +344,29 @@ const HallBookingCalendar: React.FC<HallBookingCalendarProps> = ({ onSelectBooki
                         <div>
                           <h4 className="font-medium mb-2">Available Time Slots:</h4>
                           <div className="flex flex-wrap gap-2">
-                            {timeSlots.slice(0, 6).map(slot => (
-                              <Badge key={slot} variant="outline" className="bg-green-50 dark:bg-green-900/30">
+                            {timeSlots.map(slot => (
+                              <Badge 
+                                key={slot} 
+                                variant="outline" 
+                                className={`cursor-pointer ${
+                                  selectedTimeSlot === slot
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-green-50 dark:bg-green-900/30'
+                                }`}
+                                onClick={() => handleTimeSlotClick(slot)}
+                              >
                                 {slot}
+                                {selectedTimeSlot === slot && (
+                                  <Check className="ml-1 h-3 w-3" />
+                                )}
                               </Badge>
                             ))}
-                            {timeSlots.length > 6 && (
-                              <Badge variant="outline" className="bg-gray-50 dark:bg-gray-800">
-                                +{timeSlots.length - 6} more
-                              </Badge>
-                            )}
                           </div>
                         </div>
                         <Button 
                           onClick={handleCreateBooking}
                           className="w-full mt-4"
+                          disabled={!selectedTimeSlot}
                         >
                           Create Booking
                         </Button>
