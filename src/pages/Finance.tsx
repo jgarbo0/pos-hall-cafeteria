@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
 import { Card, CardTitle, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { 
   PiggyBank, Car, Home, Laptop, 
   Music, Youtube, Navigation,
@@ -406,7 +405,7 @@ const Finance = () => {
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: `${subscription.color}20` }}
                       >
-                        {React.createElement(subscription.icon, { size: 20 })}
+                        <subscription.icon color={subscription.color} size={20} />
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium dark:text-white">{subscription.name}</div>
@@ -434,7 +433,7 @@ const Finance = () => {
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: `${goal.color}20` }}
                       >
-                        {React.createElement(goal.icon, { size: 20 })}
+                        <goal.icon color={goal.color} size={20} />
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium dark:text-white">{goal.name}</div>
@@ -475,10 +474,10 @@ const Finance = () => {
               </CardHeader>
               <CardContent>
                 <HallBookingFinanceWidget 
+                  isLoading={isLoadingHallData}
                   financeData={hallBookingFinanceData}
                   totalIncome={totalHallIncome}
                   totalExpense={totalHallExpense}
-                  isLoading={isLoadingHallData}
                   onViewDetails={() => handleViewHallBookingDetails('all')}
                 />
               </CardContent>

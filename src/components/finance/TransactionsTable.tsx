@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Transaction } from '@/types/finance';
+import { Transaction } from '@/types';
 
 interface TransactionsTableProps {
   transactions: Transaction[];
