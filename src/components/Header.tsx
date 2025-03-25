@@ -30,11 +30,11 @@ const availableLanguages = [
   { code: 'ar', name: 'Arabic', flag: '🇸🇦' }
 ];
 
-// Mock user data
-const predefinedUsers = [
-  { id: '1', name: 'Aisha', email: 'aisha@example.com', role: 'admin', image: '/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png' },
-  { id: '2', name: 'Mohamed', email: 'mohamed@example.com', role: 'cashier', image: null },
-  { id: '3', name: 'Fatima', email: 'fatima@example.com', role: 'manager', image: null }
+// Mock user data with correct role types
+const predefinedUsers: UserType[] = [
+  { id: '1', name: 'Aisha', email: 'aisha@example.com', role: 'admin', avatar: '/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png' },
+  { id: '2', name: 'Mohamed', email: 'mohamed@example.com', role: 'cashier', avatar: null },
+  { id: '3', name: 'Fatima', email: 'fatima@example.com', role: 'manager', avatar: null }
 ];
 
 const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
@@ -212,7 +212,7 @@ const Header = ({ onSearch }: { onSearch: (term: string) => void }) => {
             <DropdownMenuTrigger asChild>
               <div className="flex items-center cursor-pointer">
                 <Avatar className="h-10 w-10 border dark:border-gray-700">
-                  <AvatarImage src={user.image || "/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png"} alt={user.name} />
+                  <AvatarImage src={user.avatar || "/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png"} alt={user.name} />
                   <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="ml-3 hidden md:block">
