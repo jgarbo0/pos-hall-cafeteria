@@ -1,4 +1,3 @@
-
 export interface MenuItem {
   id: string;
   title: string;
@@ -6,6 +5,8 @@ export interface MenuItem {
   price: number;
   image: string;
   category: string;
+  popular?: boolean;
+  description?: string;
 }
 
 export interface CartItem extends MenuItem {
