@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Transaction, ExpenseCategory } from '@/types/finance';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils';
 
 interface DetailDialogProps {
@@ -46,10 +47,39 @@ const DetailDialog: React.FC<DetailDialogProps> = ({
   totalHallIncome,
   totalHallExpense
 }) => {
+  const [revenueFilter, setRevenueFilter] = useState<'all' | 'food-sales' | 'hall-rental'>('all');
+  
+  // Filter income transactions for revenue detail view
+  const incomeTransactions = transactions.filter(t => t.type === 'income');
+  
+  const filteredIncomeTransactions = incomeTransactions.filter(transaction => {
+    if (revenueFilter === 'all') return true;
+    if (revenueFilter === 'food-sales') return transaction.category === 'Food Sales';
+    if (revenueFilter === 'hall-rental') return transaction.category === 'Hall Rental';
+    return true;
+  });
+  
+  // Calculate totals by category for the revenue view
+  const revenueByCategoryData = React.useMemo(() => {
+    const categoryMap: Record<string, number> = {};
+    
+    incomeTransactions.forEach(transaction => {
+      if (!categoryMap[transaction.category]) {
+        categoryMap[transaction.category] = 0;
+      }
+      categoryMap[transaction.category] += transaction.amount;
+    });
+    
+    return Object.entries(categoryMap).map(([name, value]) => ({
+      name,
+      value
+    }));
+  }, [incomeTransactions]);
+
   return (
     <>
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
-        <DialogContent className="dark:bg-gray-800 dark:border-gray-700 dark:text-white sm:max-w-[625px]">
+        <DialogContent className="dark:bg-gray-800 dark:border-gray-700 dark:text-white sm:max-w-[625px] md:max-w-[750px]">
           <DialogHeader>
             <DialogTitle>{detailTitle}</DialogTitle>
           </DialogHeader>
@@ -57,26 +87,117 @@ const DetailDialog: React.FC<DetailDialogProps> = ({
             {detailType === 'revenue' && (
               <div className="space-y-4">
                 <p>Detailed revenue breakdown by channel and time period.</p>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={weeklyChartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="income" stroke="#4ade80" name="Income" />
-                      <Legend />
-                    </LineChart>
-                  </ResponsiveContainer>
+                
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium">Revenue Sources</h3>
+                  <Select value={revenueFilter} onValueChange={(value: any) => setRevenueFilter(value)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by source" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Sources</SelectItem>
+                      <SelectItem value="food-sales">Food Sales</SelectItem>
+                      <SelectItem value="hall-rental">Hall Rental</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={revenueByCategoryData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={true}
+                          outerRadius={100}
+                          fill="#8884d8"
+                          dataKey="value"
+                          nameKey="name"
+                          label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {revenueByCategoryData.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={index === 0 ? '#4ade80' : '#9b87f5'} 
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value: any) => [`$${value.toFixed(2)}`, 'Revenue']}
+                        />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={weeklyChartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip formatter={(value: any) => [`$${value.toFixed(2)}`, 'Income']} />
+                        <Line type="monotone" dataKey="income" stroke="#4ade80" name="Income" />
+                        <Legend />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                
+                <h3 className="text-lg font-medium mt-6 mb-2">Detailed Transactions</h3>
+                <div className="border rounded-md overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Payment Method</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredIncomeTransactions.length > 0 ? (
+                        filteredIncomeTransactions.map((transaction) => (
+                          <TableRow key={transaction.id}>
+                            <TableCell>{format(new Date(transaction.date), 'dd MMM yyyy')}</TableCell>
+                            <TableCell>{transaction.description}</TableCell>
+                            <TableCell>{transaction.category}</TableCell>
+                            <TableCell>{transaction.paymentMethod || 'N/A'}</TableCell>
+                            <TableCell className="text-right font-medium text-green-600 dark:text-green-400">
+                              {formatCurrency(transaction.amount)}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-4">
+                            No transactions found with the selected filter.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
-                    <p className="text-sm font-medium">Food Sales</p>
-                    <p className="text-lg font-bold">$834.50</p>
+                    <p className="text-sm font-medium">Food Sales Total</p>
+                    <p className="text-lg font-bold">{formatCurrency(
+                      incomeTransactions
+                        .filter(t => t.category === 'Food Sales')
+                        .reduce((sum, t) => sum + t.amount, 0)
+                    )}</p>
                   </div>
                   <div className="rounded-md bg-gray-100 dark:bg-gray-700 p-3">
-                    <p className="text-sm font-medium">Venue Bookings</p>
-                    <p className="text-lg font-bold">$416.49</p>
+                    <p className="text-sm font-medium">Hall Rental Total</p>
+                    <p className="text-lg font-bold">{formatCurrency(
+                      incomeTransactions
+                        .filter(t => t.category === 'Hall Rental')
+                        .reduce((sum, t) => sum + t.amount, 0)
+                    )}</p>
                   </div>
                 </div>
               </div>
