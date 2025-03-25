@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -48,13 +49,14 @@ interface OrderFormData {
   orderType: OrderType;
   items: number; 
   total: number;
-  status: "processing" | "completed" | "cancelled";
+  status: "completed" | "cancelled";
+  customerName: string;
 }
 
 type DateRange = 'all' | 'today' | 'week' | 'month';
 
 const Orders = () => {
-  const [activeTab, setActiveTab] = useState("processing");
+  const [activeTab, setActiveTab] = useState("all");
   const [orders, setOrders] = useState<Order[]>([]);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -69,7 +71,8 @@ const Orders = () => {
     orderType: "Dine In",
     items: 1,
     total: 0,
-    status: "processing"
+    status: "completed",
+    customerName: 'Walk-in Customer'
   });
   
   useEffect(() => {
@@ -237,7 +240,8 @@ const Orders = () => {
       orderType: order.orderType,
       items: order.items.length,
       total: order.total,
-      status: order.status
+      status: order.status === "processing" ? "completed" : order.status,
+      customerName: order.customerName || 'Walk-in Customer'
     });
     setIsEditDialogOpen(true);
   };
@@ -301,7 +305,8 @@ const Orders = () => {
             tableNumber: formData.tableNumber,
             orderType: formData.orderType,
             total: formData.total,
-            status: formData.status
+            status: formData.status,
+            customerName: formData.customerName
           }
         : order
     );
@@ -322,7 +327,8 @@ const Orders = () => {
       tax: formData.total * 0.15,
       total: formData.total,
       status: formData.status,
-      timestamp: new Date().toLocaleString()
+      timestamp: new Date().toLocaleString(),
+      customerName: formData.customerName
     };
     
     setOrders([newOrder, ...orders]);
@@ -362,9 +368,8 @@ const Orders = () => {
           </div>
           
           <div className="flex justify-between items-center mb-6">
-            <Tabs defaultValue="processing" onValueChange={setActiveTab}>
+            <Tabs defaultValue="all" onValueChange={setActiveTab}>
               <TabsList className="dark:bg-gray-800">
-                <TabsTrigger value="processing" className="dark:data-[state=active]:bg-gray-700">Processing</TabsTrigger>
                 <TabsTrigger value="completed" className="dark:data-[state=active]:bg-gray-700">Completed</TabsTrigger>
                 <TabsTrigger value="all" className="dark:data-[state=active]:bg-gray-700">All Orders</TabsTrigger>
               </TabsList>
@@ -407,6 +412,7 @@ const Orders = () => {
                 <TableHeader>
                   <TableRow className="dark:border-gray-700">
                     <TableHead className="dark:text-gray-300">Order ID</TableHead>
+                    <TableHead className="dark:text-gray-300">Customer</TableHead>
                     <TableHead className="dark:text-gray-300">Type</TableHead>
                     <TableHead className="dark:text-gray-300">Table</TableHead>
                     <TableHead className="dark:text-gray-300">Items</TableHead>
@@ -420,7 +426,7 @@ const Orders = () => {
                 <TableBody>
                   {filteredOrders.length === 0 ? (
                     <TableRow className="dark:border-gray-700">
-                      <TableCell colSpan={9} className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <TableCell colSpan={10} className="text-center py-8 text-gray-500 dark:text-gray-400">
                         No orders found
                       </TableCell>
                     </TableRow>
@@ -428,6 +434,7 @@ const Orders = () => {
                     filteredOrders.map((order) => (
                       <TableRow key={order.id} className="dark:border-gray-700">
                         <TableCell className="font-medium dark:text-white">{order.orderNumber}</TableCell>
+                        <TableCell className="dark:text-gray-300">{order.customerName || 'Walk-in Customer'}</TableCell>
                         <TableCell className="dark:text-gray-300">{order.orderType}</TableCell>
                         <TableCell className="dark:text-gray-300">
                           {order.tableNumber ? `Table ${order.tableNumber}` : 'N/A'}
@@ -447,7 +454,7 @@ const Orders = () => {
                             ) : (
                               <>
                                 <Clock size={16} />
-                                <span>Processing</span>
+                                <span>{order.status}</span>
                               </>
                             )}
                           </div>
@@ -499,6 +506,10 @@ const Orders = () => {
                     <p className="font-medium dark:text-white">{currentOrder.orderNumber}</p>
                   </div>
                   <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Customer</p>
+                    <p className="font-medium dark:text-white">{currentOrder.customerName || 'Walk-in Customer'}</p>
+                  </div>
+                  <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Date</p>
                     <p className="font-medium dark:text-white">{currentOrder.timestamp}</p>
                   </div>
@@ -523,7 +534,7 @@ const Orders = () => {
                       ) : (
                         <>
                           <Clock size={16} />
-                          <span>Processing</span>
+                          <span>{currentOrder.status}</span>
                         </>
                       )}
                     </div>
@@ -621,6 +632,16 @@ const Orders = () => {
           </DialogHeader>
           <div className="py-4">
             <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2 col-span-2">
+                <label htmlFor="customerName" className="text-sm dark:text-white">Customer Name</label>
+                <Input
+                  id="customerName"
+                  name="customerName"
+                  type="text"
+                  value={formData.customerName}
+                  onChange={handleInputChange}
+                />
+              </div>
               <div className="grid gap-2">
                 <label htmlFor="orderType" className="text-sm dark:text-white">Order Type</label>
                 <Select 
@@ -678,7 +699,6 @@ const Orders = () => {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="processing">Processing</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
@@ -715,6 +735,16 @@ const Orders = () => {
           </DialogHeader>
           <div className="py-4">
             <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2 col-span-2">
+                <label htmlFor="add-customerName" className="text-sm dark:text-white">Customer Name</label>
+                <Input
+                  id="add-customerName"
+                  name="customerName"
+                  type="text"
+                  value={formData.customerName}
+                  onChange={handleInputChange}
+                />
+              </div>
               <div className="grid gap-2">
                 <label htmlFor="add-orderType" className="text-sm dark:text-white">Order Type</label>
                 <Select 
@@ -772,7 +802,6 @@ const Orders = () => {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="processing">Processing</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
