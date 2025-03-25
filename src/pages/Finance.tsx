@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -193,7 +192,6 @@ const subscriptions: Subscription[] = [
   { id: '2', name: 'Most Rented Hall', amount: 13.99, date: 'Apr 03, 2024', icon: Youtube, color: '#FF0000' },
 ];
 
-// Generate daily expense data
 const generateDailyExpenseData = () => {
   const today = new Date();
   const startDate = subDays(today, 6);
@@ -218,7 +216,6 @@ const generateDailyExpenseData = () => {
   });
 };
 
-// Generate weekly income vs expense data
 const generateWeeklyData = () => {
   const today = new Date();
   const startDate = subDays(today, 6);
@@ -308,7 +305,6 @@ const Finance = () => {
     setTransactions([transaction, ...transactions]);
     setIsAddTransactionOpen(false);
     
-    // Reset form
     setNewTransaction({
       description: '',
       amount: '',
@@ -502,7 +498,6 @@ const Finance = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            {/* Revenue Card */}
             <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
@@ -551,7 +546,6 @@ const Finance = () => {
               </CardContent>
             </Card>
 
-            {/* Weekly Expense Card */}
             <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
@@ -577,11 +571,11 @@ const Finance = () => {
                         data={expenseCategories}
                         cx="50%"
                         cy="50%"
-                        labelLine={false}
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={2}
+                        labelLine={true}
+                        outerRadius={100}
+                        fill="#8884d8"
                         dataKey="value"
+                        label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
                       >
                         {expenseCategories.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
@@ -615,7 +609,6 @@ const Finance = () => {
               </CardContent>
             </Card>
 
-            {/* Net Income Card */}
             <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
@@ -671,7 +664,6 @@ const Finance = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-6">
-            {/* Monthly Expense Card */}
             <Card className="md:col-span-3 dark:bg-gray-800 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
@@ -709,7 +701,6 @@ const Finance = () => {
               </CardContent>
             </Card>
 
-            {/* Top Items Cards */}
             <div className="md:col-span-3 space-y-4">
               {subscriptions.map(subscription => (
                 <Card 
@@ -726,7 +717,10 @@ const Finance = () => {
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: `${subscription.color}20` }}
                       >
-                        <subscription.icon className="h-5 w-5" style={{ color: subscription.color }} />
+                        {React.createElement(subscription.icon, {
+                          className: "h-5 w-5",
+                          style: { color: subscription.color }
+                        })}
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium dark:text-white">{subscription.name}</div>
@@ -741,7 +735,6 @@ const Finance = () => {
               ))}
             </div>
 
-            {/* Saving Goals */}
             <div className="md:col-span-6 grid grid-cols-2 gap-4">
               {savingGoals.slice(1).map(goal => (
                 <Card 
@@ -755,7 +748,10 @@ const Finance = () => {
                         className="p-2 rounded-full" 
                         style={{ backgroundColor: `${goal.color}20` }}
                       >
-                        <goal.icon className="h-5 w-5" style={{ color: goal.color }} />
+                        {React.createElement(goal.icon, {
+                          className: "h-5 w-5",
+                          style: { color: goal.color }
+                        })}
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium dark:text-white">{goal.name}</div>
@@ -780,7 +776,6 @@ const Finance = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Daily Expense Chart */}
             <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
@@ -802,9 +797,9 @@ const Finance = () => {
                 <div className="h-[300px] mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={dailyExpenseData} stackOffset="sign">
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" />
-                      <XAxis dataKey="name" stroke="#9CA3AF" axisLine={false} tickLine={false} />
-                      <YAxis stroke="#9CA3AF" axisLine={false} tickLine={false} />
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
                       <Tooltip 
                         contentStyle={{ 
                           backgroundColor: "#1F2937", 
@@ -842,12 +837,11 @@ const Finance = () => {
               </CardContent>
             </Card>
 
-            {/* Transactions */}
             <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
                   Recent Transactions
-                </CardTitle>
+                CardTitle>
                 <div className="flex items-center gap-2">
                   <Select 
                     value={transactionType} 
@@ -919,7 +913,6 @@ const Finance = () => {
         </div>
       </div>
 
-      {/* Detail Dialog */}
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
         <DialogContent className="dark:bg-gray-800 dark:border-gray-700 dark:text-white sm:max-w-[625px]">
           <DialogHeader>
