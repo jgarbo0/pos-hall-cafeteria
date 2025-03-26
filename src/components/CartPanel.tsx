@@ -357,7 +357,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="cart" className="flex-1 flex flex-col overflow-hidden">
+        <TabsContent value="cart" className="flex-1 flex flex-col">
           <div className="p-4 border-b dark:border-gray-700">
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -431,10 +431,10 @@ const CartPanel: React.FC<CartPanelProps> = ({
             </div>
           </div>
           
-          <ScrollArea className="flex-1 overflow-y-auto">
+          <ScrollArea className="flex-1">
             <div className="p-4">
               {items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12">
+                <div className="flex flex-col items-center justify-center h-full py-12">
                   <ShoppingBag className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" />
                   <p className="text-gray-500 dark:text-gray-400 text-center">Your cart is empty</p>
                 </div>
@@ -446,7 +446,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
                       <div key={item.id} className="flex flex-col border-b dark:border-gray-700 pb-4">
                         <div className="flex items-start">
                           <div className="h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden flex-shrink-0 mr-4">
-                            {item.image && <img src={item.image} alt={item.title} className="h-full w-full object-cover" />}
+                            <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
                           </div>
                           <div className="flex-1">
                             <h3 className="font-medium text-sm dark:text-white">{item.title}</h3>
@@ -669,12 +669,12 @@ const CartPanel: React.FC<CartPanelProps> = ({
           <ScrollArea className="flex-1">
             <div className="p-4">
               {recentOrders.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12">
+                <div className="flex flex-col items-center justify-center h-full py-12">
                   <ClipboardList className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" />
                   <p className="text-gray-500 dark:text-gray-400 text-center">No recent orders</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {recentOrders.map((order) => (
                     <div key={order.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
