@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Plus, Minus, ShoppingBag, CreditCard, Clock, Printer, ClipboardList } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, CreditCard, Clock, Printer, ClipboardList, Percent } from 'lucide-react';
 import { CartItem, Customer, Order } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,9 +51,29 @@ const CartPanel: React.FC<CartPanelProps> = ({
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState("cart");
   const [availableTables, setAvailableTables] = useState<RestaurantTable[]>([]);
+  const [globalDiscount, setGlobalDiscount] = useState<number>(0);
+  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
+  const [itemDiscounts, setItemDiscounts] = useState<Record<string, number>>({});
 
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.1; // 10% tax
+  const rawSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  
+  const calculateDiscount = () => {
+    if (discountType === 'percentage') {
+      return rawSubtotal * (globalDiscount / 100);
+    } else {
+      return Math.min(globalDiscount, rawSubtotal);
+    }
+  };
+
+  const itemDiscountTotal = items.reduce((sum, item) => {
+    const itemDiscount = itemDiscounts[item.id] || 0;
+    return sum + ((item.price * item.quantity) * (itemDiscount / 100));
+  }, 0);
+
+  const discountAmount = calculateDiscount() + itemDiscountTotal;
+  
+  const subtotal = rawSubtotal - discountAmount;
+  const tax = subtotal * 0.1;
   const total = subtotal + tax;
 
   const isWalkInCustomer = selectedCustomer === 'Walk-in Customer';
@@ -123,7 +144,20 @@ const CartPanel: React.FC<CartPanelProps> = ({
     }).format(date);
   };
 
+  const handleApplyItemDiscount = (itemId: string, discount: number) => {
+    setItemDiscounts(prev => ({
+      ...prev,
+      [itemId]: discount
+    }));
+    toast.success(`Discount applied to item: ${discount}%`);
+  };
+
   const handleCompleteOrder = (paymentStatus: 'paid' | 'pending') => {
+    const itemsWithDiscount = items.map(item => ({
+      ...item,
+      discount: itemDiscounts[item.id] || (discountType === 'percentage' ? globalDiscount : 0)
+    }));
+    
     onPlaceOrder(paymentStatus);
     
     toast.success(
@@ -200,23 +234,42 @@ const CartPanel: React.FC<CartPanelProps> = ({
                 <th>Item</th>
                 <th>Quantity</th>
                 <th>Price</th>
+                ${discountAmount > 0 ? '<th>Discount</th>' : ''}
                 <th>Total</th>
               </tr>
             </thead>
             <tbody>
-              ${items.map(item => `
-                <tr>
-                  <td>${item.title}</td>
-                  <td>${item.quantity}</td>
-                  <td>$${item.price.toFixed(2)}</td>
-                  <td>$${(item.price * item.quantity).toFixed(2)}</td>
-                </tr>
-              `).join('')}
+              ${items.map(item => {
+                const itemDiscount = itemDiscounts[item.id] || 0;
+                const hasDiscount = itemDiscount > 0 || globalDiscount > 0;
+                const discountValue = itemDiscount > 0 ? itemDiscount : (discountType === 'percentage' ? globalDiscount : 0);
+                const itemTotal = item.price * item.quantity;
+                const discountedTotal = hasDiscount ? 
+                  (discountType === 'percentage' ? 
+                    itemTotal * (1 - (discountValue / 100)) : 
+                    itemTotal - (globalDiscount / items.length)) : 
+                  itemTotal;
+                
+                return `
+                  <tr>
+                    <td>${item.title}</td>
+                    <td>${item.quantity}</td>
+                    <td>$${item.price.toFixed(2)}</td>
+                    ${discountAmount > 0 ? 
+                      `<td>${discountValue}${discountType === 'percentage' ? '%' : 'USD'}</td>` : 
+                      ''}
+                    <td>$${discountedTotal.toFixed(2)}</td>
+                  </tr>
+                `;
+              }).join('')}
             </tbody>
           </table>
           
           <div class="totals">
-            <div><strong>Subtotal:</strong> $${subtotal.toFixed(2)}</div>
+            <div><strong>Subtotal:</strong> $${rawSubtotal.toFixed(2)}</div>
+            ${discountAmount > 0 ? 
+              `<div><strong>Discount:</strong> -$${discountAmount.toFixed(2)}</div>` : 
+              ''}
             <div><strong>Tax:</strong> $${tax.toFixed(2)}</div>
             <div><strong>Total:</strong> $${total.toFixed(2)}</div>
           </div>
@@ -349,6 +402,72 @@ const CartPanel: React.FC<CartPanelProps> = ({
                   </SelectContent>
                 </Select>
               </div>
+
+              {items.length > 0 && (
+                <div className="space-y-2 border-t pt-3 mt-3 dark:border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="discount-type" className="text-sm font-medium">
+                      Discount Type
+                    </Label>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroup 
+                        id="discount-type" 
+                        className="flex gap-4" 
+                        value={discountType} 
+                        onValueChange={(value) => setDiscountType(value as 'percentage' | 'fixed')}
+                      >
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="percentage" id="percentage" />
+                          <Label htmlFor="percentage" className="cursor-pointer text-xs">Percentage</Label>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <RadioGroupItem value="fixed" id="fixed" />
+                          <Label htmlFor="fixed" className="cursor-pointer text-xs">Fixed</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="discount" className="text-sm font-medium mb-1 block">
+                      Global Discount {discountType === 'percentage' ? '(%)' : '($)'}
+                    </Label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Input 
+                          id="discount"
+                          type="number" 
+                          value={globalDiscount.toString()}
+                          onChange={(e) => {
+                            const value = parseFloat(e.target.value);
+                            if (!isNaN(value)) {
+                              setGlobalDiscount(value);
+                            } else {
+                              setGlobalDiscount(0);
+                            }
+                          }}
+                          min="0"
+                          max={discountType === 'percentage' ? "100" : undefined}
+                          step="0.01"
+                          placeholder={discountType === 'percentage' ? "0-100" : "0.00"}
+                          className="pr-8"
+                        />
+                        <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                          {discountType === 'percentage' ? '%' : '$'}
+                        </div>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setGlobalDiscount(0)}
+                        size="sm"
+                        className="text-xs"
+                      >
+                        Clear
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
@@ -360,47 +479,99 @@ const CartPanel: React.FC<CartPanelProps> = ({
               </div>
             ) : (
               <div className="space-y-4">
-                {items.map(item => (
-                  <div key={item.id} className="flex items-start border-b dark:border-gray-700 pb-4">
-                    <div className="h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden flex-shrink-0 mr-4">
-                      <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-sm dark:text-white">{item.title}</h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-xs">${item.price.toFixed(2)}</p>
-                      <div className="flex items-center mt-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 rounded-full"
-                          onClick={() => onUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                        >
-                          <Minus size={12} />
-                        </Button>
-                        <span className="mx-2 text-sm dark:text-white">{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 rounded-full"
-                          onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                        >
-                          <Plus size={12} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 ml-auto"
-                          onClick={() => onRemoveItem(item.id)}
-                        >
-                          <Trash2 size={14} />
-                        </Button>
+                {items.map(item => {
+                  const itemDiscount = itemDiscounts[item.id] || 0;
+                  return (
+                    <div key={item.id} className="flex flex-col border-b dark:border-gray-700 pb-4">
+                      <div className="flex items-start">
+                        <div className="h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden flex-shrink-0 mr-4">
+                          <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-sm dark:text-white">{item.title}</h3>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs">${item.price.toFixed(2)}</p>
+                          <div className="flex items-center mt-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7 rounded-full"
+                              onClick={() => onUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                            >
+                              <Minus size={12} />
+                            </Button>
+                            <span className="mx-2 text-sm dark:text-white">{item.quantity}</span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7 rounded-full"
+                              onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                            >
+                              <Plus size={12} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 ml-auto"
+                              onClick={() => onRemoveItem(item.id)}
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="ml-2 font-medium text-sm dark:text-white">
+                          ${(item.price * item.quantity).toFixed(2)}
+                        </div>
+                      </div>
+
+                      <div className="mt-2 flex gap-2 items-center">
+                        <div className="flex-1 relative">
+                          <Input 
+                            type="number" 
+                            placeholder="Item discount %" 
+                            value={itemDiscount > 0 ? itemDiscount.toString() : ''} 
+                            onChange={(e) => {
+                              const value = parseFloat(e.target.value);
+                              if (!isNaN(value) && value >= 0 && value <= 100) {
+                                setItemDiscounts(prev => ({
+                                  ...prev,
+                                  [item.id]: value
+                                }));
+                              } else if (e.target.value === '') {
+                                setItemDiscounts(prev => {
+                                  const newDiscounts = {...prev};
+                                  delete newDiscounts[item.id];
+                                  return newDiscounts;
+                                });
+                              }
+                            }}
+                            min="0"
+                            max="100"
+                            className="h-8 text-xs pr-7"
+                          />
+                          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                            <Percent size={14} className="text-gray-400" />
+                          </div>
+                        </div>
+                        {itemDiscount > 0 && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 px-2"
+                            onClick={() => {
+                              setItemDiscounts(prev => {
+                                const newDiscounts = {...prev};
+                                delete newDiscounts[item.id];
+                                return newDiscounts;
+                              });
+                            }}
+                          >
+                            Clear
+                          </Button>
+                        )}
                       </div>
                     </div>
-                    <div className="ml-2 font-medium text-sm dark:text-white">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -409,8 +580,18 @@ const CartPanel: React.FC<CartPanelProps> = ({
             <div className="space-y-2 mb-4">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500 dark:text-gray-400">Subtotal</span>
-                <span className="dark:text-white">${subtotal.toFixed(2)}</span>
+                <span className="dark:text-white">${rawSubtotal.toFixed(2)}</span>
               </div>
+              
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-green-500 flex items-center">
+                    <Percent size={14} className="mr-1" /> Discount
+                  </span>
+                  <span className="text-green-500">-${discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500 dark:text-gray-400">Tax (10%)</span>
                 <span className="dark:text-white">${tax.toFixed(2)}</span>

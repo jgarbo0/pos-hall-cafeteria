@@ -144,8 +144,19 @@ export const createOrder = async (
   paymentStatus: 'paid' | 'pending' = 'paid'
 ): Promise<Order> => {
   try {
-    // Calculate totals
-    const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    // Calculate totals with discounts
+    let subtotal = 0;
+    
+    // Calculate each item's price after potential discount
+    for (const item of cartItems) {
+      let itemPrice = item.price * item.quantity;
+      // Apply item discount if present
+      if (item.discount && item.discount > 0) {
+        itemPrice = itemPrice * (1 - (item.discount / 100));
+      }
+      subtotal += itemPrice;
+    }
+    
     const tax = subtotal * 0.1; // 10% tax
     const total = subtotal + tax;
     
@@ -168,12 +179,13 @@ export const createOrder = async (
     
     if (orderError) throw orderError;
     
-    // Insert order items
+    // Insert order items with discount information
     const orderItems = cartItems.map(item => ({
       order_id: orderData.id,
       menu_item_id: item.id,
       quantity: item.quantity,
       price: item.price,
+      discount: item.discount || 0,
       notes: item.notes || null,
       spicy_level: item.spicyLevel || null
     }));

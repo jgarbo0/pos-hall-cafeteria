@@ -1,4 +1,3 @@
-
 export interface MenuItem {
   id: string;
   title: string;
@@ -14,6 +13,7 @@ export interface CartItem extends MenuItem {
   quantity: number;
   notes?: string;
   spicyLevel?: number;
+  discount?: number; // Discount percentage (0-100)
 }
 
 export interface Category {
