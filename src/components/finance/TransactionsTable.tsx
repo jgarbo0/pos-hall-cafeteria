@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 import { Transaction } from '@/types/finance';
 
 interface TransactionsTableProps {
@@ -21,6 +23,7 @@ interface TransactionsTableProps {
   onViewDetails: (id: string, title: string) => void;
   onViewAll: () => void;
   isLoading?: boolean;
+  onSearch: (term: string) => void;
 }
 
 const TransactionsTable: React.FC<TransactionsTableProps> = ({
@@ -29,13 +32,19 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
   onTransactionTypeChange,
   onViewDetails,
   onViewAll,
-  isLoading = false
+  isLoading = false,
+  onSearch
 }) => {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <div className="text-xs text-muted-foreground dark:text-gray-400">
-          Showing {transactions.length} transactions
+        <div className="relative w-[250px]">
+          <Input
+            placeholder="Search transactions..."
+            className="pl-8 h-8 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            onChange={(e) => onSearch(e.target.value)}
+          />
+          <Search className="h-4 w-4 absolute left-2 top-2 text-gray-500 dark:text-gray-400" />
         </div>
         <div className="flex items-center gap-2">
           <Select 

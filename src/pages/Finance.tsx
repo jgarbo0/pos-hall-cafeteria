@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   subDays, 
@@ -10,16 +11,16 @@ import {
   Building, 
   Coffee, 
   LineChart, 
-  PieChart,
+  PieChart as PieChartIcon,
   Music,
   Youtube,
   Home,
   Navigation,
   TrendingDown,
   TrendingUp,
-  PiggyBank
+  PiggyBank,
+  type LucideIcon
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -88,6 +89,7 @@ const Finance = () => {
   const [hall2Bookings, setHall2Bookings] = useState<HallBookingIncome[]>([]);
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
   const [isLoadingHallData, setIsLoadingHallData] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -176,6 +178,10 @@ const Finance = () => {
     setIsDetailDialogOpen(false);
     setDetailDialogTitle("");
     setDetailDialogId("");
+  };
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
   };
 
   const filteredTransactions = transactions.filter(transaction => {
@@ -307,6 +313,7 @@ const Finance = () => {
                         onViewDetails={handleViewTransactionDetails}
                         onViewAll={() => handleViewReport('all-transactions', 'All Transactions')}
                         isLoading={isLoadingTransactions}
+                        onSearch={handleSearch}
                       />
                     </CardContent>
                   </Card>
@@ -507,15 +514,25 @@ const Finance = () => {
       />
       
       <DetailDialog
-        isOpen={isDetailDialogOpen}
-        onClose={handleCloseDetailDialog}
-        title={detailDialogTitle}
-        id={detailDialogId}
-        data={transactions}
+        showDetailModal={isDetailDialogOpen}
+        setShowDetailModal={setIsDetailDialogOpen}
+        detailType={detailDialogId}
+        detailTitle={detailDialogTitle}
+        transactions={transactions}
+        weeklyChartData={chartData}
+        dailyExpenseData={[]}
+        hallBookingFinanceData={chartData}
+        selectedHallBooking={null}
+        hallBookingIncomes={hallBookingIncomes}
+        isLoadingHallData={isLoadingHallData}
+        expenseCategories={[]}
+        hallDetailModalOpen={false}
+        setHallDetailModalOpen={() => {}}
+        totalHallIncome={0}
+        totalHallExpense={0}
       />
     </div>
   );
 };
 
 export default Finance;
-
