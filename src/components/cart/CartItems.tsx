@@ -39,7 +39,9 @@ const CartItems: React.FC<CartItemsProps> = ({
                 <div key={item.id} className="flex flex-col border-b dark:border-gray-700 pb-4">
                   <div className="flex items-start">
                     <div className="h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden flex-shrink-0 mr-4">
-                      <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                      {item.image && (
+                        <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                      )}
                     </div>
                     <div className="flex-1">
                       <h3 className="font-medium text-sm dark:text-white">{item.title}</h3>
