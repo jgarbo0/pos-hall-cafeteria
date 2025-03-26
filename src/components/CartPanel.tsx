@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { TabsList, TabsTrigger, Tabs, TabsContent } from '@/components/ui/tabs';
 import { ShoppingBag, ClipboardList } from 'lucide-react';
@@ -187,7 +188,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
           />
         </TabsContent>
 
-        <TabsContent value="orders" className="flex-1 flex flex-col overflow-hidden mt-0">
+        <TabsContent value="orders" className="flex-1 flex flex-col overflow-hidden mt-0 pt-0">
           <CartOrdersList orders={recentOrders} />
         </TabsContent>
       </Tabs>
