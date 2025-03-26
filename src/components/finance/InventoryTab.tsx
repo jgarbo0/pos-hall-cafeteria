@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -218,10 +217,10 @@ const InventoryTab: React.FC = () => {
       
       // If this was a new item with quantity > 0, ask if they want to record a purchase transaction
       if (!isEditMode && inventoryFormData.quantity > 0) {
-        toast({
-          description: "Do you want to record this as a purchase transaction?",
-          action: (
-            <Button onClick={() => {
+        toast("Do you want to record this as a purchase transaction?", {
+          action: {
+            label: "Yes, record purchase",
+            onClick: () => {
               // We don't have the new item ID here, so we'll need to fetch it
               getInventoryItems().then(items => {
                 const newItem = items.find(i => i.name === inventoryFormData.name);
@@ -236,10 +235,8 @@ const InventoryTab: React.FC = () => {
                   setIsTransactionFormOpen(true);
                 }
               });
-            }} variant="outline">
-              Yes, record purchase
-            </Button>
-          ),
+            }
+          },
         });
       }
     } catch (error) {
