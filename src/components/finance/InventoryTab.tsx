@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -263,7 +262,6 @@ const InventoryTab: React.FC = () => {
     }
   };
   
-  // Filter items based on search term and category
   const filteredItems = inventoryItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          item.supplier?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -602,7 +600,6 @@ const InventoryTab: React.FC = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Item Form Dialog */}
       <Dialog open={isInventoryFormOpen} onOpenChange={setIsInventoryFormOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -756,7 +753,6 @@ const InventoryTab: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Transaction Form Dialog */}
       <Dialog open={isTransactionFormOpen} onOpenChange={setIsTransactionFormOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -861,7 +857,6 @@ const InventoryTab: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

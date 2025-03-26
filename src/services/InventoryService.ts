@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { InventoryItem, InventoryTransaction } from '@/types/inventory';
+import { InventoryItem, InventoryTransaction, InventoryCategory } from '@/types/inventory';
 import { toast } from 'sonner';
 
 export const getInventoryItems = async (): Promise<InventoryItem[]> => {
@@ -268,10 +268,11 @@ export const getInventoryTransactions = async (itemId?: string): Promise<Invento
 
 export const getLowStockItems = async (): Promise<InventoryItem[]> => {
   try {
+    // Fix the raw property issue by using a direct comparison
     const { data, error } = await supabase
       .from('inventory_items')
       .select('*')
-      .filter('quantity', 'lte', supabase.raw('min_stock_level'))
+      .lte('quantity', 'min_stock_level')
       .order('name');
     
     if (error) throw error;
