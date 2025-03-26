@@ -5,13 +5,12 @@ import Header from '@/components/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/context/LanguageContext';
 
-// Import the new component files
+// Import the component files
 import GeneralSettings from '@/components/settings/GeneralSettings';
 import UserManagement from '@/components/settings/UserManagement';
 import RolesPermissions from '@/components/settings/RolesPermissions';
 import NotificationSettings from '@/components/settings/NotificationSettings';
 import AppearanceSettings from '@/components/settings/AppearanceSettings';
-import CustomerSettings from '@/components/settings/CustomerSettings';
 import PermissionsManagement from '@/components/settings/PermissionsManagement';
 
 const Settings = () => {
@@ -57,7 +56,6 @@ const Settings = () => {
               <TabsTrigger value="permissions" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Access Control</TabsTrigger>
               <TabsTrigger value="notifications" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Notifications</TabsTrigger>
               <TabsTrigger value="appearance" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Appearance</TabsTrigger>
-              <TabsTrigger value="customers" className="dark:data-[state=active]:bg-gray-700 dark:text-white">Customers</TabsTrigger>
             </TabsList>
             
             <TabsContent value="general">
@@ -82,10 +80,6 @@ const Settings = () => {
             
             <TabsContent value="appearance">
               <AppearanceSettings theme={theme} onThemeChange={handleThemeChange} />
-            </TabsContent>
-
-            <TabsContent value="customers">
-              <CustomerSettings />
             </TabsContent>
           </Tabs>
         </div>

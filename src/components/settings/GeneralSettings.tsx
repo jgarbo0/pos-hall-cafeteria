@@ -12,26 +12,12 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { 
-  Dialog, 
-  DialogTrigger, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription, 
-  DialogFooter 
-} from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
   RestaurantInfo, 
   getRestaurantInfo, 
   updateRestaurantInfo,
-  MenuCategory,
-  getMenuCategories,
-  createMenuCategory,
-  updateMenuCategory,
-  deleteMenuCategory,
   TaxSettings,
   getTaxSettings,
   updateTaxSettings,
@@ -40,19 +26,8 @@ import {
   updateReceiptSettings
 } from '@/services/SettingsService';
 
-interface Category {
-  id: string;
-  name: string;
-  itemCount: number;
-}
-
 const GeneralSettings: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [newCategory, setNewCategory] = useState({ name: '', description: '' });
-  const [editCategory, setEditCategory] = useState<Category | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo>({
     name: '',
     phone: '',
@@ -82,17 +57,6 @@ const GeneralSettings: React.FC = () => {
         const restaurantData = await getRestaurantInfo();
         if (restaurantData) {
           setRestaurantInfo(restaurantData);
-        }
-        
-        // Fetch categories
-        const categoriesData = await getMenuCategories();
-        if (categoriesData) {
-          const formattedCategories = categoriesData.map(cat => ({
-            id: cat.id || '',
-            name: cat.name,
-            itemCount: cat.item_count || 0
-          }));
-          setCategories(formattedCategories);
         }
         
         // Fetch tax settings
@@ -130,67 +94,6 @@ const GeneralSettings: React.FC = () => {
   const handleSaveReceiptSettings = async () => {
     console.log('Saving receipt settings:', receiptSettings);
     await updateReceiptSettings(receiptSettings);
-  };
-
-  const handleAddCategory = async () => {
-    if (!newCategory.name.trim()) {
-      toast.error('Category name is required');
-      return;
-    }
-    
-    const categoryToAdd: MenuCategory = {
-      name: newCategory.name,
-      description: newCategory.description,
-      item_count: 0
-    };
-    
-    const newId = await createMenuCategory(categoryToAdd);
-    
-    if (newId) {
-      const newCategoryItem: Category = {
-        id: newId,
-        name: newCategory.name,
-        itemCount: 0
-      };
-      
-      setCategories([...categories, newCategoryItem]);
-      setNewCategory({ name: '', description: '' });
-      setIsAddDialogOpen(false);
-    }
-  };
-
-  const handleEditCategory = async () => {
-    if (!editCategory || !editCategory.name.trim()) {
-      toast.error('Category name is required');
-      return;
-    }
-    
-    const categoryToUpdate: MenuCategory = {
-      id: editCategory.id,
-      name: editCategory.name,
-      item_count: editCategory.itemCount
-    };
-    
-    const success = await updateMenuCategory(categoryToUpdate);
-    
-    if (success) {
-      const updatedCategories = categories.map(cat => 
-        cat.id === editCategory.id ? editCategory : cat
-      );
-      
-      setCategories(updatedCategories);
-      setEditCategory(null);
-      setIsEditDialogOpen(false);
-    }
-  };
-
-  const handleDeleteCategory = async (id: string) => {
-    const success = await deleteMenuCategory(id);
-    
-    if (success) {
-      const updatedCategories = categories.filter(category => category.id !== id);
-      setCategories(updatedCategories);
-    }
   };
 
   if (loading) {
@@ -266,118 +169,6 @@ const GeneralSettings: React.FC = () => {
         <CardFooter>
           <Button onClick={handleSaveRestaurantInfo}>Save Changes</Button>
         </CardFooter>
-      </Card>
-
-      <Card className="dark:bg-gray-800 dark:border-gray-700">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="dark:text-white">Categories</CardTitle>
-            <CardDescription className="dark:text-gray-400">
-              Manage menu categories
-            </CardDescription>
-          </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="flex items-center gap-1">
-                <Plus size={16} />
-                Add Category
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="dark:bg-gray-800 dark:border-gray-700">
-              <DialogHeader>
-                <DialogTitle className="dark:text-white">Add New Category</DialogTitle>
-                <DialogDescription className="dark:text-gray-400">
-                  Create a new category for menu items
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="category-name" className="dark:text-gray-300">Category Name</Label>
-                  <Input 
-                    id="category-name" 
-                    placeholder="e.g. Breakfast, Lunch, Dinner" 
-                    value={newCategory.name}
-                    onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
-                    className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category-description" className="dark:text-gray-300">Description (Optional)</Label>
-                  <Input 
-                    id="category-description" 
-                    placeholder="Brief description of this category" 
-                    value={newCategory.description}
-                    onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
-                    className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" onClick={handleAddCategory}>Save Category</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {categories.map((category) => (
-              <div key={category.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div>
-                  <h4 className="font-medium dark:text-white">{category.name}</h4>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">{category.itemCount} items</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-gray-500 dark:text-gray-400"
-                    onClick={() => {
-                      setEditCategory(category);
-                      setIsEditDialogOpen(true);
-                    }}
-                  >
-                    <Edit size={16} />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-red-500"
-                    onClick={() => handleDeleteCategory(category.id)}
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-        
-        {/* Edit Category Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="dark:bg-gray-800 dark:border-gray-700">
-            <DialogHeader>
-              <DialogTitle className="dark:text-white">Edit Category</DialogTitle>
-              <DialogDescription className="dark:text-gray-400">
-                Update category details
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-category-name" className="dark:text-gray-300">Category Name</Label>
-                <Input 
-                  id="edit-category-name" 
-                  value={editCategory?.name || ''}
-                  onChange={(e) => setEditCategory(prev => prev ? {...prev, name: e.target.value} : null)}
-                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" onClick={handleEditCategory}>Save Changes</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </Card>
       
       <Card className="dark:bg-gray-800 dark:border-gray-700">
