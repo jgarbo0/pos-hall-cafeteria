@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Card, 
@@ -35,6 +34,7 @@ interface CafeteriaFinanceTabProps {
   transactions: Transaction[];
   isLoadingTransactions: boolean;
   onViewDetails: (id: string, title: string) => void;
+  onSearch: (term: string) => void;
 }
 
 interface PopularMenuItem {
@@ -47,7 +47,8 @@ interface PopularMenuItem {
 const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
   transactions,
   isLoadingTransactions,
-  onViewDetails
+  onViewDetails,
+  onSearch
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState<string>('all');
@@ -56,10 +57,8 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
   const todaySales = transactions.filter(transaction => isToday(new Date(transaction.date)));
   const todayRevenue = todaySales.reduce((sum, transaction) => sum + transaction.amount, 0);
   
-  // Calculate average sale value
   const averageSaleValue = transactions.length > 0 ? totalSalesRevenue / transactions.length : 0;
   
-  // Mock popular menu items data
   const popularItems: PopularMenuItem[] = [
     { name: "Spicy Chicken Burger", quantity: 145, amount: 1740, trend: 15 },
     { name: "Creamy Pasta", quantity: 120, amount: 1320, trend: 8 },
@@ -68,10 +67,8 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
   ];
   
   const filteredTransactions = transactions.filter(transaction => {
-    // Filter by search term (description)
     const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Filter by date
     let matchesDate = true;
     const transactionDate = new Date(transaction.date);
     
@@ -88,7 +85,6 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
     return matchesSearch && matchesDate;
   });
 
-  // Generate chart data for the past 7 days
   const generateChartData = () => {
     const data = [];
     for (let i = 6; i >= 0; i--) {
@@ -101,7 +97,7 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
       );
       
       const income = dayTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-      const expense = income * 0.4; // Assuming expenses are 40% of income for cafeteria
+      const expense = income * 0.4;
       
       data.push({
         name: format(date, 'dd MMM'),
@@ -180,7 +176,6 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
-              {/* You would use the HallBookingFinanceWidget component here or a similar chart component */}
               <div className="flex items-center justify-center h-full text-muted-foreground">
                 Cafeteria Sales Chart
               </div>

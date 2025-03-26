@@ -10,33 +10,66 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { Transaction } from '@/types/finance';
 
 interface AddTransactionModalProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  newTransaction: {
-    description: string;
-    amount: string;
-    type: 'income' | 'expense';
-    category: string;
-    date: Date;
-    paymentMethod?: string;
-  };
-  onNewTransactionChange: (transaction: any) => void;
-  onAddTransaction: () => void;
-  paymentMethods?: { id: string; name: string }[];
+  onClose: () => void;
+  onAddTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
 }
 
 const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   isOpen,
-  onOpenChange,
-  newTransaction,
-  onNewTransactionChange,
-  onAddTransaction,
-  paymentMethods = []
+  onClose,
+  onAddTransaction
 }) => {
+  const [newTransaction, setNewTransaction] = React.useState({
+    description: '',
+    amount: '',
+    type: 'income' as 'income' | 'expense',
+    category: '',
+    date: new Date(),
+    paymentMethod: 'Cash'
+  });
+
+  const handleAddTransaction = () => {
+    if (!newTransaction.description) {
+      toast.error('Please enter a description');
+      return;
+    }
+
+    if (!newTransaction.amount || isNaN(Number(newTransaction.amount)) || Number(newTransaction.amount) <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    if (!newTransaction.category) {
+      toast.error('Please select a category');
+      return;
+    }
+
+    onAddTransaction({
+      description: newTransaction.description,
+      amount: Number(newTransaction.amount),
+      type: newTransaction.type,
+      category: newTransaction.category,
+      date: format(newTransaction.date, 'yyyy-MM-dd'),
+      paymentMethod: newTransaction.paymentMethod
+    });
+
+    // Reset form
+    setNewTransaction({
+      description: '',
+      amount: '',
+      type: 'income',
+      category: '',
+      date: new Date(),
+      paymentMethod: 'Cash'
+    });
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="dark:bg-gray-800 dark:border-gray-700 dark:text-white sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Transaction</DialogTitle>
@@ -47,7 +80,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             <Select
               value={newTransaction.type}
               onValueChange={(value: 'income' | 'expense') => 
-                onNewTransactionChange({...newTransaction, type: value})
+                setNewTransaction({...newTransaction, type: value})
               }
             >
               <SelectTrigger id="transaction-type" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
@@ -65,7 +98,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             <Input 
               id="description" 
               value={newTransaction.description}
-              onChange={(e) => onNewTransactionChange({...newTransaction, description: e.target.value})}
+              onChange={(e) => setNewTransaction({...newTransaction, description: e.target.value})}
               className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
             />
           </div>
@@ -77,7 +110,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               type="number" 
               step="0.01" 
               value={newTransaction.amount}
-              onChange={(e) => onNewTransactionChange({...newTransaction, amount: e.target.value})}
+              onChange={(e) => setNewTransaction({...newTransaction, amount: e.target.value})}
               className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
             />
           </div>
@@ -87,7 +120,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             <Select 
               value={newTransaction.category}
               onValueChange={(value) => 
-                onNewTransactionChange({...newTransaction, category: value})
+                setNewTransaction({...newTransaction, category: value})
               }
             >
               <SelectTrigger id="category" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
@@ -122,27 +155,17 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             <Select 
               value={newTransaction.paymentMethod}
               onValueChange={(value) => 
-                onNewTransactionChange({...newTransaction, paymentMethod: value})
+                setNewTransaction({...newTransaction, paymentMethod: value})
               }
             >
               <SelectTrigger id="paymentMethod" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
               <SelectContent className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                {paymentMethods.length > 0 ? (
-                  paymentMethods.map(method => (
-                    <SelectItem key={method.id} value={method.name}>
-                      {method.name}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <>
-                    <SelectItem value="Cash">Cash</SelectItem>
-                    <SelectItem value="Card">Card</SelectItem>
-                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="Mobile Payment">Mobile Payment</SelectItem>
-                  </>
-                )}
+                <SelectItem value="Cash">Cash</SelectItem>
+                <SelectItem value="Card">Card</SelectItem>
+                <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                <SelectItem value="Mobile Payment">Mobile Payment</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -160,7 +183,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                 <Calendar
                   mode="single"
                   selected={newTransaction.date}
-                  onSelect={(date) => date && onNewTransactionChange({...newTransaction, date})}
+                  onSelect={(date) => date && setNewTransaction({...newTransaction, date})}
                   initialFocus
                   className="dark:bg-gray-800"
                 />
@@ -169,10 +192,10 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={onAddTransaction}>
+          <Button onClick={handleAddTransaction}>
             Save Transaction
           </Button>
         </DialogFooter>
