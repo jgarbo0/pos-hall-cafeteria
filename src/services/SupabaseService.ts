@@ -7,7 +7,8 @@ import {
   FinancialTransaction, 
   Product, 
   HallBooking,
-  Customer 
+  Customer,
+  StaffUser
 } from '@/types';
 import { toast } from 'sonner';
 
@@ -620,6 +621,120 @@ export const deleteCustomer = async (id: string): Promise<void> => {
   }
 };
 
+// Staff Users
+export interface StaffUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  active?: boolean;
+  created_at?: string;
+}
+
+export const getStaffUsers = async (): Promise<StaffUser[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .order('name', { ascending: true });
+    
+    if (error) throw error;
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching staff users:', error);
+    toast.error('Failed to fetch staff users');
+    throw error;
+  }
+};
+
+export const getStaffUserById = async (id: string): Promise<StaffUser | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null; // User not found
+      }
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching staff user:', error);
+    toast.error('Failed to fetch staff user details');
+    throw error;
+  }
+};
+
+export const createStaffUser = async (user: Omit<StaffUser, 'id'>): Promise<StaffUser> => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .insert({
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        active: user.active !== undefined ? user.active : true
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    toast.success(`User ${user.name} created successfully`);
+    
+    return data;
+  } catch (error) {
+    console.error('Error creating staff user:', error);
+    toast.error('Failed to create staff user');
+    throw error;
+  }
+};
+
+export const updateStaffUser = async (id: string, user: Partial<StaffUser>): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('users')
+      .update({
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        active: user.active
+      })
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    toast.success(`User ${user.name} updated successfully`);
+  } catch (error) {
+    console.error('Error updating staff user:', error);
+    toast.error('Failed to update staff user');
+    throw error;
+  }
+};
+
+export const deleteStaffUser = async (id: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    toast.success('User deleted successfully');
+  } catch (error) {
+    console.error('Error deleting staff user:', error);
+    toast.error('Failed to delete staff user');
+    throw error;
+  }
+};
+
 export default {
   getMenuItems,
   createMenuItem,
@@ -637,5 +752,10 @@ export default {
   getCustomerById,
   createCustomer,
   updateCustomer,
-  deleteCustomer
+  deleteCustomer,
+  getStaffUsers,
+  getStaffUserById,
+  createStaffUser,
+  updateStaffUser,
+  deleteStaffUser
 };
