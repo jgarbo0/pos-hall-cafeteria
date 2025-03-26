@@ -445,9 +445,9 @@ const Finance = () => {
             
             <TabsContent value="hall-bookings">
               <HallBookingsFinanceTab
-                hallBookings={hallBookings}
-                hall1Bookings={hallBookingsHall1}
-                hall2Bookings={hallBookingsHall2}
+                hallBookings={hallBookingIncomes}
+                hall1Bookings={hall1Bookings}
+                hall2Bookings={hall2Bookings}
                 isLoadingHallData={isLoadingHallData}
                 onViewDetails={handleViewHallBookingDetails}
                 onSearch={handleSearch}
