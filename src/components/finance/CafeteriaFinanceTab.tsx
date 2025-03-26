@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Card, 
@@ -248,7 +249,8 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
                 </SelectContent>
               </Select>
             </div>
-          </CardHeader>
+          </div>
+        </CardHeader>
         <CardContent>
           {isLoadingTransactions ? (
             <div className="flex justify-center items-center py-8">
