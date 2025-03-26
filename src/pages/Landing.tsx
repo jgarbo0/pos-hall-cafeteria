@@ -4,49 +4,58 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Utensils, Calendar, MapPin, Phone, Clock, ArrowRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { getRestaurantTables } from '@/services/TablesService';
 
 const Landing: React.FC = () => {
+  const { data: tables } = useQuery({
+    queryKey: ['venue-tables'],
+    queryFn: getRestaurantTables
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
       {/* Hero Section */}
       <div className="relative h-screen">
         {/* Hero Background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900">
-          <div className="absolute inset-0 bg-black opacity-40 dark:opacity-60"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-800 dark:to-amber-950">
+          <div className="absolute inset-0 bg-black opacity-50 dark:opacity-60"></div>
           <div 
-            className="absolute inset-0 bg-cover bg-center opacity-20"
+            className="absolute inset-0 bg-cover bg-center opacity-30"
             style={{ backgroundImage: "url('/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png')" }}
           ></div>
         </div>
         
         {/* Content */}
         <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center items-center text-white text-center">
-          <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-8 animate-fade-in">
-            <span className="text-primary font-bold text-3xl">S</span>
+          <div className="w-20 h-20 bg-amber-500 rounded-2xl flex items-center justify-center mb-8 animate-fade-in">
+            <span className="text-white font-bold text-3xl">D</span>
           </div>
           
           <h1 className="text-4xl md:text-6xl font-bold mb-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            Somali POS System
+            Doob Venue
           </h1>
           
           <p className="text-xl md:text-2xl mb-8 max-w-2xl animate-fade-in" style={{ animationDelay: '0.4s' }}>
-            The complete solution for restaurants, cafeterias, and hall bookings in Hargeisa, Somaliland
+            Exceptional cafeteria & hall bookings in Hargeisa, Somaliland
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 animate-fade-in" style={{ animationDelay: '0.6s' }}>
-            <Link to="/login">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold px-8 py-6 text-lg">
-                Get Started
+            <a href="#menu">
+              <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-8 py-6 text-lg">
+                View Menu
               </Button>
-            </Link>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="bg-white/10 hover:bg-white/20 text-white border-white font-bold px-8 py-6 text-lg"
-              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              Learn More
-            </Button>
+            </a>
+            <a href="#halls">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="bg-white/10 hover:bg-white/20 text-white border-white font-bold px-8 py-6 text-lg"
+              >
+                Book a Hall
+              </Button>
+            </a>
           </div>
         </div>
         
@@ -58,94 +67,323 @@ const Landing: React.FC = () => {
         </div>
       </div>
 
-      {/* Features Section */}
-      <div id="features" className="py-20 bg-white dark:bg-gray-900">
+      {/* About Section */}
+      <div className="py-20 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-gray-800 dark:text-white">
-            Complete Restaurant Management System
-          </h2>
+          <div className="flex flex-col lg:flex-row items-center gap-12">
+            <div className="lg:w-1/2">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-800 dark:text-white">
+                Welcome to Doob Venue
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-6 text-lg">
+                Established in 2023, Doob Venue has quickly become one of Hargeisa's premier destinations 
+                for exceptional dining experiences and event hosting.
+              </p>
+              <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg">
+                Our spacious cafeteria offers a variety of delicious meals in a comfortable setting, 
+                while our elegant halls provide the perfect backdrop for your special occasions.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="bg-amber-100 dark:bg-amber-900 p-3 rounded-full">
+                    <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">Opening Hours</p>
+                    <p className="text-gray-500 dark:text-gray-400">7:00 AM - 10:00 PM</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="bg-amber-100 dark:bg-amber-900 p-3 rounded-full">
+                    <Phone className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">Contact Us</p>
+                    <p className="text-gray-500 dark:text-gray-400">+252 63 4123456</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="bg-amber-100 dark:bg-amber-900 p-3 rounded-full">
+                    <MapPin className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">Location</p>
+                    <p className="text-gray-500 dark:text-gray-400">Masalla A-dhagah, Hargeisa</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="bg-amber-100 dark:bg-amber-900 p-3 rounded-full">
+                    <Calendar className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">Founded</p>
+                    <p className="text-gray-500 dark:text-gray-400">2023</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="lg:w-1/2 rounded-xl overflow-hidden shadow-lg">
+              <img 
+                src="https://images.unsplash.com/photo-1554679665-f5537f187268?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                alt="Doob Venue Interior" 
+                className="w-full h-96 object-cover"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Menu Section */}
+      <div id="menu" className="py-20 bg-gray-50 dark:bg-gray-800">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <div className="inline-block p-3 bg-amber-100 dark:bg-amber-900 rounded-full mb-4">
+              <Utensils className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-800 dark:text-white">
+              Our Menu
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              Explore our delicious selection of meals, beverages, and desserts prepared with 
+              the finest ingredients for a memorable dining experience.
+            </p>
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {[
               {
-                title: "Point of Sale",
-                description: "Streamlined ordering system with intuitive interface for fast transactions",
-                icon: "💳"
+                name: "Somali Tea & Coffee",
+                description: "Traditional Somali tea and specialty coffee options",
+                image: "https://images.unsplash.com/photo-1525480122447-64809d765ec4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                price: "$2 - $5"
               },
               {
-                title: "Hall Booking",
-                description: "Manage venue reservations and special events with calendar integration",
-                icon: "🏛️"
+                name: "Breakfast Menu",
+                description: "Traditional Somali breakfast including canjeero, suqaar, and eggs",
+                image: "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                price: "$5 - $12"
               },
               {
-                title: "Inventory Control",
-                description: "Track ingredients and products with automatic stock alerts",
-                icon: "📦"
+                name: "Lunch Specialties",
+                description: "Rice dishes, pasta, and traditional Somali stews",
+                image: "https://images.unsplash.com/photo-1512058564366-18510be2db19?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                price: "$8 - $15"
               },
               {
-                title: "Customer Management",
-                description: "Build customer profiles and loyalty programs",
-                icon: "👥"
+                name: "Dinner Entrees",
+                description: "Grilled meats, fish, and vegetarian options",
+                image: "https://images.unsplash.com/photo-1559847844-5315695dadae?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                price: "$10 - $18"
               },
               {
-                title: "Financial Reports",
-                description: "Comprehensive analytics and financial insights",
-                icon: "📊"
+                name: "Desserts",
+                description: "Traditional halwa, cakes, and pastries",
+                image: "https://images.unsplash.com/photo-1551024506-0bccd828d307?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                price: "$3 - $7"
               },
               {
-                title: "Multi-language Support",
-                description: "Available in Somali and English languages",
-                icon: "🌍"
+                name: "Fresh Juices",
+                description: "Variety of fresh fruit juices and smoothies",
+                image: "https://images.unsplash.com/photo-1584587727565-a154ed3d1ad8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                price: "$3 - $6"
               }
-            ].map((feature, index) => (
-              <Card key={index} className="border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-6 text-center">
-                  <div className="text-4xl mb-4">{feature.icon}</div>
-                  <h3 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">{feature.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
+            ].map((item, index) => (
+              <Card key={index} className="overflow-hidden transition-all hover:shadow-lg">
+                <div className="h-48 overflow-hidden">
+                  <img 
+                    src={item.image} 
+                    alt={item.name} 
+                    className="w-full h-full object-cover transition-transform hover:scale-105"
+                  />
+                </div>
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
+                      {item.name}
+                    </h3>
+                    <span className="text-amber-600 dark:text-amber-400 font-medium">{item.price}</span>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 mb-4">
+                    {item.description}
+                  </p>
+                  <Link to="/menu" className="inline-flex items-center text-amber-600 dark:text-amber-400 hover:underline">
+                    View details <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          <div className="text-center">
+            <Link to="/menu">
+              <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white">
+                View Full Menu
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Halls Section */}
+      <div id="halls" className="py-20 bg-white dark:bg-gray-900">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <div className="inline-block p-3 bg-amber-100 dark:bg-amber-900 rounded-full mb-4">
+              <Calendar className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-800 dark:text-white">
+              Our Halls
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              Perfect venues for weddings, conferences, business meetings, and special occasions 
+              with flexible catering options and modern amenities.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
+            {[
+              {
+                name: "Grand Hall",
+                capacity: "Up to 200 guests",
+                description: "Our largest hall perfect for weddings and large conferences with full audiovisual setup",
+                image: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+              },
+              {
+                name: "Executive Room",
+                capacity: "Up to 50 guests",
+                description: "Professional setting ideal for business meetings, training sessions and small gatherings",
+                image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+              }
+            ].map((hall, index) => (
+              <Card key={index} className="overflow-hidden transition-all hover:shadow-lg">
+                <div className="h-64 overflow-hidden">
+                  <img 
+                    src={hall.image} 
+                    alt={hall.name} 
+                    className="w-full h-full object-cover transition-transform hover:scale-105"
+                  />
+                </div>
+                <CardContent className="p-6">
+                  <h3 className="text-2xl font-semibold mb-2 text-gray-800 dark:text-white">
+                    {hall.name}
+                  </h3>
+                  <p className="text-amber-600 dark:text-amber-400 font-medium mb-3">
+                    {hall.capacity}
+                  </p>
+                  <p className="text-gray-600 dark:text-gray-300 mb-4">
+                    {hall.description}
+                  </p>
+                  <Link to="/hall">
+                    <Button className="bg-amber-500 hover:bg-amber-600 text-white w-full">
+                      Book This Hall
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             ))}
           </div>
         </div>
       </div>
-
-      {/* Testimonials */}
+      
+      {/* Table Availability Section */}
       <div className="py-20 bg-gray-50 dark:bg-gray-800">
         <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-800 dark:text-white">
+              Table Availability
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              Check our current table availability for your visit. We recommend booking in advance for larger groups.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+            {tables?.map((table) => (
+              <Card key={table.id} className={`
+                ${table.status === 'available' ? 'border-green-300 dark:border-green-700' : 
+                  table.status === 'reserved' ? 'border-amber-300 dark:border-amber-700' : 
+                  'border-red-300 dark:border-red-700'} 
+                border-2
+              `}>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-lg font-medium text-gray-800 dark:text-white">
+                      {table.name}
+                    </h3>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      table.status === 'available' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                      table.status === 'reserved' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200' : 
+                      'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                    }`}>
+                      {table.status.charAt(0).toUpperCase() + table.status.slice(1)}
+                    </span>
+                  </div>
+                  <div className="text-gray-500 dark:text-gray-400">
+                    <p>Seats: {table.seats}</p>
+                    {table.location && <p>Location: {table.location}</p>}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            
+            {(!tables || tables.length === 0) && (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-500 dark:text-gray-400">No tables information available at the moment.</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex justify-center">
+            <Link to="/login">
+              <Button className="bg-amber-500 hover:bg-amber-600 text-white">
+                Make a Reservation
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Testimonials */}
+      <div className="py-20 bg-white dark:bg-gray-900">
+        <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-gray-800 dark:text-white">
-            Trusted by Businesses in Hargeisa
+            What Our Guests Say
           </h2>
           
           <ScrollArea className="w-full" type="always">
             <div className="flex gap-8 pb-4 px-2 min-w-full" style={{ width: 'max-content' }}>
               {[
                 {
-                  quote: "This POS system revolutionized how we manage our restaurant. The integration with hall booking is perfect for our events.",
-                  author: "Ahmed Osman",
-                  role: "Restaurant Owner"
-                },
-                {
-                  quote: "The financial reports helped us identify our best-selling items and optimize our menu accordingly.",
+                  quote: "Doob Venue hosted our wedding reception perfectly. The Grand Hall was beautifully decorated and the food was exceptional.",
                   author: "Amina Hassan",
-                  role: "Café Manager"
+                  role: "Wedding Client"
                 },
                 {
-                  quote: "Customer management feature has greatly improved our service and returning customer rate.",
+                  quote: "The Executive Room was perfect for our company's quarterly meeting. Professional service and great catering.",
                   author: "Mohamed Abdi",
-                  role: "Hotel Director"
+                  role: "Business Client"
                 },
                 {
-                  quote: "Easy to use interface means we spend less time training staff and more time serving customers.",
+                  quote: "Their cafeteria has the best Somali tea in Hargeisa! I visit at least twice a week during my lunch break.",
                   author: "Sahra Ibrahim",
-                  role: "Restaurant Manager"
+                  role: "Regular Customer"
+                },
+                {
+                  quote: "I celebrated my graduation with friends at Doob Venue. The staff was very accommodating and the food was delicious.",
+                  author: "Ahmed Osman",
+                  role: "Customer"
                 }
               ].map((testimonial, index) => (
                 <Card key={index} className="p-6 w-80 flex-shrink-0 border border-gray-200 dark:border-gray-700">
                   <CardContent className="p-0">
                     <p className="text-gray-600 dark:text-gray-300 mb-6">"{testimonial.quote}"</p>
                     <div className="flex items-center">
-                      <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white mr-4">
+                      <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-white mr-4">
                         {testimonial.author.charAt(0)}
                       </div>
                       <div>
@@ -162,17 +400,28 @@ const Landing: React.FC = () => {
       </div>
 
       {/* CTA Section */}
-      <div className="py-20 bg-primary">
+      <div className="py-20 bg-amber-600 dark:bg-amber-800">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Ready to transform your business?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Ready to experience Doob Venue?</h2>
           <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-            Join businesses across Hargeisa already benefiting from our comprehensive POS solution
+            Visit our cafeteria or book one of our halls for your next event
           </p>
-          <Link to="/login">
-            <Button size="lg" className="bg-white hover:bg-gray-100 text-primary font-bold px-8 py-6 text-lg">
-              Get Started Today
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link to="/login">
+              <Button size="lg" className="bg-white hover:bg-gray-100 text-amber-600 font-bold px-8 py-6 text-lg">
+                Book Now
+              </Button>
+            </Link>
+            <Link to="/menu">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="bg-transparent hover:bg-white/10 text-white border-white font-bold px-8 py-6 text-lg"
+              >
+                View Our Menu
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -182,19 +431,21 @@ const Landing: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-6 md:mb-0">
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center mr-3">
-                  <span className="text-white font-bold">S</span>
+                <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center mr-3">
+                  <span className="text-white font-bold">D</span>
                 </div>
-                <span className="text-xl font-semibold">Somali POS</span>
+                <span className="text-xl font-semibold">Doob Venue</span>
               </div>
-              <p className="mt-2 text-gray-400">Hargeisa, Somaliland</p>
+              <p className="mt-2 text-gray-400">Masalla A-dhagah, Hargeisa, Somaliland</p>
+              <p className="mt-1 text-gray-400">+252 63 4123456</p>
             </div>
             
             <div className="text-center md:text-right">
-              <p className="text-gray-400 text-sm">© 2023 Somali POS System. All rights reserved.</p>
+              <p className="text-gray-400 text-sm">© 2023 Doob Venue. All rights reserved.</p>
               <div className="mt-2">
-                <Link to="/login" className="text-white hover:text-primary mr-4">Login</Link>
-                <a href="#features" className="text-white hover:text-primary">Features</a>
+                <a href="#menu" className="text-white hover:text-amber-400 mr-4">Menu</a>
+                <a href="#halls" className="text-white hover:text-amber-400 mr-4">Halls</a>
+                <Link to="/login" className="text-white hover:text-amber-400">Login</Link>
               </div>
             </div>
           </div>
