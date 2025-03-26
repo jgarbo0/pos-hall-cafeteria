@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -93,12 +94,13 @@ const Orders = () => {
     fetchOrders();
   }, []);
   
+  // Memoize order summary calculation to prevent recomputation on every render
   useEffect(() => {
-    const summary = calculateOrderSummary();
+    const summary = calculateOrderSummary(orders);
     setOrderSummary(summary);
   }, [orders]);
   
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setIsLoading(true);
     try {
       const ordersData = await getOrders();
@@ -109,27 +111,28 @@ const Orders = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const formatTimestamp = (timestamp: string): string => {
+  const formatTimestamp = useCallback((timestamp: string): string => {
     try {
       return format(new Date(timestamp), 'MMM dd, yyyy h:mm a');
     } catch (error) {
       console.error('Error formatting date:', error);
       return timestamp;
     }
-  };
+  }, []);
   
-  const calculateOrderSummary = () => {
+  // Memoize the calculation function to avoid unnecessary recalculations
+  const calculateOrderSummary = useCallback((ordersList: Order[]) => {
     const today = new Date();
     const todayString = format(today, 'yyyy-MM-dd');
     
-    const totalOrders = orders.length;
-    const paidOrders = orders.filter(order => order.paymentStatus === 'paid').length;
-    const pendingOrders = orders.filter(order => order.paymentStatus === 'pending').length;
+    const totalOrders = ordersList.length;
+    const paidOrders = ordersList.filter(order => order.paymentStatus === 'paid').length;
+    const pendingOrders = ordersList.filter(order => order.paymentStatus === 'pending').length;
     
-    const totalSales = orders.reduce((sum, order) => sum + order.total, 0);
-    const todaySales = orders
+    const totalSales = ordersList.reduce((sum, order) => sum + order.total, 0);
+    const todaySales = ordersList
       .filter(order => format(new Date(order.timestamp), 'yyyy-MM-dd') === todayString)
       .reduce((sum, order) => sum + order.total, 0);
     
@@ -140,9 +143,10 @@ const Orders = () => {
       totalSales,
       todaySales
     };
-  };
+  }, []);
   
-  const getFilteredOrders = () => {
+  // Memoize filtered orders to avoid recalculation on each render
+  const filteredOrders = useMemo(() => {
     const today = new Date();
     
     let filtered = orders.filter(order => {
@@ -185,21 +189,19 @@ const Orders = () => {
     }
     
     return filtered;
-  };
+  }, [orders, activeTab, dateRange, searchTerm]);
 
-  const filteredOrders = getFilteredOrders();
-
-  const handleViewOrder = (order: Order) => {
+  const handleViewOrder = useCallback((order: Order) => {
     setCurrentOrder(order);
     setIsViewDialogOpen(true);
-  };
+  }, []);
 
-  const handlePrintOrder = (order: Order) => {
+  const handlePrintOrder = useCallback((order: Order) => {
     setCurrentOrder(order);
     setIsPrintDialogOpen(true);
-  };
+  }, []);
 
-  const handlePrintPreview = () => {
+  const handlePrintPreview = useCallback(() => {
     if (!currentOrder) return;
     
     const printWindow = window.open('', '_blank');
@@ -289,9 +291,9 @@ const Orders = () => {
     }, 500);
     
     setIsPrintDialogOpen(false);
-  };
+  }, [currentOrder, formatTimestamp]);
 
-  const handleEditOrder = (order: Order) => {
+  const handleEditOrder = useCallback((order: Order) => {
     setCurrentOrder(order);
     setFormData({
       tableNumber: order.tableNumber,
@@ -302,14 +304,14 @@ const Orders = () => {
       customerName: order.customerName || 'Walk-in Customer'
     });
     setIsEditDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteOrder = (order: Order) => {
+  const handleDeleteOrder = useCallback((order: Order) => {
     setCurrentOrder(order);
     setIsDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleAddNewClick = () => {
+  const handleAddNewClick = useCallback(() => {
     setFormData({
       tableNumber: null,
       orderType: "Dine In",
@@ -319,9 +321,9 @@ const Orders = () => {
       customerName: 'Walk-in Customer'
     });
     setIsAddDialogOpen(true);
-  };
+  }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -329,9 +331,9 @@ const Orders = () => {
         ? value === '' ? null : Number(value)
         : value
     }));
-  };
+  }, []);
 
-  const handleSelectChange = (name: string, value: string) => {
+  const handleSelectChange = useCallback((name: string, value: string) => {
     if (name === 'orderType') {
       setFormData(prev => ({
         ...prev,
@@ -343,21 +345,20 @@ const Orders = () => {
         [name]: value as "processing" | "completed" | "cancelled",
       }));
     }
-  };
+  }, []);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (!currentOrder) return;
     
-    const updatedOrders = orders.filter(order => order.id !== currentOrder.id);
-    setOrders(updatedOrders);
+    setOrders(prevOrders => prevOrders.filter(order => order.id !== currentOrder.id));
     setIsDeleteDialogOpen(false);
     toast.success(`Order ${currentOrder.id} has been deleted.`);
-  };
+  }, [currentOrder]);
 
-  const handleUpdateOrder = () => {
+  const handleUpdateOrder = useCallback(() => {
     if (!currentOrder) return;
     
-    const updatedOrders = orders.map(order => 
+    setOrders(prevOrders => prevOrders.map(order => 
       order.id === currentOrder.id 
         ? { 
             ...order,
@@ -368,14 +369,13 @@ const Orders = () => {
             customerName: formData.customerName
           }
         : order
-    );
+    ));
     
-    setOrders(updatedOrders);
     setIsEditDialogOpen(false);
     toast.success(`Order ${currentOrder.id} has been updated.`);
-  };
+  }, [currentOrder, formData]);
 
-  const handleAddOrder = () => {
+  const handleAddOrder = useCallback(() => {
     const newOrder: Order = {
       id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
       items: [],
@@ -391,48 +391,48 @@ const Orders = () => {
       paymentStatus: 'paid'
     };
     
-    setOrders([newOrder, ...orders]);
+    setOrders(prevOrders => [newOrder, ...prevOrders]);
     setIsAddDialogOpen(false);
     toast.success(`Order ${newOrder.id} has been created.`);
-  };
+  }, [formData]);
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     fetchOrders();
     toast.success('Orders refreshed');
-  };
+  }, [fetchOrders]);
 
-  const displayCustomerName = (customerName?: string): string => {
+  const displayCustomerName = useCallback((customerName?: string): string => {
     return customerName && customerName.trim() !== '' ? customerName : 'Walk-in Customer';
-  };
+  }, []);
 
-  const handlePayOrder = async (order: Order) => {
-    if (await updateOrderPaymentStatus(order.id, 'paid')) {
-      const updatedOrders = orders.map(o => 
-        o.id === order.id 
-          ? { ...o, paymentStatus: 'paid' as 'paid' | 'pending' }
-          : o
-      );
-      setOrders(updatedOrders);
-      
-      const summary = calculateOrderSummary();
-      setOrderSummary(summary);
+  const handlePayOrder = useCallback(async (order: Order) => {
+    try {
+      const success = await updateOrderPaymentStatus(order.id, 'paid');
+      if (success) {
+        setOrders(prevOrders => prevOrders.map(o => 
+          o.id === order.id 
+            ? { ...o, paymentStatus: 'paid' as 'paid' | 'pending' }
+            : o
+        ));
+        
+        toast.success(`Payment for order #${order.orderNumber} has been processed.`);
+      }
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      toast.error('Failed to process payment');
     }
-  };
+  }, []);
 
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-  };
-
-  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-  };
+  }, []);
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <SidebarNavigation />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header onSearch={handleSearch} />
+        <Header onSearch={setSearchTerm} />
         
         <div className="flex-1 p-6 overflow-auto">
           <div className="flex justify-between items-center mb-6">
@@ -658,6 +658,7 @@ const Orders = () => {
         </div>
       </div>
 
+      {/* View Order Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -773,6 +774,7 @@ const Orders = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Print Dialog */}
       <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -791,6 +793,7 @@ const Orders = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -879,6 +882,7 @@ const Orders = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Delete Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -895,6 +899,7 @@ const Orders = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Add Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>

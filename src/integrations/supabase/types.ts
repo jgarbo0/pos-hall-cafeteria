@@ -256,6 +256,7 @@ export type Database = {
       }
       order_items: {
         Row: {
+          discount: number | null
           id: string
           menu_item_id: string
           notes: string | null
@@ -265,6 +266,7 @@ export type Database = {
           spicy_level: number | null
         }
         Insert: {
+          discount?: number | null
           id?: string
           menu_item_id: string
           notes?: string | null
@@ -274,6 +276,7 @@ export type Database = {
           spicy_level?: number | null
         }
         Update: {
+          discount?: number | null
           id?: string
           menu_item_id?: string
           notes?: string | null
@@ -302,6 +305,8 @@ export type Database = {
       orders: {
         Row: {
           customer_name: string | null
+          discount: number | null
+          discount_type: string | null
           id: string
           order_number: string
           order_type: string
@@ -315,6 +320,8 @@ export type Database = {
         }
         Insert: {
           customer_name?: string | null
+          discount?: number | null
+          discount_type?: string | null
           id?: string
           order_number: string
           order_type: string
@@ -328,6 +335,8 @@ export type Database = {
         }
         Update: {
           customer_name?: string | null
+          discount?: number | null
+          discount_type?: string | null
           id?: string
           order_number?: string
           order_type?: string
