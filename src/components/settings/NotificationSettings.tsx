@@ -96,7 +96,7 @@ const NotificationSettings: React.FC = () => {
                   <Label htmlFor={item.id} className="flex-1 dark:text-gray-300">{item.label}</Label>
                   <Switch 
                     id={item.id} 
-                    checked={notificationSettings[item.key as keyof NotificationSettingsType]}
+                    checked={Boolean(notificationSettings[item.key as keyof NotificationSettingsType])}
                     onCheckedChange={(checked) => {
                       setNotificationSettings({ 
                         ...notificationSettings, 
@@ -123,7 +123,7 @@ const NotificationSettings: React.FC = () => {
                   <Label htmlFor={item.id} className="flex-1 dark:text-gray-300">{item.label}</Label>
                   <Switch 
                     id={item.id} 
-                    checked={notificationSettings[item.key as keyof NotificationSettingsType]}
+                    checked={Boolean(notificationSettings[item.key as keyof NotificationSettingsType])}
                     onCheckedChange={(checked) => {
                       setNotificationSettings({ 
                         ...notificationSettings, 

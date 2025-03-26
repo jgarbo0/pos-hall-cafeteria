@@ -101,7 +101,7 @@ export const getMenuCategories = async (): Promise<MenuCategory[]> => {
     const { data, error } = await supabase
       .from('menu_categories')
       .select('*')
-      .order('name');
+      .order('name', { ascending: true });
     
     if (error) {
       console.error('Error fetching menu categories:', error);
