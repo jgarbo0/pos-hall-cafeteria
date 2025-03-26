@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   subDays, 
@@ -262,7 +263,7 @@ const Finance = () => {
       <SidebarNavigation />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+        <Header onSearch={handleSearch} />
         
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <FinanceHeader 
@@ -450,6 +451,7 @@ const Finance = () => {
                 hall2Bookings={hall2Bookings}
                 isLoadingHallData={isLoadingHallData}
                 onViewDetails={handleViewHallBookingDetails}
+                onSearch={handleSearch}
               />
             </TabsContent>
             
@@ -494,4 +496,3 @@ const Finance = () => {
 };
 
 export default Finance;
-
