@@ -36,8 +36,6 @@ export interface Order {
   paymentStatus?: 'paid' | 'pending';
   timestamp: string;
   customerName?: string;
-  discount?: number;
-  discountType?: 'percentage' | 'fixed';
 }
 
 export interface TableItem {
