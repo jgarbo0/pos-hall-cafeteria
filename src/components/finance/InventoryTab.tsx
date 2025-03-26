@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -218,7 +219,6 @@ const InventoryTab: React.FC = () => {
       // If this was a new item with quantity > 0, ask if they want to record a purchase transaction
       if (!isEditMode && inventoryFormData.quantity > 0) {
         toast({
-          title: "Record initial stock?",
           description: "Do you want to record this as a purchase transaction?",
           action: (
             <Button onClick={() => {
