@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -15,6 +14,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from '@/components/ui/tabs';
 import { Transaction } from '@/types/finance';
 import { formatCurrency } from '@/lib/utils';
 import { 
@@ -26,18 +31,23 @@ import {
   Filter,
   DollarSign,
   Users,
-  ShoppingBag
+  ShoppingBag,
+  BarChart,
+  Utensils,
+  AlertTriangle,
+  Package
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format, isToday, isThisMonth } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
+import InventoryTab from './InventoryTab';
 
 interface CafeteriaFinanceTabProps {
   transactions: Transaction[];
   isLoadingTransactions: boolean;
   onViewDetails: (id: string, title: string) => void;
-  onSearch: (term: string) => void; // Add missing prop
+  onSearch: (term: string) => void;
 }
 
 interface PopularMenuItem {
@@ -66,6 +76,7 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
   
   // Get cafeteria-related transactions (expense only)
   const cafeteriaExpenses = transactions.filter(
@@ -194,243 +205,258 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
   
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/40 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-amber-600 dark:text-amber-300">Total Revenue</p>
-                <h3 className="text-2xl font-bold text-amber-700 dark:text-amber-200 mt-1">
-                  {formatCurrency(totalOrderRevenue)}
-                </h3>
-                <p className="text-xs text-amber-500 dark:text-amber-400 mt-1">All time cafeteria sales</p>
-              </div>
-              <div className="h-12 w-12 bg-amber-200 dark:bg-amber-700 rounded-full flex items-center justify-center">
-                <Coffee className="h-6 w-6 text-amber-600 dark:text-amber-200" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/40 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-600 dark:text-green-300">Net Profit</p>
-                <h3 className="text-2xl font-bold text-green-700 dark:text-green-200 mt-1">
-                  {formatCurrency(netProfit)}
-                </h3>
-                <p className="text-xs text-green-500 dark:text-green-400 mt-1">
-                  Revenue minus expenses
-                </p>
-              </div>
-              <div className="h-12 w-12 bg-green-200 dark:bg-green-700 rounded-full flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-green-600 dark:text-green-200" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/40 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-600 dark:text-blue-300">Average Sale</p>
-                <h3 className="text-2xl font-bold text-blue-700 dark:text-blue-200 mt-1">
-                  {formatCurrency(averageOrderValue)}
-                </h3>
-                <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">
-                  Per order
-                </p>
-              </div>
-              <div className="h-12 w-12 bg-blue-200 dark:bg-blue-700 rounded-full flex items-center justify-center">
-                <ShoppingBag className="h-6 w-6 text-blue-600 dark:text-blue-200" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-medium">Revenue & Expenses</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                Cafeteria Sales & Expenses Chart
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-medium">Popular Menu Items</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-8">
-              {popularItems.map((item, index) => (
-                <div key={index} className="flex items-center">
-                  <div className="space-y-1 flex-1">
-                    <p className="text-sm font-medium leading-none">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {item.quantity} sold - {formatCurrency(item.amount)}
+      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="overview">Cafeteria Overview</TabsTrigger>
+          <TabsTrigger value="inventory">Inventory Management</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/40 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-amber-600 dark:text-amber-300">Today's Sales</p>
+                    <h3 className="text-2xl font-bold text-amber-700 dark:text-amber-200 mt-1">
+                      {formatCurrency(todayRevenue)}
+                    </h3>
+                    <p className="text-xs text-amber-500 dark:text-amber-400 mt-1">
+                      {todayOrders.length} orders today
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <p className={`text-sm ${item.trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {item.trend > 0 ? '+' : ''}{item.trend}%
-                    </p>
-                    {item.trend > 0 ? (
-                      <TrendingUp className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4 text-red-500" />
-                    )}
+                  <div className="h-12 w-12 bg-amber-200 dark:bg-amber-700 rounded-full flex items-center justify-center">
+                    <BarChart className="h-6 w-6 text-amber-600 dark:text-amber-200" />
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </CardContent>
+            </Card>
 
-      <Card className="shadow-sm mb-6">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg font-medium">Cafeteria Financial Activity</CardTitle>
-          <div className="flex items-center space-x-2">
-            <div className="relative flex items-center">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search..."
-                className="pl-8 h-9"
-                value={searchTerm}
-                onChange={(e) => handleSearchChange(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select
-                value={dateFilter}
-                onValueChange={setDateFilter}
-              >
-                <SelectTrigger className="w-40 h-9">
-                  <SelectValue placeholder="All Time" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Time</SelectItem>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="week">This Week</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/40 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-red-600 dark:text-red-300">Today's Expenses</p>
+                    <h3 className="text-2xl font-bold text-red-700 dark:text-red-200 mt-1">
+                      {formatCurrency(todayExpenses)}
+                    </h3>
+                    <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                      {cafeteriaExpenses.filter(t => isToday(new Date(t.date))).length} transactions
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 bg-red-200 dark:bg-red-700 rounded-full flex items-center justify-center">
+                    <TrendingDown className="h-6 w-6 text-red-600 dark:text-red-200" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/40 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-green-600 dark:text-green-300">Net Profit (Today)</p>
+                    <h3 className="text-2xl font-bold text-green-700 dark:text-green-200 mt-1">
+                      {formatCurrency(todayRevenue - todayExpenses)}
+                    </h3>
+                    <p className="text-xs text-green-500 dark:text-green-400 mt-1">
+                      Daily performance
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 bg-green-200 dark:bg-green-700 rounded-full flex items-center justify-center">
+                    <DollarSign className="h-6 w-6 text-green-600 dark:text-green-200" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </CardHeader>
-        <CardContent>
-          {isLoadingOrders || isLoadingTransactions ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : filteredFinancialData.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No financial activity found matching your criteria
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="dark:border-gray-700">
-                    <TableHead className="dark:text-gray-400">Date</TableHead>
-                    <TableHead className="dark:text-gray-400">Description</TableHead>
-                    <TableHead className="dark:text-gray-400">Type</TableHead>
-                    <TableHead className="dark:text-gray-400">Payment Method</TableHead>
-                    <TableHead className="dark:text-gray-400 text-right">Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredFinancialData.map((item) => (
-                    <TableRow 
-                      key={item.id} 
-                      className="dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                      onClick={() => onViewDetails(item.id, item.description)}
-                    >
-                      <TableCell className="font-medium dark:text-gray-300">
-                        {format(new Date(item.date), 'dd MMM yyyy')}
-                      </TableCell>
-                      <TableCell className="dark:text-gray-300">{item.description}</TableCell>
-                      <TableCell className="dark:text-gray-300">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          item.type === 'income' 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                        }`}>
-                          {item.type === 'income' ? 'Income' : 'Expense'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="dark:text-gray-300">{item.paymentMethod || 'Cash'}</TableCell>
-                      <TableCell className={`dark:text-gray-300 text-right font-medium ${
-                        item.type === 'income' 
-                          ? 'text-green-600 dark:text-green-400' 
-                          : 'text-red-600 dark:text-red-400'
-                      }`}>
-                        {item.type === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
-                      </TableCell>
-                    </TableRow>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <Card className="shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-lg font-medium">Revenue & Expenses</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    Cafeteria Sales & Expenses Chart
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-lg font-medium">Popular Menu Items</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-8">
+                  {popularItems.map((item, index) => (
+                    <div key={index} className="flex items-center">
+                      <div className="space-y-1 flex-1">
+                        <p className="text-sm font-medium leading-none">{item.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {item.quantity} sold - {formatCurrency(item.amount)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className={`text-sm ${item.trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {item.trend > 0 ? '+' : ''}{item.trend}%
+                        </p>
+                        {item.trend > 0 ? (
+                          <TrendingUp className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <TrendingDown className="h-4 w-4 text-red-500" />
+                        )}
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Sales Revenue</span>
-                <span className="text-sm font-medium text-green-600">{formatCurrency(todayRevenue)}</span>
+          <Card className="shadow-sm mb-6">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg font-medium">Cafeteria Financial Activity</CardTitle>
+              <div className="flex items-center space-x-2">
+                <div className="relative flex items-center">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search..."
+                    className="pl-8 h-9"
+                    value={searchTerm}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <Select
+                    value={dateFilter}
+                    onValueChange={setDateFilter}
+                  >
+                    <SelectTrigger className="w-40 h-9">
+                      <SelectValue placeholder="All Time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Time</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="week">This Week</SelectItem>
+                      <SelectItem value="month">This Month</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Expenses</span>
-                <span className="text-sm font-medium text-red-600">{formatCurrency(todayExpenses)}</span>
-              </div>
-              <div className="flex items-center justify-between border-t pt-2">
-                <span className="text-sm font-medium">Net Profit</span>
-                <span className="text-sm font-bold">{formatCurrency(todayRevenue - todayExpenses)}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent>
+              {isLoadingOrders || isLoadingTransactions ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : filteredFinancialData.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No financial activity found matching your criteria
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="dark:border-gray-700">
+                        <TableHead className="dark:text-gray-400">Date</TableHead>
+                        <TableHead className="dark:text-gray-400">Description</TableHead>
+                        <TableHead className="dark:text-gray-400">Type</TableHead>
+                        <TableHead className="dark:text-gray-400">Payment Method</TableHead>
+                        <TableHead className="dark:text-gray-400 text-right">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredFinancialData.map((item) => (
+                        <TableRow 
+                          key={item.id} 
+                          className="dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                          onClick={() => onViewDetails(item.id, item.description)}
+                        >
+                          <TableCell className="font-medium dark:text-gray-300">
+                            {format(new Date(item.date), 'dd MMM yyyy')}
+                          </TableCell>
+                          <TableCell className="dark:text-gray-300">{item.description}</TableCell>
+                          <TableCell className="dark:text-gray-300">
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              item.type === 'income' 
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            }`}>
+                              {item.type === 'income' ? 'Income' : 'Expense'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="dark:text-gray-300">{item.paymentMethod || 'Cash'}</TableCell>
+                          <TableCell className={`dark:text-gray-300 text-right font-medium ${
+                            item.type === 'income' 
+                              ? 'text-green-600 dark:text-green-400' 
+                              : 'text-red-600 dark:text-red-400'
+                          }`}>
+                            {item.type === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Orders Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Total Orders</span>
-                <span className="text-sm font-medium">{orders.length}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Today's Orders</span>
-                <span className="text-sm font-medium">{todayOrders.length}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Average Order Value</span>
-                <span className="text-sm font-medium">{formatCurrency(averageOrderValue)}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Today's Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Sales Revenue</span>
+                    <span className="text-sm font-medium text-green-600">{formatCurrency(todayRevenue)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Expenses</span>
+                    <span className="text-sm font-medium text-red-600">{formatCurrency(todayExpenses)}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-t pt-2">
+                    <span className="text-sm font-medium">Net Profit</span>
+                    <span className="text-sm font-bold">{formatCurrency(todayRevenue - todayExpenses)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Orders Overview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Total Orders</span>
+                    <span className="text-sm font-medium">{orders.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Today's Orders</span>
+                    <span className="text-sm font-medium">{todayOrders.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Average Order Value</span>
+                    <span className="text-sm font-medium">{formatCurrency(averageOrderValue)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="inventory">
+          <InventoryTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
