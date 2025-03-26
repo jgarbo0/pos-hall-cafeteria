@@ -31,6 +31,28 @@ interface Category {
   itemCount: number;
 }
 
+interface RestaurantInfo {
+  name: string;
+  phone: string;
+  address: string;
+  email: string;
+  business_hours: string;
+}
+
+interface TaxSettings {
+  tax_rate: number;
+  include_tax_in_price: boolean;
+  show_tax_on_receipt: boolean;
+}
+
+interface ReceiptSettings {
+  header: string;
+  address: string;
+  footer: string;
+  show_logo: boolean;
+  include_tip: boolean;
+}
+
 const GeneralSettings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -38,19 +60,19 @@ const GeneralSettings: React.FC = () => {
   const [editCategory, setEditCategory] = useState<Category | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [restaurantInfo, setRestaurantInfo] = useState({
+  const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo>({
     name: '',
     phone: '',
     address: '',
     email: '',
     business_hours: ''
   });
-  const [taxSettings, setTaxSettings] = useState({
+  const [taxSettings, setTaxSettings] = useState<TaxSettings>({
     tax_rate: 0,
     include_tax_in_price: false,
     show_tax_on_receipt: false
   });
-  const [receiptSettings, setReceiptSettings] = useState({
+  const [receiptSettings, setReceiptSettings] = useState<ReceiptSettings>({
     header: '',
     address: '',
     footer: '',
@@ -69,22 +91,22 @@ const GeneralSettings: React.FC = () => {
         if (generalSettings) {
           // Set restaurant info
           if (generalSettings.restaurant_info) {
-            setRestaurantInfo(generalSettings.restaurant_info);
+            setRestaurantInfo(generalSettings.restaurant_info as RestaurantInfo);
           }
           
           // Set categories
           if (generalSettings.categories) {
-            setCategories(generalSettings.categories);
+            setCategories(generalSettings.categories as Category[]);
           }
           
           // Set tax settings
           if (generalSettings.tax_settings) {
-            setTaxSettings(generalSettings.tax_settings);
+            setTaxSettings(generalSettings.tax_settings as TaxSettings);
           }
           
           // Set receipt settings
           if (generalSettings.receipt_settings) {
-            setReceiptSettings(generalSettings.receipt_settings);
+            setReceiptSettings(generalSettings.receipt_settings as ReceiptSettings);
           }
         }
       } catch (error) {

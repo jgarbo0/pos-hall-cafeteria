@@ -28,9 +28,17 @@ interface AppearanceSettingsProps {
   onThemeChange: (theme: string) => void;
 }
 
+interface ThemeSettings {
+  theme: string;
+  primary_color: string;
+  font_size: string;
+  compact_mode: boolean;
+  animations: boolean;
+}
+
 const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ theme, onThemeChange }) => {
   const [loading, setLoading] = useState(true);
-  const [appearanceSettings, setAppearanceSettings] = useState({
+  const [appearanceSettings, setAppearanceSettings] = useState<ThemeSettings>({
     theme: 'light',
     primary_color: 'blue',
     font_size: 'medium',
@@ -45,7 +53,7 @@ const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ theme, onThemeC
         const settings = await getSettings('appearance', 'theme_settings');
         
         if (settings) {
-          setAppearanceSettings(settings);
+          setAppearanceSettings(settings as ThemeSettings);
           // Update the theme in parent component if it differs
           if (settings.theme !== theme) {
             onThemeChange(settings.theme);

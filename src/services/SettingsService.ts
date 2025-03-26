@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -30,7 +31,7 @@ export const getSettings = async (category: string, key: string): Promise<Settin
       return null;
     }
     
-    return data?.value || null;
+    return data?.value as SettingsValue || null;
   } catch (error) {
     console.error('Error in getSettings:', error);
     return null;
@@ -52,7 +53,7 @@ export const getAllSettingsByCategory = async (category: string): Promise<Record
     
     // Convert array to object with key as the property name
     const settingsObject = data.reduce((acc, item) => {
-      acc[item.key] = item.value;
+      acc[item.key] = item.value as SettingsValue;
       return acc;
     }, {} as Record<string, SettingsValue>);
     

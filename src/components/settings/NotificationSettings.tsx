@@ -16,16 +16,29 @@ import { Loader2 } from 'lucide-react';
 import { getAllSettingsByCategory, createOrUpdateSettings } from '@/services/SettingsService';
 import { toast } from 'sonner';
 
+interface EmailNotifications {
+  new_order: boolean;
+  low_stock: boolean;
+  daily_summary: boolean;
+  customer_feedback: boolean;
+}
+
+interface AppNotifications {
+  app_new_order: boolean;
+  app_order_status: boolean;
+  app_inventory: boolean;
+}
+
 const NotificationSettings: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const [emailNotifications, setEmailNotifications] = useState({
+  const [emailNotifications, setEmailNotifications] = useState<EmailNotifications>({
     new_order: true,
     low_stock: true,
     daily_summary: true,
     customer_feedback: false
   });
   
-  const [appNotifications, setAppNotifications] = useState({
+  const [appNotifications, setAppNotifications] = useState<AppNotifications>({
     app_new_order: true,
     app_order_status: true,
     app_inventory: true
@@ -40,11 +53,11 @@ const NotificationSettings: React.FC = () => {
         
         if (notificationSettings) {
           if (notificationSettings.email_notifications) {
-            setEmailNotifications(notificationSettings.email_notifications);
+            setEmailNotifications(notificationSettings.email_notifications as EmailNotifications);
           }
           
           if (notificationSettings.app_notifications) {
-            setAppNotifications(notificationSettings.app_notifications);
+            setAppNotifications(notificationSettings.app_notifications as AppNotifications);
           }
         }
       } catch (error) {
