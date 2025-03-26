@@ -20,7 +20,7 @@ interface CartPanelProps {
   onRemoveItem: (id: string) => void;
   onUpdateQuantity: (id: string, quantity: number) => void;
   onClearCart: () => void;
-  onPlaceOrder: (paymentStatus: 'paid' | 'pending', discountType?: 'percentage' | 'fixed') => void;
+  onPlaceOrder: (paymentStatus: 'paid' | 'pending', discountType?: 'percentage' | 'fixed', discountAmount?: number) => void;
   orderNumber: string;
   tableNumber: number;
   customers?: Customer[];
@@ -182,7 +182,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
       globalDiscount: index === 0 ? globalDiscount : undefined
     }));
     
-    onPlaceOrder(paymentStatus, discountType);
+    onPlaceOrder(paymentStatus, discountType, discountAmount);
     
     toast.success(
       `Order #${orderNumber} completed successfully!`,
@@ -730,3 +730,4 @@ const CartPanel: React.FC<CartPanelProps> = ({
 };
 
 export default CartPanel;
+

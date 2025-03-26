@@ -51,7 +51,7 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({ orders }) => {
                   <p>{order.items} items</p>
                   <span className="mx-1">•</span>
                   <p>{order.time}</p>
-                  {order.discount && order.discount > 0 && (
+                  {order.discount && Number(order.discount) > 0 && (
                     <>
                       <span className="mx-1">•</span>
                       <p className="text-green-600 flex items-center">

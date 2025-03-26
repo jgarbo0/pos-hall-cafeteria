@@ -150,7 +150,11 @@ const Index = () => {
     setTableNumber(newTableNumber);
   };
   
-  const handlePlaceOrder = async (paymentStatus: 'paid' | 'pending', discountType: 'percentage' | 'fixed' = 'percentage') => {
+  const handlePlaceOrder = async (
+    paymentStatus: 'paid' | 'pending', 
+    discountType: 'percentage' | 'fixed' = 'percentage',
+    discountAmount?: number
+  ) => {
     if (cartItems.length === 0) {
       toast.error("Your cart is empty!");
       return;
@@ -172,7 +176,8 @@ const Index = () => {
         cartItems, 
         customerName,
         paymentStatus,
-        discountType
+        discountType,
+        discountAmount
       );
       
       const paymentMessage = paymentStatus === 'paid' 

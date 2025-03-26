@@ -142,12 +142,13 @@ export const createOrder = async (
   cartItems: CartItem[],
   customerName: string = 'Walk-in Customer',
   paymentStatus: 'paid' | 'pending' = 'paid',
-  discountType: 'percentage' | 'fixed' = 'percentage'
+  discountType: 'percentage' | 'fixed' = 'percentage',
+  discountAmount?: number
 ): Promise<Order> => {
   try {
     // Calculate totals with discounts
     let subtotal = 0;
-    let totalDiscount = 0;
+    let totalDiscount = discountAmount !== undefined ? discountAmount : 0;
     
     // Get any global discount from the cart items
     let globalDiscount = 0;
@@ -159,8 +160,8 @@ export const createOrder = async (
     // Calculate each item's price after potential discount
     for (const item of cartItems) {
       let itemPrice = item.price * item.quantity;
-      // Apply item discount if present
-      if (item.discount && item.discount > 0) {
+      // Apply item discount if present and if discountAmount wasn't explicitly provided
+      if (discountAmount === undefined && item.discount && item.discount > 0) {
         const itemDiscount = itemPrice * (item.discount / 100);
         totalDiscount += itemDiscount;
         itemPrice = itemPrice - itemDiscount;
@@ -168,13 +169,13 @@ export const createOrder = async (
       subtotal += itemPrice;
     }
     
-    // Apply global discount if present
-    if (globalDiscount > 0) {
-      const discountAmount = discountType === 'percentage' 
+    // Apply global discount if present and if discountAmount wasn't explicitly provided
+    if (discountAmount === undefined && globalDiscount > 0) {
+      const discountVal = discountType === 'percentage' 
         ? subtotal * (globalDiscount / 100) 
         : globalDiscount;
       
-      totalDiscount += discountAmount;
+      totalDiscount += discountVal;
     }
     
     // Get tax rate from tax_settings
@@ -188,14 +189,17 @@ export const createOrder = async (
       taxRate = Number(taxData.tax_rate);
     }
     
+    // If discountAmount was explicitly provided, use that instead of calculated amount
+    const finalDiscount = discountAmount !== undefined ? discountAmount : totalDiscount;
+    
     // Calculate total after discount is applied
-    const discountedSubtotal = subtotal - totalDiscount;
+    const discountedSubtotal = subtotal - finalDiscount;
     const tax = discountedSubtotal * (taxRate / 100);
     const total = discountedSubtotal + tax;
     
     console.log('Order details:', {
       subtotal,
-      discount: totalDiscount,
+      discount: finalDiscount,
       discountType,
       taxRate,
       tax,
@@ -210,7 +214,7 @@ export const createOrder = async (
         order_type: orderType,
         table_number: tableNumber,
         subtotal: subtotal, // Original subtotal before discount
-        discount: totalDiscount, // Save the total discount amount
+        discount: finalDiscount, // Save the total discount amount
         discount_type: discountType, // Save the discount type
         tax: tax,
         total: total,
