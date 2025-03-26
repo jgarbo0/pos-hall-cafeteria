@@ -35,6 +35,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@/components/ui/toggle-group';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Edit, Trash, Image, List, Grid, Upload } from 'lucide-react';
 import { MenuItem, Category } from '@/types';
 import { toast } from "sonner";
@@ -402,111 +403,113 @@ const Products = () => {
                     Add Product
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-[425px] max-h-[90vh]">
                   <DialogHeader>
                     <DialogTitle>{currentProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <label htmlFor="title" className="dark:text-white">Product Name</label>
-                      <Input 
-                        id="title" 
-                        name="title"
-                        value={editFormData.title}
-                        onChange={handleEditFormChange}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <label htmlFor="price" className="dark:text-white">Price</label>
-                      <Input 
-                        id="price" 
-                        name="price"
-                        type="number" 
-                        step="0.01"
-                        value={editFormData.price}
-                        onChange={handleEditFormChange}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <label htmlFor="category" className="dark:text-white">Category</label>
-                      <Select 
-                        value={editFormData.category}
-                        onValueChange={handleCategoryChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.filter(c => c.id !== 'all').map(category => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid gap-2">
-                      <label htmlFor="description" className="dark:text-white">Description</label>
-                      <Input 
-                        id="description" 
-                        name="description"
-                        value={editFormData.description}
-                        onChange={handleEditFormChange}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <label className="dark:text-white">Popular Item</label>
-                      <div className="flex items-center">
-                        <input 
-                          type="checkbox" 
-                          id="popular"
-                          name="popular"
-                          checked={editFormData.popular}
-                          onChange={(e) => handlePopularChange(e.target.checked)}
-                          className="mr-2"
-                        />
-                        <label htmlFor="popular" className="dark:text-white">Mark as popular</label>
-                      </div>
-                    </div>
-                    <div className="grid gap-2">
-                      <label className="dark:text-white">Product Image</label>
-                      <div className="flex gap-2">
+                  <ScrollArea className="max-h-[calc(90vh-120px)] overflow-auto pr-3">
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <label htmlFor="title" className="dark:text-white">Product Name</label>
                         <Input 
-                          id="image" 
-                          name="image"
-                          value={editFormData.image}
+                          id="title" 
+                          name="title"
+                          value={editFormData.title}
                           onChange={handleEditFormChange}
-                          placeholder="Image URL"
-                          className="flex-1"
-                        />
-                        <Button 
-                          variant="outline" 
-                          type="button" 
-                          onClick={triggerFileInput}
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          Upload
-                        </Button>
-                        <input 
-                          type="file" 
-                          ref={fileInputRef} 
-                          onChange={handleImageUpload} 
-                          className="hidden" 
-                          accept="image/*"
                         />
                       </div>
-                      {editFormData.image && (
-                        <div className="mt-2">
-                          <img 
-                            src={editFormData.image} 
-                            alt="Product preview" 
-                            className="h-32 w-32 object-cover rounded-md" 
+                      <div className="grid gap-2">
+                        <label htmlFor="price" className="dark:text-white">Price</label>
+                        <Input 
+                          id="price" 
+                          name="price"
+                          type="number" 
+                          step="0.01"
+                          value={editFormData.price}
+                          onChange={handleEditFormChange}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <label htmlFor="category" className="dark:text-white">Category</label>
+                        <Select 
+                          value={editFormData.category}
+                          onValueChange={handleCategoryChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.filter(c => c.id !== 'all').map(category => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <label htmlFor="description" className="dark:text-white">Description</label>
+                        <Input 
+                          id="description" 
+                          name="description"
+                          value={editFormData.description}
+                          onChange={handleEditFormChange}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <label className="dark:text-white">Popular Item</label>
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="popular"
+                            name="popular"
+                            checked={editFormData.popular}
+                            onChange={(e) => handlePopularChange(e.target.checked)}
+                            className="mr-2"
+                          />
+                          <label htmlFor="popular" className="dark:text-white">Mark as popular</label>
+                        </div>
+                      </div>
+                      <div className="grid gap-2">
+                        <label className="dark:text-white">Product Image</label>
+                        <div className="flex gap-2">
+                          <Input 
+                            id="image" 
+                            name="image"
+                            value={editFormData.image}
+                            onChange={handleEditFormChange}
+                            placeholder="Image URL"
+                            className="flex-1"
+                          />
+                          <Button 
+                            variant="outline" 
+                            type="button" 
+                            onClick={triggerFileInput}
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload
+                          </Button>
+                          <input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            onChange={handleImageUpload} 
+                            className="hidden" 
+                            accept="image/*"
                           />
                         </div>
-                      )}
+                        {editFormData.image && (
+                          <div className="mt-2">
+                            <img 
+                              src={editFormData.image} 
+                              alt="Product preview" 
+                              className="h-32 w-32 object-cover rounded-md" 
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex justify-end">
+                  </ScrollArea>
+                  <div className="flex justify-end pt-4">
                     <Button onClick={currentProduct ? handleUpdateProduct : handleAddNewProduct}>
                       {currentProduct ? 'Update Product' : 'Save Product'}
                     </Button>
