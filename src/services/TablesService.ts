@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -21,7 +20,12 @@ export const getRestaurantTables = async (): Promise<RestaurantTable[]> => {
     
     if (error) throw error;
     
-    return data || [];
+    const typedData = data?.map(table => ({
+      ...table,
+      status: validateTableStatus(table.status)
+    })) || [];
+    
+    return typedData;
   } catch (error) {
     console.error('Error fetching restaurant tables:', error);
     toast.error('Failed to load restaurant tables');
@@ -39,13 +43,26 @@ export const createRestaurantTable = async (table: Omit<RestaurantTable, 'id' | 
     
     if (error) throw error;
     
+    const typedData: RestaurantTable = {
+      ...data,
+      status: validateTableStatus(data.status)
+    };
+    
     toast.success(`Table "${table.name}" created successfully`);
-    return data;
+    return typedData;
   } catch (error) {
     console.error('Error creating restaurant table:', error);
     toast.error('Failed to create restaurant table');
     return null;
   }
+};
+
+const validateTableStatus = (status: string): 'available' | 'occupied' | 'reserved' => {
+  if (status === 'available' || status === 'occupied' || status === 'reserved') {
+    return status;
+  }
+  console.warn(`Invalid table status: "${status}". Defaulting to "available".`);
+  return 'available';
 };
 
 export const updateRestaurantTable = async (id: string, table: Partial<RestaurantTable>): Promise<boolean> => {
