@@ -634,7 +634,7 @@ export interface StaffUser {
 export const getStaffUsers = async (): Promise<StaffUser[]> => {
   try {
     const { data, error } = await supabase
-      .from('users')
+      .from('staff_users')
       .select('*')
       .order('name', { ascending: true });
     
@@ -651,7 +651,7 @@ export const getStaffUsers = async (): Promise<StaffUser[]> => {
 export const getStaffUserById = async (id: string): Promise<StaffUser | null> => {
   try {
     const { data, error } = await supabase
-      .from('users')
+      .from('staff_users')
       .select('*')
       .eq('id', id)
       .single();
@@ -674,7 +674,7 @@ export const getStaffUserById = async (id: string): Promise<StaffUser | null> =>
 export const createStaffUser = async (user: Omit<StaffUser, 'id'>): Promise<StaffUser> => {
   try {
     const { data, error } = await supabase
-      .from('users')
+      .from('staff_users')
       .insert({
         name: user.name,
         email: user.email,
@@ -699,7 +699,7 @@ export const createStaffUser = async (user: Omit<StaffUser, 'id'>): Promise<Staf
 export const updateStaffUser = async (id: string, user: Partial<StaffUser>): Promise<void> => {
   try {
     const { error } = await supabase
-      .from('users')
+      .from('staff_users')
       .update({
         name: user.name,
         email: user.email,
@@ -721,7 +721,7 @@ export const updateStaffUser = async (id: string, user: Partial<StaffUser>): Pro
 export const deleteStaffUser = async (id: string): Promise<void> => {
   try {
     const { error } = await supabase
-      .from('users')
+      .from('staff_users')
       .delete()
       .eq('id', id);
     
