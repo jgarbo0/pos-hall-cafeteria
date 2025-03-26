@@ -1,30 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { 
-  Dialog, 
-  DialogTrigger, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription, 
-  DialogFooter 
-} from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import { UserPlus, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { StaffUser } from '@/types';
 import { getStaffUsers, createStaffUser, updateStaffUser, deleteStaffUser } from '@/services/SupabaseService';
+
+// Import components
+import UserList from './users/UserList';
+import AddUserForm from './users/AddUserForm';
+import EditUserForm from './users/EditUserForm';
+import DeleteUserDialog from './users/DeleteUserDialog';
 
 const UserManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -98,6 +84,20 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  const handleOpenAddDialog = () => {
+    setIsAddDialogOpen(true);
+  };
+
+  const handleOpenEditDialog = (user: StaffUser) => {
+    setCurrentUser(user);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleOpenDeleteDialog = (user: StaffUser) => {
+    setCurrentUser(user);
+    setIsDeleteDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-full p-8">
@@ -118,199 +118,37 @@ const UserManagement: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium dark:text-white">Staff Members</h3>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <UserPlus size={16} />
-                  Add User
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="dark:bg-gray-800 dark:border-gray-700">
-                <DialogHeader>
-                  <DialogTitle className="dark:text-white">Add New User</DialogTitle>
-                  <DialogDescription className="dark:text-gray-400">
-                    Create a new staff account
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="dark:text-gray-300">Full Name</Label>
-                    <Input 
-                      id="name" 
-                      value={newUser.name}
-                      onChange={(e) => setNewUser({...newUser, name: e.target.value})}
-                      className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="dark:text-gray-300">Email</Label>
-                    <Input 
-                      id="email" 
-                      type="email"
-                      value={newUser.email}
-                      onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                      className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="role" className="dark:text-gray-300">Role</Label>
-                    <Select 
-                      value={newUser.role} 
-                      onValueChange={(value) => setNewUser({...newUser, role: value})}
-                    >
-                      <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                      <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                        <SelectItem value="Admin">Admin</SelectItem>
-                        <SelectItem value="Manager">Manager</SelectItem>
-                        <SelectItem value="Staff">Staff</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="dark:bg-gray-700 dark:text-white dark:border-gray-600">
-                    Cancel
-                  </Button>
-                  <Button onClick={handleAddUser}>
-                    Add User
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-          <Separator className="dark:bg-gray-700" />
-          <div className="space-y-4">
-            {users.length === 0 ? (
-              <p className="text-center text-gray-500 dark:text-gray-400 py-4">No users found. Add your first user to get started.</p>
-            ) : (
-              users.map((user, index) => (
-                <div key={user.id || index} className="flex justify-between items-center p-4 border rounded-md dark:border-gray-700 dark:bg-gray-800">
-                  <div>
-                    <p className="font-medium dark:text-white">{user.name}</p>
-                    <p className="text-sm text-muted-foreground dark:text-gray-400">{user.email}</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-medium dark:text-gray-300">{user.role}</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                      onClick={() => {
-                        setCurrentUser(user);
-                        setIsEditDialogOpen(true);
-                      }}
-                    >
-                      <Edit size={16} />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="dark:bg-gray-700 dark:text-red-400 dark:border-gray-600"
-                      onClick={() => {
-                        setCurrentUser(user);
-                        setIsDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2 size={16} />
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        <UserList 
+          users={users} 
+          onAddUser={handleOpenAddDialog}
+          onEditUser={handleOpenEditDialog}
+          onDeleteUser={handleOpenDeleteDialog}
+        />
       </CardContent>
 
-      {/* Edit User Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="dark:bg-gray-800 dark:border-gray-700">
-          <DialogHeader>
-            <DialogTitle className="dark:text-white">Edit User</DialogTitle>
-            <DialogDescription className="dark:text-gray-400">
-              Update user details
-            </DialogDescription>
-          </DialogHeader>
-          {currentUser && (
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-name" className="dark:text-gray-300">Full Name</Label>
-                <Input 
-                  id="edit-name" 
-                  value={currentUser.name}
-                  onChange={(e) => setCurrentUser({...currentUser, name: e.target.value})}
-                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-email" className="dark:text-gray-300">Email</Label>
-                <Input 
-                  id="edit-email" 
-                  type="email"
-                  value={currentUser.email}
-                  onChange={(e) => setCurrentUser({...currentUser, email: e.target.value})}
-                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-role" className="dark:text-gray-300">Role</Label>
-                <Select 
-                  value={currentUser.role} 
-                  onValueChange={(value) => setCurrentUser({...currentUser, role: value})}
-                >
-                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                    <SelectItem value="Admin">Admin</SelectItem>
-                    <SelectItem value="Manager">Manager</SelectItem>
-                    <SelectItem value="Staff">Staff</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="dark:bg-gray-700 dark:text-white dark:border-gray-600">
-              Cancel
-            </Button>
-            <Button onClick={handleEditUser}>
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Dialogs */}
+      <AddUserForm
+        isOpen={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        newUser={newUser}
+        setNewUser={setNewUser}
+        handleAddUser={handleAddUser}
+      />
 
-      {/* Delete User Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="dark:bg-gray-800 dark:border-gray-700">
-          <DialogHeader>
-            <DialogTitle className="dark:text-white">Delete User</DialogTitle>
-            <DialogDescription className="dark:text-gray-400">
-              Are you sure you want to delete this user? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          {currentUser && (
-            <div className="py-4">
-              <p className="text-gray-600 dark:text-gray-300">
-                You are about to delete <span className="font-medium">{currentUser.name}</span> ({currentUser.email}).
-              </p>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} className="dark:bg-gray-700 dark:text-white dark:border-gray-600">
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteUser}>
-              Delete User
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditUserForm
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        currentUser={currentUser}
+        setCurrentUser={setCurrentUser}
+        handleEditUser={handleEditUser}
+      />
+
+      <DeleteUserDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        currentUser={currentUser}
+        handleDeleteUser={handleDeleteUser}
+      />
     </Card>
   );
 };
