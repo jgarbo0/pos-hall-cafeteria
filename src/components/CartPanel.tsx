@@ -88,6 +88,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
           label: "View Orders",
           onClick: () => navigate('/orders')
         },
+        duration: 5000 // Show toast for 5 seconds
       }
     );
     
@@ -131,8 +132,8 @@ const CartPanel: React.FC<CartPanelProps> = ({
         itemsCount={items.length}
       />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
-        <TabsList className="grid grid-cols-2 mx-4 mt-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col overflow-hidden">
+        <TabsList className="grid grid-cols-2 mx-4 mt-2 flex-shrink-0">
           <TabsTrigger value="cart" className="flex items-center gap-2">
             <ShoppingBag className="h-4 w-4" />
             Cart
@@ -143,7 +144,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="cart" className="flex-1 flex flex-col">
+        <TabsContent value="cart" className="flex-1 flex flex-col overflow-hidden mt-0">
           <CartControls 
             orderType={orderType}
             onOrderTypeChange={onOrderTypeChange}
@@ -187,7 +188,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
           />
         </TabsContent>
 
-        <TabsContent value="orders" className="flex-1 flex flex-col mt-0">
+        <TabsContent value="orders" className="flex-1 flex flex-col overflow-hidden mt-0">
           <CartOrdersList orders={recentOrders} />
         </TabsContent>
       </Tabs>

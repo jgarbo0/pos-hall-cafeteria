@@ -16,7 +16,7 @@ const CartOrdersList: React.FC<CartOrdersListProps> = ({ orders }) => {
   const navigate = useNavigate();
   
   return (
-    <ScrollArea className="flex-1">
+    <ScrollArea className="flex-1 h-full">
       <div className="p-4">
         {orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-12">

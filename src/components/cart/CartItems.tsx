@@ -24,7 +24,7 @@ const CartItems: React.FC<CartItemsProps> = ({
   onClearItemDiscount
 }) => {
   return (
-    <ScrollArea className="flex-1">
+    <ScrollArea className="flex-1 h-full">
       <div className="p-4">
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-12">

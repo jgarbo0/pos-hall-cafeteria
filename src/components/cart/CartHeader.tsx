@@ -17,7 +17,7 @@ const CartHeader: React.FC<CartHeaderProps> = ({
   itemsCount
 }) => {
   return (
-    <div className="p-4 border-b dark:border-gray-700">
+    <div className="p-4 border-b dark:border-gray-700 flex-shrink-0">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold dark:text-white">Order #{orderNumber}</h2>
         {activeTab === "cart" && (
