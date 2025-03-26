@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -110,6 +109,36 @@ export const createSettings = async (category: string, key: string, value: Setti
   } catch (error) {
     console.error('Error in createSettings:', error);
     toast.error('An error occurred while creating settings');
+    return false;
+  }
+};
+
+// Create or update settings - checks if settings exist and creates or updates accordingly
+export const createOrUpdateSettings = async (category: string, key: string, value: SettingsValue): Promise<boolean> => {
+  try {
+    // First check if the settings exist
+    const { data, error: fetchError } = await supabase
+      .from('settings')
+      .select('id')
+      .eq('category', category)
+      .eq('key', key);
+    
+    if (fetchError) {
+      console.error('Error checking if settings exist:', fetchError);
+      toast.error('Failed to check if settings exist');
+      return false;
+    }
+    
+    // If settings exist, update them
+    if (data && data.length > 0) {
+      return await updateSettings(category, key, value);
+    } 
+    
+    // Otherwise, create new settings
+    return await createSettings(category, key, value);
+  } catch (error) {
+    console.error('Error in createOrUpdateSettings:', error);
+    toast.error('An error occurred while saving settings');
     return false;
   }
 };

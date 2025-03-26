@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { getAllSettingsByCategory, updateSettings } from '@/services/SettingsService';
+import { getAllSettingsByCategory, createOrUpdateSettings } from '@/services/SettingsService';
 
 interface Category {
   id: string;
@@ -35,6 +35,9 @@ const GeneralSettings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
+  const [editCategory, setEditCategory] = useState<Category | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [restaurantInfo, setRestaurantInfo] = useState({
     name: '',
     phone: '',
@@ -96,21 +99,21 @@ const GeneralSettings: React.FC = () => {
   }, []);
 
   const handleSaveRestaurantInfo = async () => {
-    const success = await updateSettings('general', 'restaurant_info', restaurantInfo);
+    const success = await createOrUpdateSettings('general', 'restaurant_info', restaurantInfo);
     if (success) {
       toast.success('Restaurant information updated successfully');
     }
   };
 
   const handleSaveTaxSettings = async () => {
-    const success = await updateSettings('general', 'tax_settings', taxSettings);
+    const success = await createOrUpdateSettings('general', 'tax_settings', taxSettings);
     if (success) {
       toast.success('Tax settings updated successfully');
     }
   };
 
   const handleSaveReceiptSettings = async () => {
-    const success = await updateSettings('general', 'receipt_settings', receiptSettings);
+    const success = await createOrUpdateSettings('general', 'receipt_settings', receiptSettings);
     if (success) {
       toast.success('Receipt settings updated successfully');
     }
@@ -130,18 +133,39 @@ const GeneralSettings: React.FC = () => {
     };
     
     const updatedCategories = [...categories, newCategoryItem];
-    const success = await updateSettings('general', 'categories', updatedCategories);
+    const success = await createOrUpdateSettings('general', 'categories', updatedCategories);
     
     if (success) {
       setCategories(updatedCategories);
       setNewCategory({ name: '', description: '' });
+      setIsAddDialogOpen(false);
       toast.success(`Category "${newCategory.name}" added successfully`);
+    }
+  };
+
+  const handleEditCategory = async () => {
+    if (!editCategory || !editCategory.name.trim()) {
+      toast.error('Category name is required');
+      return;
+    }
+    
+    const updatedCategories = categories.map(cat => 
+      cat.id === editCategory.id ? editCategory : cat
+    );
+    
+    const success = await createOrUpdateSettings('general', 'categories', updatedCategories);
+    
+    if (success) {
+      setCategories(updatedCategories);
+      setEditCategory(null);
+      setIsEditDialogOpen(false);
+      toast.success('Category updated successfully');
     }
   };
 
   const handleDeleteCategory = async (id: string) => {
     const updatedCategories = categories.filter(category => category.id !== id);
-    const success = await updateSettings('general', 'categories', updatedCategories);
+    const success = await createOrUpdateSettings('general', 'categories', updatedCategories);
     
     if (success) {
       setCategories(updatedCategories);
@@ -232,7 +256,7 @@ const GeneralSettings: React.FC = () => {
               Manage menu categories
             </CardDescription>
           </div>
-          <Dialog>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="flex items-center gap-1">
                 <Plus size={16} />
@@ -283,7 +307,15 @@ const GeneralSettings: React.FC = () => {
                   <span className="text-sm text-gray-500 dark:text-gray-400">{category.itemCount} items</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 dark:text-gray-400">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-gray-500 dark:text-gray-400"
+                    onClick={() => {
+                      setEditCategory(category);
+                      setIsEditDialogOpen(true);
+                    }}
+                  >
                     <Edit size={16} />
                   </Button>
                   <Button 
@@ -299,6 +331,33 @@ const GeneralSettings: React.FC = () => {
             ))}
           </div>
         </CardContent>
+        
+        {/* Edit Category Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="dark:bg-gray-800 dark:border-gray-700">
+            <DialogHeader>
+              <DialogTitle className="dark:text-white">Edit Category</DialogTitle>
+              <DialogDescription className="dark:text-gray-400">
+                Update category details
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-category-name" className="dark:text-gray-300">Category Name</Label>
+                <Input 
+                  id="edit-category-name" 
+                  value={editCategory?.name || ''}
+                  onChange={(e) => setEditCategory(prev => prev ? {...prev, name: e.target.value} : null)}
+                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" onClick={handleEditCategory}>Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </Card>
       
       <Card className="dark:bg-gray-800 dark:border-gray-700">
@@ -316,7 +375,7 @@ const GeneralSettings: React.FC = () => {
               type="number" 
               step="0.01" 
               value={taxSettings.tax_rate}
-              onChange={(e) => setTaxSettings({...taxSettings, tax_rate: parseFloat(e.target.value)})} 
+              onChange={(e) => setTaxSettings({...taxSettings, tax_rate: parseFloat(e.target.value) || 0})} 
               className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
             />
           </div>

@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Loader2 } from 'lucide-react';
-import { getAllSettingsByCategory, updateSettings } from '@/services/SettingsService';
+import { getAllSettingsByCategory, createOrUpdateSettings } from '@/services/SettingsService';
 import { toast } from 'sonner';
 
 const NotificationSettings: React.FC = () => {
@@ -59,22 +59,22 @@ const NotificationSettings: React.FC = () => {
   }, []);
   
   const handleSaveEmailNotifications = async () => {
-    const success = await updateSettings('notifications', 'email_notifications', emailNotifications);
+    const success = await createOrUpdateSettings('notifications', 'email_notifications', emailNotifications);
     if (success) {
       toast.success('Email notification settings updated');
     }
   };
   
   const handleSaveAppNotifications = async () => {
-    const success = await updateSettings('notifications', 'app_notifications', appNotifications);
+    const success = await createOrUpdateSettings('notifications', 'app_notifications', appNotifications);
     if (success) {
       toast.success('App notification settings updated');
     }
   };
   
   const handleSaveAll = async () => {
-    const emailSuccess = await updateSettings('notifications', 'email_notifications', emailNotifications);
-    const appSuccess = await updateSettings('notifications', 'app_notifications', appNotifications);
+    const emailSuccess = await createOrUpdateSettings('notifications', 'email_notifications', emailNotifications);
+    const appSuccess = await createOrUpdateSettings('notifications', 'app_notifications', appNotifications);
     
     if (emailSuccess && appSuccess) {
       toast.success('All notification preferences saved');
