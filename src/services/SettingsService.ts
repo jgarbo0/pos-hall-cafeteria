@@ -509,7 +509,7 @@ export const getRoles = async (): Promise<Role[]> => {
     const { data, error } = await supabase
       .from('roles')
       .select('*')
-      .order('name');
+      .order('name', { ascending: true });
     
     if (error) {
       console.error('Error fetching roles:', error);
@@ -531,7 +531,8 @@ export const getPermissions = async (): Promise<Permission[]> => {
     const { data, error } = await supabase
       .from('permissions')
       .select('*')
-      .order('module', 'name');
+      .order('module', { ascending: true })
+      .order('name', { ascending: true });
     
     if (error) {
       console.error('Error fetching permissions:', error);
@@ -846,3 +847,4 @@ export const createOrUpdateSettings = async (category: string, key: string, valu
     return false;
   }
 };
+
