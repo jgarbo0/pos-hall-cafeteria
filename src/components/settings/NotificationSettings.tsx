@@ -74,7 +74,12 @@ const NotificationSettings: React.FC = () => {
   
   const handleSaveEmailNotifications = async () => {
     console.log('Saving email notifications:', emailNotifications);
-    const success = await createOrUpdateSettings('notifications', 'email_notifications', emailNotifications as unknown as SettingsValue);
+    const success = await createOrUpdateSettings(
+      'notifications', 
+      'email_notifications', 
+      emailNotifications as unknown as SettingsValue
+    );
+    
     if (success) {
       toast.success('Email notification settings updated');
     }
@@ -82,7 +87,12 @@ const NotificationSettings: React.FC = () => {
   
   const handleSaveAppNotifications = async () => {
     console.log('Saving app notifications:', appNotifications);
-    const success = await createOrUpdateSettings('notifications', 'app_notifications', appNotifications as unknown as SettingsValue);
+    const success = await createOrUpdateSettings(
+      'notifications', 
+      'app_notifications', 
+      appNotifications as unknown as SettingsValue
+    );
+    
     if (success) {
       toast.success('App notification settings updated');
     }
@@ -93,8 +103,18 @@ const NotificationSettings: React.FC = () => {
       email: emailNotifications,
       app: appNotifications
     });
-    const emailSuccess = await createOrUpdateSettings('notifications', 'email_notifications', emailNotifications as unknown as SettingsValue);
-    const appSuccess = await createOrUpdateSettings('notifications', 'app_notifications', appNotifications as unknown as SettingsValue);
+    
+    const emailSuccess = await createOrUpdateSettings(
+      'notifications', 
+      'email_notifications', 
+      emailNotifications as unknown as SettingsValue
+    );
+    
+    const appSuccess = await createOrUpdateSettings(
+      'notifications', 
+      'app_notifications', 
+      appNotifications as unknown as SettingsValue
+    );
     
     if (emailSuccess && appSuccess) {
       toast.success('All notification preferences saved');
@@ -137,7 +157,7 @@ const NotificationSettings: React.FC = () => {
                   <Label htmlFor={item.id} className="flex-1 dark:text-gray-300">{item.label}</Label>
                   <Switch 
                     id={item.id} 
-                    checked={emailNotifications[item.key as keyof typeof emailNotifications]}
+                    checked={emailNotifications[item.key as keyof EmailNotifications]}
                     onCheckedChange={(checked) => {
                       setEmailNotifications({ ...emailNotifications, [item.key]: checked });
                     }}
@@ -161,7 +181,7 @@ const NotificationSettings: React.FC = () => {
                   <Label htmlFor={item.id} className="flex-1 dark:text-gray-300">{item.label}</Label>
                   <Switch 
                     id={item.id} 
-                    checked={appNotifications[item.key as keyof typeof appNotifications]}
+                    checked={appNotifications[item.key as keyof AppNotifications]}
                     onCheckedChange={(checked) => {
                       setAppNotifications({ ...appNotifications, [item.key]: checked });
                     }}

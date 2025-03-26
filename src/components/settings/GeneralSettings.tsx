@@ -123,7 +123,12 @@ const GeneralSettings: React.FC = () => {
 
   const handleSaveRestaurantInfo = async () => {
     console.log('Saving restaurant info:', restaurantInfo);
-    const success = await createOrUpdateSettings('general', 'restaurant_info', restaurantInfo as unknown as SettingsValue);
+    const success = await createOrUpdateSettings(
+      'general', 
+      'restaurant_info', 
+      restaurantInfo as unknown as SettingsValue
+    );
+    
     if (success) {
       toast.success('Restaurant information updated successfully');
     }
@@ -131,7 +136,12 @@ const GeneralSettings: React.FC = () => {
 
   const handleSaveTaxSettings = async () => {
     console.log('Saving tax settings:', taxSettings);
-    const success = await createOrUpdateSettings('general', 'tax_settings', taxSettings as unknown as SettingsValue);
+    const success = await createOrUpdateSettings(
+      'general', 
+      'tax_settings', 
+      taxSettings as unknown as SettingsValue
+    );
+    
     if (success) {
       toast.success('Tax settings updated successfully');
     }
@@ -139,7 +149,12 @@ const GeneralSettings: React.FC = () => {
 
   const handleSaveReceiptSettings = async () => {
     console.log('Saving receipt settings:', receiptSettings);
-    const success = await createOrUpdateSettings('general', 'receipt_settings', receiptSettings as unknown as SettingsValue);
+    const success = await createOrUpdateSettings(
+      'general', 
+      'receipt_settings', 
+      receiptSettings as unknown as SettingsValue
+    );
+    
     if (success) {
       toast.success('Receipt settings updated successfully');
     }
@@ -160,7 +175,11 @@ const GeneralSettings: React.FC = () => {
     
     const updatedCategories = [...categories, newCategoryItem];
     console.log('Saving categories after adding:', updatedCategories);
-    const success = await createOrUpdateSettings('general', 'categories', updatedCategories as unknown as SettingsValue);
+    const success = await createOrUpdateSettings(
+      'general', 
+      'categories', 
+      updatedCategories as unknown as SettingsValue
+    );
     
     if (success) {
       setCategories(updatedCategories);
@@ -181,7 +200,11 @@ const GeneralSettings: React.FC = () => {
     );
     
     console.log('Saving categories after editing:', updatedCategories);
-    const success = await createOrUpdateSettings('general', 'categories', updatedCategories as unknown as SettingsValue);
+    const success = await createOrUpdateSettings(
+      'general', 
+      'categories', 
+      updatedCategories as unknown as SettingsValue
+    );
     
     if (success) {
       setCategories(updatedCategories);
@@ -194,7 +217,11 @@ const GeneralSettings: React.FC = () => {
   const handleDeleteCategory = async (id: string) => {
     const updatedCategories = categories.filter(category => category.id !== id);
     console.log('Saving categories after deleting:', updatedCategories);
-    const success = await createOrUpdateSettings('general', 'categories', updatedCategories as unknown as SettingsValue);
+    const success = await createOrUpdateSettings(
+      'general', 
+      'categories', 
+      updatedCategories as unknown as SettingsValue
+    );
     
     if (success) {
       setCategories(updatedCategories);

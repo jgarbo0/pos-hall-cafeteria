@@ -19,6 +19,8 @@ export interface Settings {
 // Fetch settings by category and key
 export const getSettings = async (category: string, key: string): Promise<SettingsValue | null> => {
   try {
+    console.log(`Fetching settings for ${category}.${key}`);
+    
     const { data, error } = await supabase
       .from('settings')
       .select('value')
@@ -31,6 +33,7 @@ export const getSettings = async (category: string, key: string): Promise<Settin
       return null;
     }
     
+    console.log(`Retrieved settings for ${category}.${key}:`, data?.value);
     return data?.value as SettingsValue || null;
   } catch (error) {
     console.error('Error in getSettings:', error);
@@ -41,6 +44,8 @@ export const getSettings = async (category: string, key: string): Promise<Settin
 // Fetch all settings by category
 export const getAllSettingsByCategory = async (category: string): Promise<Record<string, SettingsValue> | null> => {
   try {
+    console.log(`Fetching all settings for category: ${category}`);
+    
     const { data, error } = await supabase
       .from('settings')
       .select('key, value')
@@ -57,6 +62,7 @@ export const getAllSettingsByCategory = async (category: string): Promise<Record
       return acc;
     }, {} as Record<string, SettingsValue>);
     
+    console.log(`Retrieved settings for category ${category}:`, settingsObject);
     return settingsObject;
   } catch (error) {
     console.error('Error in getAllSettingsByCategory:', error);
@@ -81,6 +87,7 @@ export const updateSettings = async (category: string, key: string, value: Setti
       return false;
     }
     
+    console.log(`Successfully updated settings: ${category}.${key}`);
     toast.success('Settings updated successfully');
     return true;
   } catch (error) {
@@ -109,6 +116,7 @@ export const createSettings = async (category: string, key: string, value: Setti
       return false;
     }
     
+    console.log(`Successfully created settings: ${category}.${key}`);
     toast.success('Settings created successfully');
     return true;
   } catch (error) {
@@ -121,7 +129,7 @@ export const createSettings = async (category: string, key: string, value: Setti
 // Create or update settings - checks if settings exist and creates or updates accordingly
 export const createOrUpdateSettings = async (category: string, key: string, value: SettingsValue): Promise<boolean> => {
   try {
-    console.log(`Checking if settings exist: ${category}.${key}`);
+    console.log(`Checking if settings exist: ${category}.${key}`, value);
     
     // First check if the settings exist
     const { data, error: fetchError } = await supabase
@@ -136,7 +144,7 @@ export const createOrUpdateSettings = async (category: string, key: string, valu
       return false;
     }
     
-    console.log(`Settings exist check result:`, data);
+    console.log(`Settings exist check result for ${category}.${key}:`, data);
     
     // If settings exist, update them
     if (data && data.length > 0) {
