@@ -187,7 +187,7 @@ export const createOrder = async (
         customer_name: customerName,
         payment_status: paymentStatus,
         discount: globalDiscount,
-        discount_type: discountType
+        discount_type: discountType as string // Type assertion to string for database
       })
       .select()
       .single();
@@ -230,7 +230,7 @@ export const createOrder = async (
       timestamp: orderData.timestamp,
       customerName: orderData.customer_name,
       discount: orderData.discount,
-      discountType: orderData.discount_type
+      discountType: orderData.discount_type as 'percentage' | 'fixed'
     };
   } catch (error) {
     console.error('Error creating order:', error);
@@ -307,7 +307,7 @@ export const getOrders = async (): Promise<Order[]> => {
         timestamp: order.timestamp,
         customerName: order.customer_name,
         discount: order.discount || 0,
-        discountType: order.discount_type || 'percentage'
+        discountType: (order.discount_type || 'percentage') as 'percentage' | 'fixed'
       });
     }
     
@@ -785,4 +785,3 @@ export default {
   updateStaffUser,
   deleteStaffUser
 };
-
