@@ -1,14 +1,11 @@
-
 import React, { useState } from 'react';
 import { 
   Card, 
   CardContent, 
   CardHeader, 
-  CardTitle,
-  CardDescription 
+  CardTitle 
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -16,29 +13,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { Transaction } from '@/types/finance';
 import { formatCurrency } from '@/lib/utils';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
-  ShoppingBag, 
+  Coffee, 
   Calendar, 
   TrendingUp,
+  TrendingDown,
   Search,
   Filter,
-  Coffee,
   DollarSign,
-  Clock,
-  CreditCard,
-  ReceiptText,
-  ChevronRight 
+  Users,
+  ShoppingBag
 } from 'lucide-react';
-import { format, isToday, startOfWeek, endOfWeek } from 'date-fns';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { format, isToday, isThisMonth } from 'date-fns';
 
 interface CafeteriaFinanceTabProps {
   transactions: Transaction[];
   isLoadingTransactions: boolean;
   onViewDetails: (id: string, title: string) => void;
+}
+
+interface PopularMenuItem {
+  name: string;
+  quantity: number;
+  amount: number;
+  trend: number;
 }
 
 const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
@@ -47,74 +49,69 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
   onViewDetails
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [timeFilter, setTimeFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('all');
   
-  const totalSales = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+  const totalSalesRevenue = transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+  const todaySales = transactions.filter(transaction => isToday(new Date(transaction.date)));
+  const todayRevenue = todaySales.reduce((sum, transaction) => sum + transaction.amount, 0);
   
-  const todayTransactions = transactions.filter(tx => isToday(new Date(tx.date)));
-  const todaySales = todayTransactions.reduce((sum, tx) => sum + tx.amount, 0);
+  // Calculate average sale value
+  const averageSaleValue = transactions.length > 0 ? totalSalesRevenue / transactions.length : 0;
   
-  // Estimate expenses as 40% of revenue
-  const totalExpenses = totalSales * 0.4;
-  const todayExpenses = todaySales * 0.4;
+  // Mock popular menu items data
+  const popularItems: PopularMenuItem[] = [
+    { name: "Spicy Chicken Burger", quantity: 145, amount: 1740, trend: 15 },
+    { name: "Creamy Pasta", quantity: 120, amount: 1320, trend: 8 },
+    { name: "Cappuccino", quantity: 180, amount: 900, trend: 12 },
+    { name: "Chocolate Cake", quantity: 90, amount: 990, trend: -5 }
+  ];
   
-  const profit = totalSales - totalExpenses;
-  
-  // Filter transactions based on search and time period
-  const filteredTransactions = transactions.filter(tx => {
-    const matchesSearch = 
-      tx.description.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredTransactions = transactions.filter(transaction => {
+    // Filter by search term (description)
+    const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const txDate = new Date(tx.date);
-    let matchesTime = true;
+    // Filter by date
+    let matchesDate = true;
+    const transactionDate = new Date(transaction.date);
     
-    if (timeFilter === 'today') {
-      matchesTime = isToday(txDate);
-    } else if (timeFilter === 'week') {
-      const weekStart = startOfWeek(new Date());
-      const weekEnd = endOfWeek(new Date());
-      matchesTime = txDate >= weekStart && txDate <= weekEnd;
+    if (dateFilter === 'today') {
+      matchesDate = isToday(transactionDate);
+    } else if (dateFilter === 'week') {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      matchesDate = transactionDate >= oneWeekAgo;
+    } else if (dateFilter === 'month') {
+      matchesDate = isThisMonth(transactionDate);
     }
     
-    return matchesSearch && matchesTime;
+    return matchesSearch && matchesDate;
   });
 
-  // Generate data for the sales by day chart
-  const generateSalesByDayData = () => {
-    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const data = daysOfWeek.map(day => {
-      const dayIndex = daysOfWeek.indexOf(day);
+  // Generate chart data for the past 7 days
+  const generateChartData = () => {
+    const data = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = format(date, 'yyyy-MM-dd');
       
-      const dayTransactions = transactions.filter(tx => {
-        const txDate = new Date(tx.date);
-        return txDate.getDay() === dayIndex;
+      const dayTransactions = transactions.filter(transaction => 
+        transaction.date.toString().substring(0, 10) === dateStr
+      );
+      
+      const income = dayTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+      const expense = income * 0.4; // Assuming expenses are 40% of income for cafeteria
+      
+      data.push({
+        name: format(date, 'dd MMM'),
+        income: parseFloat(income.toFixed(2)),
+        expense: parseFloat(expense.toFixed(2))
       });
-      
-      const totalAmount = dayTransactions.reduce((sum, tx) => sum + tx.amount, 0);
-      
-      return {
-        day,
-        amount: totalAmount
-      };
-    });
-    
+    }
     return data;
   };
   
-  const salesByDayData = generateSalesByDayData();
-  
-  const getRandomInt = (min: number, max: number) => {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  };
-  
-  // Mock popular items data
-  const popularItems = [
-    { name: 'Chicken Shawarma', quantity: getRandomInt(25, 40), amount: getRandomInt(150, 250) },
-    { name: 'Beef Burger', quantity: getRandomInt(20, 35), amount: getRandomInt(120, 200) },
-    { name: 'Cappuccino', quantity: getRandomInt(30, 50), amount: getRandomInt(90, 150) },
-    { name: 'Chicken Biryani', quantity: getRandomInt(15, 30), amount: getRandomInt(100, 180) },
-    { name: 'Milkshake', quantity: getRandomInt(20, 35), amount: getRandomInt(80, 120) },
-  ];
+  const chartData = generateChartData();
   
   return (
     <div>
@@ -123,14 +120,14 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-amber-600 dark:text-amber-300">Total Sales</p>
+                <p className="text-sm font-medium text-amber-600 dark:text-amber-300">Total Revenue</p>
                 <h3 className="text-2xl font-bold text-amber-700 dark:text-amber-200 mt-1">
-                  {formatCurrency(totalSales)}
+                  {formatCurrency(totalSalesRevenue)}
                 </h3>
                 <p className="text-xs text-amber-500 dark:text-amber-400 mt-1">All time cafeteria sales</p>
               </div>
               <div className="h-12 w-12 bg-amber-200 dark:bg-amber-700 rounded-full flex items-center justify-center">
-                <ShoppingBag className="h-6 w-6 text-amber-600 dark:text-amber-200" />
+                <Coffee className="h-6 w-6 text-amber-600 dark:text-amber-200" />
               </div>
             </div>
           </CardContent>
@@ -140,12 +137,12 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-600 dark:text-green-300">Today's Sales</p>
+                <p className="text-sm font-medium text-green-600 dark:text-green-300">Today's Revenue</p>
                 <h3 className="text-2xl font-bold text-green-700 dark:text-green-200 mt-1">
-                  {formatCurrency(todaySales)}
+                  {formatCurrency(todayRevenue)}
                 </h3>
                 <p className="text-xs text-green-500 dark:text-green-400 mt-1">
-                  {todayTransactions.length} transactions today
+                  {todaySales.length} sales today
                 </p>
               </div>
               <div className="h-12 w-12 bg-green-200 dark:bg-green-700 rounded-full flex items-center justify-center">
@@ -155,20 +152,20 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/40 shadow-sm">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/40 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-red-600 dark:text-red-300">Expenses</p>
-                <h3 className="text-2xl font-bold text-red-700 dark:text-red-200 mt-1">
-                  {formatCurrency(totalExpenses)}
+                <p className="text-sm font-medium text-blue-600 dark:text-blue-300">Average Sale</p>
+                <h3 className="text-2xl font-bold text-blue-700 dark:text-blue-200 mt-1">
+                  {formatCurrency(averageSaleValue)}
                 </h3>
-                <p className="text-xs text-red-500 dark:text-red-400 mt-1">
-                  Today: {formatCurrency(todayExpenses)}
+                <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">
+                  Per transaction
                 </p>
               </div>
-              <div className="h-12 w-12 bg-red-200 dark:bg-red-700 rounded-full flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-red-600 dark:text-red-200" />
+              <div className="h-12 w-12 bg-blue-200 dark:bg-blue-700 rounded-full flex items-center justify-center">
+                <ShoppingBag className="h-6 w-6 text-blue-600 dark:text-blue-200" />
               </div>
             </div>
           </CardContent>
@@ -178,70 +175,41 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-medium">Sales Overview</CardTitle>
+            <CardTitle className="text-lg font-medium">Revenue Overview</CardTitle>
           </CardHeader>
-          <CardContent className="pt-4">
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={salesByDayData}
-                  margin={{
-                    top: 5,
-                    right: 20,
-                    left: 20,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis tickFormatter={(value) => `$${value}`} />
-                  <Tooltip 
-                    formatter={(value) => [`$${value}`, 'Sales']}
-                    labelFormatter={(label) => `${label}`}
-                  />
-                  <Bar dataKey="amount" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+          <CardContent>
+            <div className="h-[300px]">
+              {/* You would use the HallBookingFinanceWidget component here or a similar chart component */}
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                Cafeteria Sales Chart
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">Popular Items</CardTitle>
-            <CardDescription>Top selling items</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-medium">Popular Menu Items</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-8">
               {popularItems.map((item, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="relative mr-3">
-                      <div className={`h-9 w-9 rounded-full flex items-center justify-center ${
-                        index === 0 ? 'bg-amber-100 text-amber-600' :
-                        index === 1 ? 'bg-gray-100 text-gray-600' :
-                        index === 2 ? 'bg-orange-100 text-orange-600' :
-                        'bg-blue-100 text-blue-600'
-                      }`}>
-                        <Coffee className="h-4 w-4" />
-                      </div>
-                      {index < 3 && (
-                        <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">
-                          {index + 1}
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{item.name}</p>
-                      <p className="text-xs text-gray-500">{item.quantity} items sold</p>
-                    </div>
+                <div key={index} className="flex items-center">
+                  <div className="space-y-1 flex-1">
+                    <p className="text-sm font-medium leading-none">{item.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {item.quantity} sold - {formatCurrency(item.amount)}
+                    </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-green-600">{formatCurrency(item.amount)}</p>
-                    <div className="flex items-center text-xs text-gray-500">
-                      <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-                      <span>+{getRandomInt(5, 15)}%</span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <p className={`text-sm ${item.trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {item.trend > 0 ? '+' : ''}{item.trend}%
+                    </p>
+                    {item.trend > 0 ? (
+                      <TrendingUp className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4 text-red-500" />
+                    )}
                   </div>
                 </div>
               ))}
@@ -250,152 +218,80 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Card className="col-span-2 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-medium">
-              Recent Sales
-            </CardTitle>
-            <div className="flex items-center space-x-2">
-              <div className="relative flex items-center">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search transactions..."
-                  className="pl-8 h-9 w-40 md:w-auto"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <Select
-                  value={timeFilter}
-                  onValueChange={setTimeFilter}
-                >
-                  <SelectTrigger className="w-32 h-9">
-                    <SelectValue placeholder="All Time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Time</SelectItem>
-                    <SelectItem value="today">Today</SelectItem>
-                    <SelectItem value="week">This Week</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+      <Card className="shadow-sm mb-6">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-lg font-medium">Cafeteria Sales</CardTitle>
+          <div className="flex items-center space-x-2">
+            <div className="relative flex items-center">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search sales..."
+                className="pl-8 h-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select
+                value={dateFilter}
+                onValueChange={setDateFilter}
+              >
+                <SelectTrigger className="w-40 h-9">
+                  <SelectValue placeholder="All Time" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="week">This Week</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardHeader>
-          <CardContent>
-            {isLoadingTransactions ? (
-              <div className="flex justify-center items-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : filteredTransactions.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No sales transactions found matching your criteria
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="dark:border-gray-700">
-                      <TableHead className="dark:text-gray-400">Date</TableHead>
-                      <TableHead className="dark:text-gray-400">Description</TableHead>
-                      <TableHead className="dark:text-gray-400 text-right">Amount</TableHead>
+        <CardContent>
+          {isLoadingTransactions ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : filteredTransactions.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No cafeteria sales found matching your criteria
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="dark:border-gray-700">
+                    <TableHead className="dark:text-gray-400">Date</TableHead>
+                    <TableHead className="dark:text-gray-400">Description</TableHead>
+                    <TableHead className="dark:text-gray-400">Payment Method</TableHead>
+                    <TableHead className="dark:text-gray-400 text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTransactions.map((transaction) => (
+                    <TableRow 
+                      key={transaction.id} 
+                      className="dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                      onClick={() => onViewDetails(transaction.id, transaction.description)}
+                    >
+                      <TableCell className="font-medium dark:text-gray-300">
+                        {format(new Date(transaction.date), 'dd MMM yyyy')}
+                      </TableCell>
+                      <TableCell className="dark:text-gray-300">{transaction.description}</TableCell>
+                      <TableCell className="dark:text-gray-300">{transaction.paymentMethod || 'Cash'}</TableCell>
+                      <TableCell className="dark:text-gray-300 text-right font-medium text-green-600 dark:text-green-400">
+                        {formatCurrency(transaction.amount)}
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTransactions.slice(0, 5).map((tx) => (
-                      <TableRow 
-                        key={tx.id} 
-                        className="dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                        onClick={() => onViewDetails(tx.id, tx.description)}
-                      >
-                        <TableCell className="font-medium dark:text-gray-300">
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-2 text-gray-500" />
-                            {format(new Date(tx.date), 'dd MMM yyyy')}
-                          </div>
-                        </TableCell>
-                        <TableCell className="dark:text-gray-300">{tx.description}</TableCell>
-                        <TableCell className="dark:text-gray-300 text-right font-medium text-green-600 dark:text-green-400">
-                          {formatCurrency(tx.amount)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                {filteredTransactions.length > 5 && (
-                  <div className="flex justify-center mt-4">
-                    <Button variant="outline" size="sm" onClick={() => onViewDetails('all', 'All Food Sales')}>
-                      View All
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">Summary</CardTitle>
-            <CardDescription>Food sales overview</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
-                <div className="flex items-center">
-                  <DollarSign className="h-5 w-5 text-green-500 mr-2" />
-                  <span className="text-sm font-medium">Total Revenue</span>
-                </div>
-                <span className="font-semibold">{formatCurrency(totalSales)}</span>
-              </div>
-              
-              <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
-                <div className="flex items-center">
-                  <CreditCard className="h-5 w-5 text-red-500 mr-2" />
-                  <span className="text-sm font-medium">Expenses</span>
-                </div>
-                <span className="font-semibold text-red-600">{formatCurrency(totalExpenses)}</span>
-              </div>
-              
-              <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
-                <div className="flex items-center">
-                  <ReceiptText className="h-5 w-5 text-blue-500 mr-2" />
-                  <span className="text-sm font-medium">Profit</span>
-                </div>
-                <span className="font-semibold text-blue-600">{formatCurrency(profit)}</span>
-              </div>
-              
-              <div className="flex justify-between items-center py-2">
-                <div className="flex items-center">
-                  <TrendingUp className="h-5 w-5 text-purple-500 mr-2" />
-                  <span className="text-sm font-medium">Profit Margin</span>
-                </div>
-                <span className="font-semibold">{totalSales > 0 ? `${((profit / totalSales) * 100).toFixed(1)}%` : '0%'}</span>
-              </div>
-              
-              <div className="mt-6">
-                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                  <div className="flex items-center mb-2">
-                    <Coffee className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
-                    <h4 className="font-medium text-green-800 dark:text-green-300">Quick Actions</h4>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" size="sm" className="h-9 text-xs">
-                      Inventory Report
-                    </Button>
-                    <Button variant="outline" size="sm" className="h-9 text-xs">
-                      Menu Performance
-                    </Button>
-                  </div>
-                </div>
-              </div>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
