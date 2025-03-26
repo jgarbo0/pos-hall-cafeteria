@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Percent } from 'lucide-react';
 
 interface RecentOrder {
   id: string;
@@ -52,7 +53,9 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({ orders }) => {
                   {order.discount && order.discount > 0 && (
                     <>
                       <span className="mx-1">•</span>
-                      <p className="text-green-600">Discount: ${order.discount.toFixed(2)}</p>
+                      <p className="text-green-600 flex items-center">
+                        <Percent className="h-3 w-3 mr-0.5" /> ${order.discount.toFixed(2)}
+                      </p>
                     </>
                   )}
                 </div>

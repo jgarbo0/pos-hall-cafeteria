@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { 
   MenuItem, 
@@ -175,7 +174,7 @@ export const createOrder = async (
     const tax = subtotal * (taxRate / 100);
     const total = subtotal + tax;
     
-    // Insert order
+    // Insert order - Make sure discount is properly saved
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -183,7 +182,7 @@ export const createOrder = async (
         order_type: orderType,
         table_number: tableNumber,
         subtotal: subtotal + totalDiscount, // Original subtotal before discount
-        discount: totalDiscount,
+        discount: totalDiscount, // Save the total discount amount
         tax: tax,
         total: total,
         status: 'completed',
@@ -201,7 +200,7 @@ export const createOrder = async (
       menu_item_id: item.id,
       quantity: item.quantity,
       price: item.price,
-      discount: item.discount || 0,
+      discount: item.discount || 0, // Store individual item discount
       notes: item.notes || null,
       spicy_level: item.spicyLevel || null
     }));
@@ -226,7 +225,7 @@ export const createOrder = async (
       subtotal: orderData.subtotal,
       tax: orderData.tax,
       total: orderData.total,
-      discount: orderData.discount,
+      discount: orderData.discount, // Include discount in returned order object
       status: orderData.status as 'processing' | 'completed' | 'cancelled',
       paymentStatus: orderData.payment_status as 'paid' | 'pending',
       timestamp: orderData.timestamp,
