@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Clock, Info } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Info, Percent, DollarSign } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -50,6 +50,8 @@ const formSchema = z.object({
   group: z.coerce.number().min(0, { message: "Group cannot be negative" }),
   single: z.coerce.number().min(0, { message: "Single cannot be negative" }),
   staff: z.coerce.number().min(0, { message: "Staff cannot be negative" }),
+  discount: z.coerce.number().min(0, { message: "Discount cannot be negative" }),
+  discountType: z.enum(['percentage', 'fixed']),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -86,6 +88,8 @@ const HallBookingForm = ({
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [finalAmount, setFinalAmount] = useState<number>(0);
 
   // Check for localStorage values from calendar selection
   const storedDate = localStorage.getItem('selectedBookingDate');
@@ -122,6 +126,8 @@ const HallBookingForm = ({
       group: initialData.guests?.group || 0,
       single: initialData.guests?.single || 0,
       staff: initialData.guests?.staff || 0,
+      discount: initialData.discount || 0,
+      discountType: initialData.discountType || 'percentage',
     } : {
       customerName: "",
       customerPhone: "",
@@ -135,6 +141,8 @@ const HallBookingForm = ({
       group: 0,
       single: 0,
       staff: 0,
+      discount: 0,
+      discountType: 'percentage',
       // Use stored date/time if available
       date: storedDate ? new Date(storedDate) : undefined,
       startTime: storedTime || "",
@@ -172,7 +180,35 @@ const HallBookingForm = ({
     });
     
     setTotalAmount(total);
-  }, [selectedPackage, selectedServices, packages]);
+    
+    // Calculate discount
+    const discountType = form.getValues('discountType');
+    const discountValue = form.getValues('discount') || 0;
+    
+    if (discountType === 'percentage') {
+      const discountAmt = (total * discountValue) / 100;
+      setDiscountAmount(discountAmt);
+      setFinalAmount(total - discountAmt);
+    } else {
+      setDiscountAmount(discountValue);
+      setFinalAmount(total - discountValue);
+    }
+  }, [selectedPackage, selectedServices, packages, form.getValues('discount'), form.getValues('discountType')]);
+
+  // Recalculate discount when discount value or type changes
+  const handleDiscountChange = () => {
+    const discountType = form.getValues('discountType');
+    const discountValue = form.getValues('discount') || 0;
+    
+    if (discountType === 'percentage') {
+      const discountAmt = (totalAmount * discountValue) / 100;
+      setDiscountAmount(discountAmt);
+      setFinalAmount(totalAmount - discountAmt);
+    } else {
+      setDiscountAmount(discountValue);
+      setFinalAmount(totalAmount - discountValue);
+    }
+  };
 
   const handleServiceToggle = (serviceId: string, checked: boolean) => {
     if (checked) {
@@ -205,7 +241,9 @@ const HallBookingForm = ({
         additionalServices: selectedServices,
         status: initialData?.status || 'pending',
         notes: data.notes || "",
-        totalAmount: totalAmount,
+        totalAmount: finalAmount, // Use final amount after discount
+        discount: data.discount,
+        discountType: data.discountType,
         guests: {
           total: data.totalGuests,
           children: data.children,
@@ -233,7 +271,9 @@ const HallBookingForm = ({
         additional_services: selectedServices,
         status: initialData?.status || 'pending',
         notes: data.notes || "",
-        total_amount: totalAmount
+        total_amount: finalAmount, // Use final amount after discount
+        discount: data.discount,
+        discount_type: data.discountType
       };
       
       if (isUpdate) {
@@ -261,7 +301,7 @@ const HallBookingForm = ({
             customerName: data.customerName,
             purpose: data.purpose,
             attendees: data.attendees,
-            amount: totalAmount
+            amount: finalAmount // Use final amount after discount
           };
           
           console.log('Recording hall booking as income:', hallBookingIncome);
@@ -662,6 +702,71 @@ const HallBookingForm = ({
               </div>
             </div>
             
+            <div className="space-y-4">
+              <h3 className="text-base font-medium">Discount</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="discount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Discount Amount</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          {...field} 
+                          onChange={(e) => {
+                            field.onChange(e);
+                            handleDiscountChange();
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              
+                <FormField
+                  control={form.control}
+                  name="discountType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Discount Type</FormLabel>
+                      <Select 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          handleDiscountChange();
+                        }} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="percentage">
+                            <div className="flex items-center">
+                              <Percent className="h-4 w-4 mr-2" />
+                              <span>Percentage (%)</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="fixed">
+                            <div className="flex items-center">
+                              <DollarSign className="h-4 w-4 mr-2" />
+                              <span>Fixed Amount ($)</span>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+          
             <FormField
               control={form.control}
               name="notes"
@@ -676,10 +781,31 @@ const HallBookingForm = ({
               )}
             />
             
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                <span className="font-medium dark:text-gray-200">${totalAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-green-600 dark:text-green-400">
+                <span className="flex items-center">
+                  {form.getValues('discountType') === 'percentage' ? (
+                    <Percent className="h-4 w-4 mr-1" />
+                  ) : (
+                    <DollarSign className="h-4 w-4 mr-1" />
+                  )}
+                  Discount:
+                </span>
+                <span>
+                  ${discountAmount.toFixed(2)}
+                  {form.getValues('discountType') === 'percentage' && (
+                    <span className="text-xs ml-1">({form.getValues('discount') || 0}%)</span>
+                  )}
+                </span>
+              </div>
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2"></div>
               <div className="flex justify-between items-center">
                 <span className="font-semibold dark:text-gray-200">Total Amount:</span>
-                <span className="font-bold text-lg text-blue-600 dark:text-blue-400">${totalAmount.toFixed(2)}</span>
+                <span className="font-bold text-lg text-blue-600 dark:text-blue-400">${finalAmount.toFixed(2)}</span>
               </div>
             </div>
           </div>

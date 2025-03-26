@@ -95,6 +95,8 @@ export type Database = {
           customer_name: string
           customer_phone: string
           date: string
+          discount: number | null
+          discount_type: string | null
           end_time: string
           hall_id: number | null
           id: string
@@ -113,6 +115,8 @@ export type Database = {
           customer_name: string
           customer_phone: string
           date: string
+          discount?: number | null
+          discount_type?: string | null
           end_time: string
           hall_id?: number | null
           id?: string
@@ -131,6 +135,8 @@ export type Database = {
           customer_name?: string
           customer_phone?: string
           date?: string
+          discount?: number | null
+          discount_type?: string | null
           end_time?: string
           hall_id?: number | null
           id?: string

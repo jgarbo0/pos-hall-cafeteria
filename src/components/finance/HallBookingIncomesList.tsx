@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
-import { Building, CalendarIcon, Users } from 'lucide-react';
+import { Building, CalendarIcon, Users, Percent, DollarSign } from 'lucide-react';
 
 interface HallBookingIncome {
   id: string;
@@ -14,6 +14,8 @@ interface HallBookingIncome {
   purpose: string;
   attendees: number;
   amount: number;
+  discount?: number;
+  discountType?: 'percentage' | 'fixed';
 }
 
 interface HallBookingIncomesListProps {
@@ -43,6 +45,7 @@ const HallBookingIncomesList: React.FC<HallBookingIncomesListProps> = ({
               <TableHead className="dark:text-gray-400">Customer</TableHead>
               <TableHead className="dark:text-gray-400">Purpose</TableHead>
               <TableHead className="dark:text-gray-400 text-right">Attendees</TableHead>
+              <TableHead className="dark:text-gray-400 text-right">Discount</TableHead>
               <TableHead className="dark:text-gray-400 text-right">Amount</TableHead>
               <TableHead className="dark:text-gray-400 text-right">Actions</TableHead>
             </TableRow>
@@ -50,7 +53,7 @@ const HallBookingIncomesList: React.FC<HallBookingIncomesListProps> = ({
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4">
+                <TableCell colSpan={7} className="text-center py-4">
                   <div className="flex justify-center items-center">
                     <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary"></div>
                     <span className="ml-2">Loading hall bookings...</span>
@@ -59,7 +62,7 @@ const HallBookingIncomesList: React.FC<HallBookingIncomesListProps> = ({
               </TableRow>
             ) : bookings.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4">
+                <TableCell colSpan={7} className="text-center py-4">
                   No hall booking incomes found
                 </TableCell>
               </TableRow>
@@ -78,6 +81,22 @@ const HallBookingIncomesList: React.FC<HallBookingIncomesListProps> = ({
                   <TableCell className="dark:text-gray-300 text-right flex items-center justify-end">
                     <Users className="h-4 w-4 mr-2 text-gray-500" />
                     {booking.attendees}
+                  </TableCell>
+                  <TableCell className="dark:text-gray-300 text-right">
+                    {booking.discount && Number(booking.discount) > 0 ? (
+                      <div className="flex items-center justify-end text-green-600 dark:text-green-400">
+                        {booking.discountType === 'percentage' ? (
+                          <Percent className="h-4 w-4 mr-1" />
+                        ) : (
+                          <DollarSign className="h-4 w-4 mr-1" />
+                        )}
+                        {booking.discountType === 'percentage' 
+                          ? `${Number(booking.discount).toFixed(0)}%`
+                          : formatCurrency(Number(booking.discount))}
+                      </div>
+                    ) : (
+                      <span>-</span>
+                    )}
                   </TableCell>
                   <TableCell className="dark:text-gray-300 text-right font-medium text-green-600 dark:text-green-400">
                     {formatCurrency(booking.amount)}
