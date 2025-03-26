@@ -141,7 +141,9 @@ export const createOrder = async (
   tableNumber: number | null, 
   cartItems: CartItem[],
   customerName: string = 'Walk-in Customer',
-  paymentStatus: 'paid' | 'pending' = 'paid'
+  paymentStatus: 'paid' | 'pending' = 'paid',
+  globalDiscount: number = 0,
+  discountType: 'percentage' | 'fixed' = 'percentage'
 ): Promise<Order> => {
   try {
     // Calculate totals with discounts
@@ -183,7 +185,9 @@ export const createOrder = async (
         total: total,
         status: 'completed',
         customer_name: customerName,
-        payment_status: paymentStatus
+        payment_status: paymentStatus,
+        discount: globalDiscount,
+        discount_type: discountType
       })
       .select()
       .single();
@@ -224,7 +228,9 @@ export const createOrder = async (
       status: orderData.status as 'processing' | 'completed' | 'cancelled',
       paymentStatus: orderData.payment_status as 'paid' | 'pending',
       timestamp: orderData.timestamp,
-      customerName: orderData.customer_name
+      customerName: orderData.customer_name,
+      discount: orderData.discount,
+      discountType: orderData.discount_type
     };
   } catch (error) {
     console.error('Error creating order:', error);
@@ -247,7 +253,9 @@ export const getOrders = async (): Promise<Order[]> => {
         status,
         timestamp,
         customer_name,
-        payment_status
+        payment_status,
+        discount,
+        discount_type
       `)
       .order('timestamp', { ascending: false });
     
@@ -265,6 +273,7 @@ export const getOrders = async (): Promise<Order[]> => {
           price,
           notes,
           spicy_level,
+          discount,
           menu_items(id, title, price, image, description, category_id, available)
         `)
         .eq('order_id', order.id);
@@ -280,7 +289,8 @@ export const getOrders = async (): Promise<Order[]> => {
         category: item.menu_items.category_id,
         available: item.menu_items.available || 0,
         notes: item.notes,
-        spicyLevel: item.spicy_level
+        spicyLevel: item.spicy_level,
+        discount: item.discount || 0
       }));
       
       orders.push({
@@ -295,7 +305,9 @@ export const getOrders = async (): Promise<Order[]> => {
         status: order.status as 'processing' | 'completed' | 'cancelled',
         paymentStatus: order.payment_status as 'paid' | 'pending',
         timestamp: order.timestamp,
-        customerName: order.customer_name
+        customerName: order.customer_name,
+        discount: order.discount || 0,
+        discountType: order.discount_type || 'percentage'
       });
     }
     
@@ -773,3 +785,4 @@ export default {
   updateStaffUser,
   deleteStaffUser
 };
+

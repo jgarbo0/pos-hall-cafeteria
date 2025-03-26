@@ -65,23 +65,40 @@ export const createPrintPreview = (currentOrder: Order) => {
               <th>Item</th>
               <th>Quantity</th>
               <th>Price</th>
+              ${currentOrder.items.some(item => item.discount && item.discount > 0) ? '<th>Discount</th>' : ''}
               <th>Total</th>
             </tr>
           </thead>
           <tbody>
-            ${currentOrder.items.map(item => `
-              <tr>
-                <td>${item.title}</td>
-                <td>${item.quantity}</td>
-                <td>$${item.price.toFixed(2)}</td>
-                <td>$${(item.price * item.quantity).toFixed(2)}</td>
-              </tr>
-            `).join('')}
+            ${currentOrder.items.map(item => {
+              const hasDiscount = item.discount && item.discount > 0;
+              const itemTotal = item.price * item.quantity;
+              const discountedPrice = hasDiscount ? 
+                itemTotal * (1 - item.discount / 100) : 
+                itemTotal;
+              
+              return `
+                <tr>
+                  <td>${item.title}</td>
+                  <td>${item.quantity}</td>
+                  <td>$${item.price.toFixed(2)}</td>
+                  ${hasDiscount ? `<td>${item.discount}%</td>` : ''}
+                  <td>$${discountedPrice.toFixed(2)}</td>
+                </tr>
+              `;
+            }).join('')}
           </tbody>
         </table>
         
         <div class="totals">
           <div><strong>Subtotal:</strong> $${currentOrder.subtotal.toFixed(2)}</div>
+          ${currentOrder.discount && currentOrder.discount > 0 ? 
+            `<div><strong>Discount (${currentOrder.discountType === 'percentage' ? currentOrder.discount + '%' : '$' + currentOrder.discount}):</strong> $${
+              currentOrder.discountType === 'percentage' ? 
+                ((currentOrder.subtotal * currentOrder.discount) / 100).toFixed(2) : 
+                currentOrder.discount.toFixed(2)
+            }</div>` : 
+            ''}
           <div><strong>Tax:</strong> $${currentOrder.tax.toFixed(2)}</div>
           <div><strong>Total:</strong> $${currentOrder.total.toFixed(2)}</div>
         </div>

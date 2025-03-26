@@ -34,6 +34,9 @@ const PrintOrderDialog: React.FC<PrintOrderDialogProps> = ({
         </DialogHeader>
         <div className="py-4">
           <p className="dark:text-white">Ready to print order #{currentOrder.orderNumber}?</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            The receipt will include all order details including any applied discounts.
+          </p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>

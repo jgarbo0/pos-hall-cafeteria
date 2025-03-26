@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { TabsList, TabsTrigger, Tabs, TabsContent } from '@/components/ui/tabs';
 import { ShoppingBag, ClipboardList } from 'lucide-react';
@@ -21,7 +20,7 @@ interface CartPanelProps {
   onRemoveItem: (id: string) => void;
   onUpdateQuantity: (id: string, quantity: number) => void;
   onClearCart: () => void;
-  onPlaceOrder: (paymentStatus: 'paid' | 'pending') => void;
+  onPlaceOrder: (paymentStatus: 'paid' | 'pending', globalDiscount: number, discountType: string) => void;
   orderNumber: string;
   tableNumber: number;
   customers?: Customer[];
@@ -76,10 +75,10 @@ const CartPanel: React.FC<CartPanelProps> = ({
   const handleCompleteOrder = (paymentStatus: 'paid' | 'pending') => {
     const itemsWithDiscount = items.map(item => ({
       ...item,
-      discount: itemDiscounts[item.id] || (discountType === 'percentage' ? globalDiscount : 0)
+      discount: itemDiscounts[item.id] || 0
     }));
     
-    onPlaceOrder(paymentStatus);
+    onPlaceOrder(paymentStatus, globalDiscount, discountType);
     
     toast.success(
       `Order #${orderNumber} completed successfully!`,

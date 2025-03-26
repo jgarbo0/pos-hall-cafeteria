@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Order } from '@/types';
+import { AlertTriangle } from 'lucide-react';
 
 interface DeleteOrderDialogProps {
   isOpen: boolean;
@@ -29,7 +30,10 @@ const DeleteOrderDialog: React.FC<DeleteOrderDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Delete Order</DialogTitle>
+          <DialogTitle className="flex items-center text-red-600">
+            <AlertTriangle className="mr-2 h-5 w-5" />
+            Delete Order
+          </DialogTitle>
         </DialogHeader>
         <div className="py-4">
           <p className="dark:text-white">Are you sure you want to delete order #{currentOrder.orderNumber}?</p>

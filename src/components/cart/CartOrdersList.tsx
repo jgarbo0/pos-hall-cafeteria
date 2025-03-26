@@ -17,16 +17,16 @@ const CartOrdersList: React.FC<CartOrdersListProps> = ({ orders }) => {
   
   return (
     <ScrollArea className="flex-1 h-full">
-      <div className="p-4">
+      <div className="p-2">
         {orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
             <ClipboardList className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" />
             <p className="text-gray-500 dark:text-gray-400 text-center">No recent orders</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {orders.map((order) => (
-              <div key={order.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+              <div key={order.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <h3 className="font-medium text-sm dark:text-white">Order #{order.orderNumber}</h3>
