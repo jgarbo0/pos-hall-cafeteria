@@ -268,11 +268,11 @@ export const getInventoryTransactions = async (itemId?: string): Promise<Invento
 
 export const getLowStockItems = async (): Promise<InventoryItem[]> => {
   try {
-    // Fix the raw property issue by using a direct comparison
+    // Fix the comparison by explicitly comparing quantity with min_stock_level columns
     const { data, error } = await supabase
       .from('inventory_items')
       .select('*')
-      .lte('quantity', 'min_stock_level')
+      .or(`quantity.lte.min_stock_level`)
       .order('name');
     
     if (error) throw error;
