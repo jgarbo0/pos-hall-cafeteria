@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -95,7 +94,6 @@ const Orders = () => {
   }, []);
   
   useEffect(() => {
-    // Recalculate summary whenever orders change
     const summary = calculateOrderSummary();
     setOrderSummary(summary);
   }, [orders]);
@@ -176,7 +174,6 @@ const Orders = () => {
       });
     }
     
-    // Apply search filter if searchTerm is not empty
     if (searchTerm.trim() !== '') {
       const searchLower = searchTerm.toLowerCase().trim();
       filtered = filtered.filter(order => 
@@ -416,10 +413,17 @@ const Orders = () => {
           : o
       );
       setOrders(updatedOrders);
+      
+      const summary = calculateOrderSummary();
+      setOrderSummary(summary);
     }
   };
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+  };
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
@@ -439,7 +443,7 @@ const Orders = () => {
                 <Input 
                   placeholder="Search orders..." 
                   value={searchTerm}
-                  onChange={handleSearch}
+                  onChange={handleSearchInputChange}
                   className="pl-8"
                 />
               </div>
