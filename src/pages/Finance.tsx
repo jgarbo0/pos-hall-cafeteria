@@ -501,6 +501,7 @@ const Finance = () => {
                 transactions={cafeteriaTransactions}
                 isLoadingTransactions={isLoadingTransactions}
                 onViewDetails={handleViewTransactionDetails}
+                onSearch={handleSearch}
               />
             </TabsContent>
           </Tabs>
