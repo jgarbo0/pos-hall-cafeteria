@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -193,12 +194,12 @@ const HallBookingForm = ({
       setDiscountAmount(discountValue);
       setFinalAmount(total - discountValue);
     }
-  }, [selectedPackage, selectedServices, packages, form.getValues('discount'), form.getValues('discountType')]);
+  }, [selectedPackage, selectedServices, packages, form]);
 
   // Recalculate discount when discount value or type changes
-  const handleDiscountChange = () => {
-    const discountType = form.getValues('discountType');
-    const discountValue = form.getValues('discount') || 0;
+  const handleDiscountChange = (value: number | string, type?: 'percentage' | 'fixed') => {
+    const discountType = type || form.getValues('discountType');
+    const discountValue = typeof value === 'number' ? value : parseFloat(value) || 0;
     
     if (discountType === 'percentage') {
       const discountAmt = (totalAmount * discountValue) / 100;
@@ -716,9 +717,10 @@ const HallBookingForm = ({
                           type="number" 
                           min="0" 
                           {...field} 
+                          value={field.value}
                           onChange={(e) => {
                             field.onChange(e);
-                            handleDiscountChange();
+                            handleDiscountChange(e.target.value);
                           }}
                         />
                       </FormControl>
@@ -736,7 +738,7 @@ const HallBookingForm = ({
                       <Select 
                         onValueChange={(value) => {
                           field.onChange(value);
-                          handleDiscountChange();
+                          handleDiscountChange(form.getValues('discount'), value as 'percentage' | 'fixed');
                         }} 
                         defaultValue={field.value}
                       >
