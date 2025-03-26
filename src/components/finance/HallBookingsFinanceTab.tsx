@@ -33,8 +33,8 @@ const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
   }));
   
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
+    <div className="space-y-8">
+      <div className="mb-10">
         <HallBookingFinanceWidget
           data={chartData}
           totalIncome={totalIncome}
@@ -44,7 +44,7 @@ const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
         />
       </div>
       
-      <div>
+      <div className="mt-12">
         <HallBookingIncomesList
           bookings={hallBookings}
           isLoading={isLoadingHallData}
