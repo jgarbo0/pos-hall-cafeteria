@@ -622,15 +622,6 @@ export const deleteCustomer = async (id: string): Promise<void> => {
 };
 
 // Staff Users
-export interface StaffUser {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  active?: boolean;
-  created_at?: string;
-}
-
 export const getStaffUsers = async (): Promise<StaffUser[]> => {
   try {
     const { data, error } = await supabase
