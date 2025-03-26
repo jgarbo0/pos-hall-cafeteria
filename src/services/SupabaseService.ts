@@ -149,6 +149,13 @@ export const createOrder = async (
     let subtotal = 0;
     let totalDiscount = 0;
     
+    // Get any global discount from the cart items
+    let globalDiscount = 0;
+    const firstItem = cartItems[0];
+    if (firstItem && firstItem.globalDiscount !== undefined) {
+      globalDiscount = firstItem.globalDiscount;
+    }
+    
     // Calculate each item's price after potential discount
     for (const item of cartItems) {
       let itemPrice = item.price * item.quantity;
@@ -159,6 +166,16 @@ export const createOrder = async (
         itemPrice = itemPrice - itemDiscount;
       }
       subtotal += itemPrice;
+    }
+    
+    // Apply global discount if present
+    if (globalDiscount > 0) {
+      if (discountType === 'percentage') {
+        const discountAmount = subtotal * (globalDiscount / 100);
+        totalDiscount += discountAmount;
+      } else {
+        totalDiscount += globalDiscount;
+      }
     }
     
     // Get tax rate from tax_settings
@@ -172,8 +189,22 @@ export const createOrder = async (
       taxRate = Number(taxData.tax_rate);
     }
     
-    const tax = subtotal * (taxRate / 100);
-    const total = subtotal + tax;
+    // Calculate total after discount is applied
+    const discountedSubtotal = subtotal - (discountType === 'percentage' ? 
+      (subtotal * (globalDiscount / 100)) : 
+      globalDiscount);
+    
+    const tax = discountedSubtotal * (taxRate / 100);
+    const total = discountedSubtotal + tax;
+    
+    console.log('Order details:', {
+      subtotal,
+      discount: totalDiscount,
+      discountType,
+      taxRate,
+      tax,
+      total
+    });
     
     // Insert order - Make sure discount is properly saved
     const { data: orderData, error: orderError } = await supabase
@@ -182,7 +213,7 @@ export const createOrder = async (
         order_number: orderNumber,
         order_type: orderType,
         table_number: tableNumber,
-        subtotal: subtotal + totalDiscount, // Original subtotal before discount
+        subtotal: subtotal, // Original subtotal before discount
         discount: totalDiscount, // Save the total discount amount
         discount_type: discountType, // Save the discount type
         tax: tax,
@@ -787,4 +818,3 @@ export default {
   updateStaffUser,
   deleteStaffUser
 };
-

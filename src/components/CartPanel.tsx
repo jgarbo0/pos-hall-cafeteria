@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -177,9 +176,10 @@ const CartPanel: React.FC<CartPanelProps> = ({
   };
 
   const handleCompleteOrder = (paymentStatus: 'paid' | 'pending') => {
-    const itemsWithDiscount = items.map(item => ({
+    const itemsWithDiscount = items.map((item, index) => ({
       ...item,
-      discount: itemDiscounts[item.id] || (discountType === 'percentage' ? globalDiscount : 0)
+      discount: itemDiscounts[item.id] || 0,
+      globalDiscount: index === 0 ? globalDiscount : undefined
     }));
     
     onPlaceOrder(paymentStatus, discountType);
