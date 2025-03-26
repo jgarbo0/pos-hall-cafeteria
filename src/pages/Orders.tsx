@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -33,7 +34,8 @@ import {
   FileText,
   DollarSign,
   CreditCard,
-  AlertTriangle
+  AlertTriangle,
+  Search
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Order, OrderType, CartItem } from '@/types';
@@ -70,6 +72,14 @@ const Orders = () => {
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [orderSummary, setOrderSummary] = useState({
+    totalOrders: 0,
+    paidOrders: 0,
+    pendingOrders: 0,
+    totalSales: 0,
+    todaySales: 0
+  });
   const [formData, setFormData] = useState<OrderFormData>({
     tableNumber: null,
     orderType: "Dine In",
@@ -83,6 +93,12 @@ const Orders = () => {
     document.title = "Doob Café - Orders/Sales";
     fetchOrders();
   }, []);
+  
+  useEffect(() => {
+    // Recalculate summary whenever orders change
+    const summary = calculateOrderSummary();
+    setOrderSummary(summary);
+  }, [orders]);
   
   const fetchOrders = async () => {
     setIsLoading(true);
@@ -127,8 +143,6 @@ const Orders = () => {
       todaySales
     };
   };
-
-  const orderSummary = calculateOrderSummary();
   
   const getFilteredOrders = () => {
     const today = new Date();
@@ -160,6 +174,17 @@ const Orders = () => {
         
         return true;
       });
+    }
+    
+    // Apply search filter if searchTerm is not empty
+    if (searchTerm.trim() !== '') {
+      const searchLower = searchTerm.toLowerCase().trim();
+      filtered = filtered.filter(order => 
+        order.orderNumber.toLowerCase().includes(searchLower) ||
+        (order.customerName && order.customerName.toLowerCase().includes(searchLower)) ||
+        order.orderType.toLowerCase().includes(searchLower) ||
+        order.total.toString().includes(searchLower)
+      );
     }
     
     return filtered;
@@ -365,7 +390,8 @@ const Orders = () => {
       total: formData.total,
       status: formData.status,
       timestamp: new Date().toLocaleString(),
-      customerName: formData.customerName
+      customerName: formData.customerName,
+      paymentStatus: 'paid'
     };
     
     setOrders([newOrder, ...orders]);
@@ -393,17 +419,30 @@ const Orders = () => {
     }
   };
 
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <SidebarNavigation />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header onSearch={() => {}} />
+        <Header onSearch={handleSearch} />
         
         <div className="flex-1 p-6 overflow-auto">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-semibold dark:text-white">Orders/Sales Management</h1>
             <div className="flex gap-2">
+              <div className="relative w-64">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input 
+                  placeholder="Search orders..." 
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  className="pl-8"
+                />
+              </div>
               <Button onClick={handleRefresh} variant="outline">
                 <Clock className="mr-2 h-4 w-4" />
                 Refresh
@@ -474,8 +513,10 @@ const Orders = () => {
           <div className="flex justify-between items-center mb-6">
             <Tabs defaultValue="all" onValueChange={setActiveTab}>
               <TabsList className="dark:bg-gray-800">
-                <TabsTrigger value="completed" className="dark:data-[state=active]:bg-gray-700">Completed</TabsTrigger>
                 <TabsTrigger value="all" className="dark:data-[state=active]:bg-gray-700">All Orders</TabsTrigger>
+                <TabsTrigger value="processing" className="dark:data-[state=active]:bg-gray-700">Processing</TabsTrigger>
+                <TabsTrigger value="completed" className="dark:data-[state=active]:bg-gray-700">Completed</TabsTrigger>
+                <TabsTrigger value="cancelled" className="dark:data-[state=active]:bg-gray-700">Cancelled</TabsTrigger>
               </TabsList>
             </Tabs>
             
@@ -531,7 +572,7 @@ const Orders = () => {
                   {filteredOrders.length === 0 ? (
                     <TableRow className="dark:border-gray-700">
                       <TableCell colSpan={10} className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        No orders found
+                        {searchTerm ? 'No matching orders found' : 'No orders found'}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -548,12 +589,19 @@ const Orders = () => {
                         <TableCell className="dark:text-gray-300">{formatTimestamp(order.timestamp)}</TableCell>
                         <TableCell>
                           <div className={`flex items-center space-x-1 ${
-                            order.status === 'completed' ? 'text-green-600 dark:text-green-500' : 'text-amber-500'
+                            order.status === 'completed' ? 'text-green-600 dark:text-green-500' : 
+                            order.status === 'cancelled' ? 'text-red-600 dark:text-red-500' :
+                            'text-amber-500'
                           }`}>
                             {order.status === 'completed' ? (
                               <>
                                 <CheckCircle size={16} />
                                 <span>Completed</span>
+                              </>
+                            ) : order.status === 'cancelled' ? (
+                              <>
+                                <Trash size={16} />
+                                <span>Cancelled</span>
                               </>
                             ) : (
                               <>
