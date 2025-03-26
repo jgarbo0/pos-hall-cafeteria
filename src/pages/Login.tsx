@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -18,26 +18,26 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner';
 import { User } from '@/types';
 
-// Predefined users
+// Predefined users for Somalia
 const predefinedUsers: User[] = [
   {
     id: '1',
-    name: 'Admin User',
-    email: 'admin@example.com',
+    name: 'Abdirahman Mohamed',
+    email: 'admin@somalipos.com',
     role: 'admin',
     avatar: '/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png'
   },
   {
     id: '2',
-    name: 'Cashier User',
-    email: 'cashier@example.com',
+    name: 'Amina Hassan',
+    email: 'cashier@somalipos.com',
     role: 'cashier',
     avatar: '/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png'
   },
   {
     id: '3',
-    name: 'Manager User',
-    email: 'manager@example.com',
+    name: 'Faisal Ahmed',
+    email: 'manager@somalipos.com',
     role: 'manager',
     avatar: '/lovable-uploads/38d9cb5d-08d6-4a42-95fe-fa0e714f6f33.png'
   }
@@ -98,88 +98,98 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary rounded-2xl mx-auto flex items-center justify-center mb-4">
-            <span className="text-white font-bold text-2xl">S</span>
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="flex justify-end mb-4">
+        <Link to="/landing">
+          <Button variant="ghost" className="text-primary hover:text-primary/80">
+            Back to Home
+          </Button>
+        </Link>
+      </div>
+      
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-primary rounded-2xl mx-auto flex items-center justify-center mb-4">
+              <span className="text-white font-bold text-2xl">S</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Somali POS System</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">Sign in to access the dashboard</p>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Somali POS System</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">Sign in to access the dashboard</p>
-        </div>
-        
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>Enter your credentials to continue</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="your@email.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="******" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Signing In...' : 'Sign In'}
+          
+          <Card className="w-full shadow-lg border-0 dark:bg-gray-800">
+            <CardHeader>
+              <CardTitle>Sign In</CardTitle>
+              <CardDescription>Enter your credentials to continue</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="your@email.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="******" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Signing In...' : 'Sign In'}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Quick login as:
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleQuickLogin('admin@somalipos.com')}
+                >
+                  Abdirahman (Admin)
                 </Button>
-              </form>
-            </Form>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Quick login as:
-            </div>
-            <div className="flex flex-wrap gap-2 justify-center">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleQuickLogin('admin@example.com')}
-              >
-                Admin
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleQuickLogin('cashier@example.com')}
-              >
-                Cashier
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleQuickLogin('manager@example.com')}
-              >
-                Manager
-              </Button>
-            </div>
-            <div className="text-xs text-center mt-4 text-gray-500 dark:text-gray-400">
-              Use 'password' as the password for all test accounts
-            </div>
-          </CardFooter>
-        </Card>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleQuickLogin('cashier@somalipos.com')}
+                >
+                  Amina (Cashier)
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleQuickLogin('manager@somalipos.com')}
+                >
+                  Faisal (Manager)
+                </Button>
+              </div>
+              <div className="text-xs text-center mt-4 text-gray-500 dark:text-gray-400">
+                Use 'password' as the password for all test accounts
+              </div>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
     </div>
   );

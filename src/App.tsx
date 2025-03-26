@@ -17,6 +17,7 @@ import Index from './pages/Index';
 import NotFound from './pages/NotFound';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
+import Landing from './pages/Landing';
 import CustomerDetails from './pages/CustomerDetails';
 
 import { Toaster as SonnerToaster } from 'sonner';
@@ -30,6 +31,7 @@ function App() {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/landing" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/orders" element={<Orders />} />

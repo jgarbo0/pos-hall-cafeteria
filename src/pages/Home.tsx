@@ -1,7 +1,6 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -11,7 +10,7 @@ const Home = () => {
     const user = localStorage.getItem('user');
     
     if (user) {
-      // If user is logged in, redirect to dashboard
+      // If user is logged in, redirect to dashboard or menu
       const userData = JSON.parse(user);
       if (userData.role === 'admin') {
         navigate('/dashboard');
@@ -19,8 +18,8 @@ const Home = () => {
         navigate('/menu');
       }
     } else {
-      // If user is not logged in, redirect to login page
-      navigate('/login');
+      // If user is not logged in, redirect to landing page
+      navigate('/landing');
     }
   }, [navigate]);
 
