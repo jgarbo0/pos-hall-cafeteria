@@ -67,6 +67,8 @@ export const getAllSettingsByCategory = async (category: string): Promise<Record
 // Update settings
 export const updateSettings = async (category: string, key: string, value: SettingsValue): Promise<boolean> => {
   try {
+    console.log(`Updating settings: ${category}.${key}`, value);
+    
     const { error } = await supabase
       .from('settings')
       .update({ value })
@@ -91,6 +93,8 @@ export const updateSettings = async (category: string, key: string, value: Setti
 // Create new settings
 export const createSettings = async (category: string, key: string, value: SettingsValue): Promise<boolean> => {
   try {
+    console.log(`Creating settings: ${category}.${key}`, value);
+    
     const { error } = await supabase
       .from('settings')
       .insert({
@@ -117,6 +121,8 @@ export const createSettings = async (category: string, key: string, value: Setti
 // Create or update settings - checks if settings exist and creates or updates accordingly
 export const createOrUpdateSettings = async (category: string, key: string, value: SettingsValue): Promise<boolean> => {
   try {
+    console.log(`Checking if settings exist: ${category}.${key}`);
+    
     // First check if the settings exist
     const { data, error: fetchError } = await supabase
       .from('settings')
@@ -129,6 +135,8 @@ export const createOrUpdateSettings = async (category: string, key: string, valu
       toast.error('Failed to check if settings exist');
       return false;
     }
+    
+    console.log(`Settings exist check result:`, data);
     
     // If settings exist, update them
     if (data && data.length > 0) {

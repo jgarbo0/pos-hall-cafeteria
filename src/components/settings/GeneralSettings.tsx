@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { getAllSettingsByCategory, createOrUpdateSettings } from '@/services/SettingsService';
+import { getAllSettingsByCategory, createOrUpdateSettings, SettingsValue } from '@/services/SettingsService';
 
 interface Category {
   id: string;
@@ -87,6 +87,7 @@ const GeneralSettings: React.FC = () => {
         
         // Fetch all general settings
         const generalSettings = await getAllSettingsByCategory('general');
+        console.log('Fetched general settings:', generalSettings);
         
         if (generalSettings) {
           // Set restaurant info
@@ -121,21 +122,24 @@ const GeneralSettings: React.FC = () => {
   }, []);
 
   const handleSaveRestaurantInfo = async () => {
-    const success = await createOrUpdateSettings('general', 'restaurant_info', restaurantInfo);
+    console.log('Saving restaurant info:', restaurantInfo);
+    const success = await createOrUpdateSettings('general', 'restaurant_info', restaurantInfo as unknown as SettingsValue);
     if (success) {
       toast.success('Restaurant information updated successfully');
     }
   };
 
   const handleSaveTaxSettings = async () => {
-    const success = await createOrUpdateSettings('general', 'tax_settings', taxSettings);
+    console.log('Saving tax settings:', taxSettings);
+    const success = await createOrUpdateSettings('general', 'tax_settings', taxSettings as unknown as SettingsValue);
     if (success) {
       toast.success('Tax settings updated successfully');
     }
   };
 
   const handleSaveReceiptSettings = async () => {
-    const success = await createOrUpdateSettings('general', 'receipt_settings', receiptSettings);
+    console.log('Saving receipt settings:', receiptSettings);
+    const success = await createOrUpdateSettings('general', 'receipt_settings', receiptSettings as unknown as SettingsValue);
     if (success) {
       toast.success('Receipt settings updated successfully');
     }
@@ -155,7 +159,8 @@ const GeneralSettings: React.FC = () => {
     };
     
     const updatedCategories = [...categories, newCategoryItem];
-    const success = await createOrUpdateSettings('general', 'categories', updatedCategories);
+    console.log('Saving categories after adding:', updatedCategories);
+    const success = await createOrUpdateSettings('general', 'categories', updatedCategories as unknown as SettingsValue);
     
     if (success) {
       setCategories(updatedCategories);
@@ -175,7 +180,8 @@ const GeneralSettings: React.FC = () => {
       cat.id === editCategory.id ? editCategory : cat
     );
     
-    const success = await createOrUpdateSettings('general', 'categories', updatedCategories);
+    console.log('Saving categories after editing:', updatedCategories);
+    const success = await createOrUpdateSettings('general', 'categories', updatedCategories as unknown as SettingsValue);
     
     if (success) {
       setCategories(updatedCategories);
@@ -187,7 +193,8 @@ const GeneralSettings: React.FC = () => {
 
   const handleDeleteCategory = async (id: string) => {
     const updatedCategories = categories.filter(category => category.id !== id);
-    const success = await createOrUpdateSettings('general', 'categories', updatedCategories);
+    console.log('Saving categories after deleting:', updatedCategories);
+    const success = await createOrUpdateSettings('general', 'categories', updatedCategories as unknown as SettingsValue);
     
     if (success) {
       setCategories(updatedCategories);

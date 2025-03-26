@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Loader2 } from 'lucide-react';
-import { getAllSettingsByCategory, createOrUpdateSettings } from '@/services/SettingsService';
+import { getAllSettingsByCategory, createOrUpdateSettings, SettingsValue } from '@/services/SettingsService';
 import { toast } from 'sonner';
 
 interface EmailNotifications {
@@ -50,6 +50,7 @@ const NotificationSettings: React.FC = () => {
         setLoading(true);
         
         const notificationSettings = await getAllSettingsByCategory('notifications');
+        console.log('Fetched notification settings:', notificationSettings);
         
         if (notificationSettings) {
           if (notificationSettings.email_notifications) {
@@ -72,22 +73,28 @@ const NotificationSettings: React.FC = () => {
   }, []);
   
   const handleSaveEmailNotifications = async () => {
-    const success = await createOrUpdateSettings('notifications', 'email_notifications', emailNotifications);
+    console.log('Saving email notifications:', emailNotifications);
+    const success = await createOrUpdateSettings('notifications', 'email_notifications', emailNotifications as unknown as SettingsValue);
     if (success) {
       toast.success('Email notification settings updated');
     }
   };
   
   const handleSaveAppNotifications = async () => {
-    const success = await createOrUpdateSettings('notifications', 'app_notifications', appNotifications);
+    console.log('Saving app notifications:', appNotifications);
+    const success = await createOrUpdateSettings('notifications', 'app_notifications', appNotifications as unknown as SettingsValue);
     if (success) {
       toast.success('App notification settings updated');
     }
   };
   
   const handleSaveAll = async () => {
-    const emailSuccess = await createOrUpdateSettings('notifications', 'email_notifications', emailNotifications);
-    const appSuccess = await createOrUpdateSettings('notifications', 'app_notifications', appNotifications);
+    console.log('Saving all notifications:', {
+      email: emailNotifications,
+      app: appNotifications
+    });
+    const emailSuccess = await createOrUpdateSettings('notifications', 'email_notifications', emailNotifications as unknown as SettingsValue);
+    const appSuccess = await createOrUpdateSettings('notifications', 'app_notifications', appNotifications as unknown as SettingsValue);
     
     if (emailSuccess && appSuccess) {
       toast.success('All notification preferences saved');
