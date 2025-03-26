@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -105,10 +106,30 @@ export const updateTableStatus = async (id: string, status: 'available' | 'occup
   return updateRestaurantTable(id, { status });
 };
 
+export const updateOrderPaymentStatus = async (id: string, paymentStatus: 'paid' | 'pending'): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('orders')
+      .update({ payment_status: paymentStatus })
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    const statusText = paymentStatus === 'paid' ? 'marked as paid' : 'marked as pending';
+    toast.success(`Order payment ${statusText} successfully`);
+    return true;
+  } catch (error) {
+    console.error('Error updating order payment status:', error);
+    toast.error('Failed to update order payment status');
+    return false;
+  }
+};
+
 export default {
   getRestaurantTables,
   createRestaurantTable,
   updateRestaurantTable,
   deleteRestaurantTable,
-  updateTableStatus
+  updateTableStatus,
+  updateOrderPaymentStatus
 };

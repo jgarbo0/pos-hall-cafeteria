@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -47,6 +46,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { getOrders } from '@/services/SupabaseService';
 import { Card, CardContent } from '@/components/ui/card';
+import { updateOrderPaymentStatus } from '@/services/TablesService';
+import { DollarSign } from 'lucide-react';
 
 interface OrderFormData {
   tableNumber: number | null;
@@ -97,18 +98,15 @@ const Orders = () => {
     }
   };
 
-  // Format the timestamp to a more readable date and time
   const formatTimestamp = (timestamp: string): string => {
     try {
-      // Parse the timestamp and format it to a readable date and time
       return format(new Date(timestamp), 'MMM dd, yyyy h:mm a');
     } catch (error) {
       console.error('Error formatting date:', error);
-      return timestamp; // Return original if parsing fails
+      return timestamp;
     }
   };
   
-  // Summary calculations for the payment status widgets
   const calculateOrderSummary = () => {
     const today = new Date();
     const todayString = format(today, 'yyyy-MM-dd');
@@ -136,13 +134,11 @@ const Orders = () => {
   const getFilteredOrders = () => {
     const today = new Date();
     
-    // First filter by status
     let filtered = orders.filter(order => {
       if (activeTab === "all") return true;
       return order.status === activeTab;
     });
     
-    // Then filter by date range
     if (dateRange !== 'all') {
       filtered = filtered.filter(order => {
         const orderDate = new Date(order.timestamp.split(' ')[0]);
@@ -383,9 +379,19 @@ const Orders = () => {
     toast.success('Orders refreshed');
   };
 
-  // This function should display the customer name from the database, falling back to "Walk-in Customer" only if null or empty
   const displayCustomerName = (customerName?: string): string => {
     return customerName && customerName.trim() !== '' ? customerName : 'Walk-in Customer';
+  };
+
+  const handlePayOrder = async (order: Order) => {
+    if (await updateOrderPaymentStatus(order.id, 'paid')) {
+      const updatedOrders = orders.map(o => 
+        o.id === order.id 
+          ? { ...o, paymentStatus: 'paid' }
+          : o
+      );
+      setOrders(updatedOrders);
+    }
   };
 
   return (
@@ -414,7 +420,6 @@ const Orders = () => {
             </div>
           </div>
           
-          {/* Payment Status Widgets */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
             <Card>
               <CardContent className="p-4 flex flex-col justify-center items-center">
@@ -580,6 +585,16 @@ const Orders = () => {
                             <Button size="sm" variant="outline" className="text-red-500" onClick={() => handleDeleteOrder(order)}>
                               <Trash className="h-4 w-4" />
                             </Button>
+                            {order.paymentStatus === 'pending' && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="text-green-600"
+                                onClick={() => handlePayOrder(order)}
+                              >
+                                <DollarSign className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
