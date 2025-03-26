@@ -445,11 +445,12 @@ const Finance = () => {
             
             <TabsContent value="hall-bookings">
               <HallBookingsFinanceTab
-                hallBookings={hallBookingIncomes}
-                hall1Bookings={hall1Bookings}
-                hall2Bookings={hall2Bookings}
+                hallBookings={hallBookings}
+                hall1Bookings={hallBookingsHall1}
+                hall2Bookings={hallBookingsHall2}
                 isLoadingHallData={isLoadingHallData}
                 onViewDetails={handleViewHallBookingDetails}
+                onSearch={handleSearch}
               />
             </TabsContent>
             
@@ -494,4 +495,3 @@ const Finance = () => {
 };
 
 export default Finance;
-

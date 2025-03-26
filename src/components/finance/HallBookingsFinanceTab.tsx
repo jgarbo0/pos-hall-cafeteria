@@ -26,7 +26,6 @@ import {
   Users 
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import HallBookingFinanceWidget from './HallBookingFinanceWidget';
 import HallBookingIncomesList from './HallBookingIncomesList';
 
@@ -36,14 +35,16 @@ interface HallBookingsFinanceTabProps {
   hall2Bookings: HallBookingIncome[];
   isLoadingHallData: boolean;
   onViewDetails: (id: string) => void;
+  onSearch?: (term: string) => void;
 }
 
 const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
-  hallBookings,
-  hall1Bookings,
-  hall2Bookings,
-  isLoadingHallData,
-  onViewDetails
+  hallBookings = [],
+  hall1Bookings = [],
+  hall2Bookings = [],
+  isLoadingHallData = false,
+  onViewDetails,
+  onSearch
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [hallFilter, setHallFilter] = useState<string>('all');
@@ -54,6 +55,14 @@ const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
   
   const todayBookings = hallBookings.filter(booking => isToday(new Date(booking.date)));
   const todayRevenue = todayBookings.reduce((sum, booking) => sum + Number(booking.amount), 0);
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    if (onSearch) {
+      onSearch(term);
+    }
+  };
   
   const filteredBookings = hallBookings.filter(booking => {
     const matchesSearch = 
@@ -95,8 +104,8 @@ const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
   const chartData = generateChartData();
   
   return (
-    <div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/40 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -162,24 +171,28 @@ const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
       </div>
 
       {/* Layout changed to flex side-by-side on larger screens */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Card className="shadow-sm lg:col-span-2">
+          <CardHeader className="pb-2">
             <CardTitle className="text-lg font-medium">Revenue Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <HallBookingFinanceWidget 
-              data={chartData}
-              totalIncome={totalHallRevenue}
-              totalExpense={totalHallRevenue * 0.3}
-              onViewReport={() => {}}
-              isLoading={isLoadingHallData}
-            />
+            <div className="flex flex-col">
+              <div className="flex flex-col h-full justify-between">
+                <HallBookingFinanceWidget 
+                  data={chartData}
+                  totalIncome={totalHallRevenue}
+                  totalExpense={totalHallRevenue * 0.3}
+                  onViewReport={() => {}}
+                  isLoading={isLoadingHallData}
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="pb-2">
             <CardTitle className="text-lg font-medium">Hall Analytics</CardTitle>
           </CardHeader>
           <CardContent>
@@ -196,7 +209,7 @@ const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
                   <div className="mt-1 h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-blue-500 rounded-full"
-                      style={{ width: `${(hall1Revenue / (hall1Revenue + hall2Revenue)) * 100}%` }}
+                      style={{ width: `${(hall1Revenue / (hall1Revenue + hall2Revenue || 1)) * 100}%` }}
                     ></div>
                   </div>
                 </div>
@@ -212,7 +225,7 @@ const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
                   <div className="mt-1 h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-purple-500 rounded-full"
-                      style={{ width: `${(hall2Revenue / (hall1Revenue + hall2Revenue)) * 100}%` }}
+                      style={{ width: `${(hall2Revenue / (hall1Revenue + hall2Revenue || 1)) * 100}%` }}
                     ></div>
                   </div>
                 </div>
@@ -261,8 +274,7 @@ const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
       </div>
 
       {/* Booking incomes section with fixed height and scrollable */}
-      <div className="mt-10">
-        {/* Added search and filter controls to the header for better organization */}
+      <div className="mt-12">
         <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-medium">Hall Booking Incomes</CardTitle>
@@ -273,7 +285,7 @@ const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
                   placeholder="Search bookings..."
                   className="pl-8 h-9"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={handleSearch}
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -295,11 +307,13 @@ const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
             </div>
           </CardHeader>
           <CardContent>
-            <HallBookingIncomesList
-              bookings={filteredBookings}
-              onViewDetails={onViewDetails}
-              isLoading={isLoadingHallData}
-            />
+            <div className="overflow-hidden max-h-[500px] overflow-y-auto">
+              <HallBookingIncomesList
+                bookings={filteredBookings}
+                onViewDetails={onViewDetails}
+                isLoading={isLoadingHallData}
+              />
+            </div>
           </CardContent>
         </Card>
       </div>

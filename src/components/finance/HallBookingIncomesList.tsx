@@ -19,13 +19,13 @@ interface HallBookingIncome {
 }
 
 interface HallBookingIncomesListProps {
-  bookings: HallBookingIncome[];
+  bookings?: HallBookingIncome[];
   onViewDetails: (id: string) => void;
   isLoading?: boolean;
 }
 
 const HallBookingIncomesList: React.FC<HallBookingIncomesListProps> = ({
-  bookings = [], // Added default empty array to prevent undefined errors
+  bookings = [], // Default empty array to prevent undefined errors
   onViewDetails,
   isLoading = false
 }) => {
