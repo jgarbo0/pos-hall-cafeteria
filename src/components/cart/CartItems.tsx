@@ -27,7 +27,7 @@ const CartItems: React.FC<CartItemsProps> = ({
     <ScrollArea className="flex-1 h-full">
       <div className="p-4">
         {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full py-12">
+          <div className="flex flex-col items-center justify-center py-12">
             <ShoppingBag className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" />
             <p className="text-gray-500 dark:text-gray-400 text-center">Your cart is empty</p>
           </div>

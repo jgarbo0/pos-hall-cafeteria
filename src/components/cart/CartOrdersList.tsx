@@ -19,7 +19,7 @@ const CartOrdersList: React.FC<CartOrdersListProps> = ({ orders }) => {
     <ScrollArea className="flex-1 h-full">
       <div className="p-4">
         {orders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full py-12">
+          <div className="flex flex-col items-center justify-center py-12">
             <ClipboardList className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" />
             <p className="text-gray-500 dark:text-gray-400 text-center">No recent orders</p>
           </div>
