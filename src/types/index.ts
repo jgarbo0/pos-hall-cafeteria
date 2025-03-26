@@ -34,6 +34,7 @@ export interface Order {
   tax: number;
   total: number;
   discount?: number; // Total discount amount
+  discountType?: 'percentage' | 'fixed'; // Type of discount
   status: 'processing' | 'completed' | 'cancelled';
   paymentStatus?: 'paid' | 'pending';
   timestamp: string;

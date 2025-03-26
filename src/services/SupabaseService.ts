@@ -141,7 +141,8 @@ export const createOrder = async (
   tableNumber: number | null, 
   cartItems: CartItem[],
   customerName: string = 'Walk-in Customer',
-  paymentStatus: 'paid' | 'pending' = 'paid'
+  paymentStatus: 'paid' | 'pending' = 'paid',
+  discountType: 'percentage' | 'fixed' = 'percentage'
 ): Promise<Order> => {
   try {
     // Calculate totals with discounts
@@ -183,6 +184,7 @@ export const createOrder = async (
         table_number: tableNumber,
         subtotal: subtotal + totalDiscount, // Original subtotal before discount
         discount: totalDiscount, // Save the total discount amount
+        discount_type: discountType, // Save the discount type
         tax: tax,
         total: total,
         status: 'completed',
@@ -226,6 +228,7 @@ export const createOrder = async (
       tax: orderData.tax,
       total: orderData.total,
       discount: orderData.discount, // Include discount in returned order object
+      discountType: orderData.discount_type as 'percentage' | 'fixed', // Include discount type
       status: orderData.status as 'processing' | 'completed' | 'cancelled',
       paymentStatus: orderData.payment_status as 'paid' | 'pending',
       timestamp: orderData.timestamp,
@@ -250,6 +253,7 @@ export const getOrders = async (): Promise<Order[]> => {
         tax,
         total,
         discount,
+        discount_type,
         status,
         timestamp,
         customer_name,
@@ -301,6 +305,7 @@ export const getOrders = async (): Promise<Order[]> => {
         tax: order.tax,
         total: order.total,
         discount: order.discount,
+        discountType: order.discount_type as 'percentage' | 'fixed',
         status: order.status as 'processing' | 'completed' | 'cancelled',
         paymentStatus: order.payment_status as 'paid' | 'pending',
         timestamp: order.timestamp,
@@ -782,3 +787,4 @@ export default {
   updateStaffUser,
   deleteStaffUser
 };
+

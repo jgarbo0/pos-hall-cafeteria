@@ -21,7 +21,7 @@ interface CartPanelProps {
   onRemoveItem: (id: string) => void;
   onUpdateQuantity: (id: string, quantity: number) => void;
   onClearCart: () => void;
-  onPlaceOrder: (paymentStatus: 'paid' | 'pending') => void;
+  onPlaceOrder: (paymentStatus: 'paid' | 'pending', discountType?: 'percentage' | 'fixed') => void;
   orderNumber: string;
   tableNumber: number;
   customers?: Customer[];
@@ -182,7 +182,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
       discount: itemDiscounts[item.id] || (discountType === 'percentage' ? globalDiscount : 0)
     }));
     
-    onPlaceOrder(paymentStatus);
+    onPlaceOrder(paymentStatus, discountType);
     
     toast.success(
       `Order #${orderNumber} completed successfully!`,
