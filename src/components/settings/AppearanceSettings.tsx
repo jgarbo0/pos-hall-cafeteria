@@ -19,7 +19,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import LanguageSelector from '@/components/LanguageSelector';
-import { getSettings, updateSettings } from '@/services/SettingsService';
+import { 
+  AppearanceSettings as AppearanceSettingsType,
+  getAppearanceSettings, 
+  updateAppearanceSettings 
+} from '@/services/SettingsService';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -28,17 +32,9 @@ interface AppearanceSettingsProps {
   onThemeChange: (theme: string) => void;
 }
 
-interface ThemeSettings {
-  theme: string;
-  primary_color: string;
-  font_size: string;
-  compact_mode: boolean;
-  animations: boolean;
-}
-
 const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ theme, onThemeChange }) => {
   const [loading, setLoading] = useState(true);
-  const [appearanceSettings, setAppearanceSettings] = useState<ThemeSettings>({
+  const [appearanceSettings, setAppearanceSettings] = useState<AppearanceSettingsType>({
     theme: 'light',
     primary_color: 'blue',
     font_size: 'medium',
@@ -50,10 +46,10 @@ const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ theme, onThemeC
     const fetchSettings = async () => {
       try {
         setLoading(true);
-        const settings = await getSettings('appearance', 'theme_settings');
+        const settings = await getAppearanceSettings();
         
         if (settings) {
-          setAppearanceSettings(settings as ThemeSettings);
+          setAppearanceSettings(settings);
           // Update the theme in parent component if it differs
           if (settings.theme !== theme) {
             onThemeChange(settings.theme);
@@ -71,7 +67,7 @@ const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ theme, onThemeC
   
   const handleSaveAppearance = async () => {
     try {
-      const success = await updateSettings('appearance', 'theme_settings', appearanceSettings);
+      const success = await updateAppearanceSettings(appearanceSettings);
       
       if (success) {
         // Make sure to update the theme in the parent component

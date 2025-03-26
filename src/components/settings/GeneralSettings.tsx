@@ -23,34 +23,27 @@ import {
 } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { getAllSettingsByCategory, createOrUpdateSettings, SettingsValue } from '@/services/SettingsService';
+import { 
+  RestaurantInfo, 
+  getRestaurantInfo, 
+  updateRestaurantInfo,
+  MenuCategory,
+  getMenuCategories,
+  createMenuCategory,
+  updateMenuCategory,
+  deleteMenuCategory,
+  TaxSettings,
+  getTaxSettings,
+  updateTaxSettings,
+  ReceiptSettings,
+  getReceiptSettings,
+  updateReceiptSettings
+} from '@/services/SettingsService';
 
 interface Category {
   id: string;
   name: string;
   itemCount: number;
-}
-
-interface RestaurantInfo {
-  name: string;
-  phone: string;
-  address: string;
-  email: string;
-  business_hours: string;
-}
-
-interface TaxSettings {
-  tax_rate: number;
-  include_tax_in_price: boolean;
-  show_tax_on_receipt: boolean;
-}
-
-interface ReceiptSettings {
-  header: string;
-  address: string;
-  footer: string;
-  show_logo: boolean;
-  include_tip: boolean;
 }
 
 const GeneralSettings: React.FC = () => {
@@ -85,30 +78,33 @@ const GeneralSettings: React.FC = () => {
       try {
         setLoading(true);
         
-        // Fetch all general settings
-        const generalSettings = await getAllSettingsByCategory('general');
-        console.log('Fetched general settings:', generalSettings);
+        // Fetch restaurant info
+        const restaurantData = await getRestaurantInfo();
+        if (restaurantData) {
+          setRestaurantInfo(restaurantData);
+        }
         
-        if (generalSettings) {
-          // Set restaurant info
-          if (generalSettings.restaurant_info) {
-            setRestaurantInfo(generalSettings.restaurant_info as RestaurantInfo);
-          }
-          
-          // Set categories
-          if (generalSettings.categories) {
-            setCategories(generalSettings.categories as Category[]);
-          }
-          
-          // Set tax settings
-          if (generalSettings.tax_settings) {
-            setTaxSettings(generalSettings.tax_settings as TaxSettings);
-          }
-          
-          // Set receipt settings
-          if (generalSettings.receipt_settings) {
-            setReceiptSettings(generalSettings.receipt_settings as ReceiptSettings);
-          }
+        // Fetch categories
+        const categoriesData = await getMenuCategories();
+        if (categoriesData) {
+          const formattedCategories = categoriesData.map(cat => ({
+            id: cat.id || '',
+            name: cat.name,
+            itemCount: cat.item_count || 0
+          }));
+          setCategories(formattedCategories);
+        }
+        
+        // Fetch tax settings
+        const taxData = await getTaxSettings();
+        if (taxData) {
+          setTaxSettings(taxData);
+        }
+        
+        // Fetch receipt settings
+        const receiptData = await getReceiptSettings();
+        if (receiptData) {
+          setReceiptSettings(receiptData);
         }
       } catch (error) {
         console.error('Error fetching settings:', error);
@@ -123,41 +119,17 @@ const GeneralSettings: React.FC = () => {
 
   const handleSaveRestaurantInfo = async () => {
     console.log('Saving restaurant info:', restaurantInfo);
-    const success = await createOrUpdateSettings(
-      'general', 
-      'restaurant_info', 
-      restaurantInfo as unknown as SettingsValue
-    );
-    
-    if (success) {
-      toast.success('Restaurant information updated successfully');
-    }
+    await updateRestaurantInfo(restaurantInfo);
   };
 
   const handleSaveTaxSettings = async () => {
     console.log('Saving tax settings:', taxSettings);
-    const success = await createOrUpdateSettings(
-      'general', 
-      'tax_settings', 
-      taxSettings as unknown as SettingsValue
-    );
-    
-    if (success) {
-      toast.success('Tax settings updated successfully');
-    }
+    await updateTaxSettings(taxSettings);
   };
 
   const handleSaveReceiptSettings = async () => {
     console.log('Saving receipt settings:', receiptSettings);
-    const success = await createOrUpdateSettings(
-      'general', 
-      'receipt_settings', 
-      receiptSettings as unknown as SettingsValue
-    );
-    
-    if (success) {
-      toast.success('Receipt settings updated successfully');
-    }
+    await updateReceiptSettings(receiptSettings);
   };
 
   const handleAddCategory = async () => {
@@ -166,26 +138,24 @@ const GeneralSettings: React.FC = () => {
       return;
     }
     
-    const newId = Math.random().toString(36).substr(2, 9);
-    const newCategoryItem: Category = {
-      id: newId,
+    const categoryToAdd: MenuCategory = {
       name: newCategory.name,
-      itemCount: 0
+      description: newCategory.description,
+      item_count: 0
     };
     
-    const updatedCategories = [...categories, newCategoryItem];
-    console.log('Saving categories after adding:', updatedCategories);
-    const success = await createOrUpdateSettings(
-      'general', 
-      'categories', 
-      updatedCategories as unknown as SettingsValue
-    );
+    const newId = await createMenuCategory(categoryToAdd);
     
-    if (success) {
-      setCategories(updatedCategories);
+    if (newId) {
+      const newCategoryItem: Category = {
+        id: newId,
+        name: newCategory.name,
+        itemCount: 0
+      };
+      
+      setCategories([...categories, newCategoryItem]);
       setNewCategory({ name: '', description: '' });
       setIsAddDialogOpen(false);
-      toast.success(`Category "${newCategory.name}" added successfully`);
     }
   };
 
@@ -195,37 +165,31 @@ const GeneralSettings: React.FC = () => {
       return;
     }
     
-    const updatedCategories = categories.map(cat => 
-      cat.id === editCategory.id ? editCategory : cat
-    );
+    const categoryToUpdate: MenuCategory = {
+      id: editCategory.id,
+      name: editCategory.name,
+      item_count: editCategory.itemCount
+    };
     
-    console.log('Saving categories after editing:', updatedCategories);
-    const success = await createOrUpdateSettings(
-      'general', 
-      'categories', 
-      updatedCategories as unknown as SettingsValue
-    );
+    const success = await updateMenuCategory(categoryToUpdate);
     
     if (success) {
+      const updatedCategories = categories.map(cat => 
+        cat.id === editCategory.id ? editCategory : cat
+      );
+      
       setCategories(updatedCategories);
       setEditCategory(null);
       setIsEditDialogOpen(false);
-      toast.success('Category updated successfully');
     }
   };
 
   const handleDeleteCategory = async (id: string) => {
-    const updatedCategories = categories.filter(category => category.id !== id);
-    console.log('Saving categories after deleting:', updatedCategories);
-    const success = await createOrUpdateSettings(
-      'general', 
-      'categories', 
-      updatedCategories as unknown as SettingsValue
-    );
+    const success = await deleteMenuCategory(id);
     
     if (success) {
+      const updatedCategories = categories.filter(category => category.id !== id);
       setCategories(updatedCategories);
-      toast.success('Category deleted successfully');
     }
   };
 
@@ -264,7 +228,7 @@ const GeneralSettings: React.FC = () => {
               <Label htmlFor="restaurant-phone" className="dark:text-gray-300">Phone Number</Label>
               <Input 
                 id="restaurant-phone" 
-                value={restaurantInfo.phone} 
+                value={restaurantInfo.phone || ''} 
                 onChange={(e) => setRestaurantInfo({...restaurantInfo, phone: e.target.value})}
                 className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
               />
@@ -274,7 +238,7 @@ const GeneralSettings: React.FC = () => {
             <Label htmlFor="restaurant-address" className="dark:text-gray-300">Address</Label>
             <Input 
               id="restaurant-address" 
-              value={restaurantInfo.address} 
+              value={restaurantInfo.address || ''} 
               onChange={(e) => setRestaurantInfo({...restaurantInfo, address: e.target.value})}
               className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
             />
@@ -284,7 +248,7 @@ const GeneralSettings: React.FC = () => {
             <Input 
               id="restaurant-email" 
               type="email" 
-              value={restaurantInfo.email} 
+              value={restaurantInfo.email || ''} 
               onChange={(e) => setRestaurantInfo({...restaurantInfo, email: e.target.value})}
               className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
             />
@@ -293,7 +257,7 @@ const GeneralSettings: React.FC = () => {
             <Label htmlFor="restaurant-hours" className="dark:text-gray-300">Business Hours</Label>
             <Input 
               id="restaurant-hours" 
-              value={restaurantInfo.business_hours} 
+              value={restaurantInfo.business_hours || ''} 
               onChange={(e) => setRestaurantInfo({...restaurantInfo, business_hours: e.target.value})}
               className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
             />
@@ -469,7 +433,7 @@ const GeneralSettings: React.FC = () => {
             <Label htmlFor="receipt-header" className="dark:text-gray-300">Receipt Header</Label>
             <Input 
               id="receipt-header" 
-              value={receiptSettings.header}
+              value={receiptSettings.header || ''}
               onChange={(e) => setReceiptSettings({...receiptSettings, header: e.target.value})}
               className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
             />
@@ -478,7 +442,7 @@ const GeneralSettings: React.FC = () => {
             <Label htmlFor="receipt-address" className="dark:text-gray-300">Receipt Address</Label>
             <Input 
               id="receipt-address" 
-              value={receiptSettings.address}
+              value={receiptSettings.address || ''}
               onChange={(e) => setReceiptSettings({...receiptSettings, address: e.target.value})}
               className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
             />
@@ -487,7 +451,7 @@ const GeneralSettings: React.FC = () => {
             <Label htmlFor="receipt-footer" className="dark:text-gray-300">Receipt Footer Text</Label>
             <Input 
               id="receipt-footer" 
-              value={receiptSettings.footer}
+              value={receiptSettings.footer || ''}
               onChange={(e) => setReceiptSettings({...receiptSettings, footer: e.target.value})}
               className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
             />

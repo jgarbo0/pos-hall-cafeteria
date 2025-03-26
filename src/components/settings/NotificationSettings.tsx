@@ -13,53 +13,33 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Loader2 } from 'lucide-react';
-import { getAllSettingsByCategory, createOrUpdateSettings, SettingsValue } from '@/services/SettingsService';
+import { 
+  NotificationSettings as NotificationSettingsType,
+  getNotificationSettings,
+  updateNotificationSettings
+} from '@/services/SettingsService';
 import { toast } from 'sonner';
-
-interface EmailNotifications {
-  new_order: boolean;
-  low_stock: boolean;
-  daily_summary: boolean;
-  customer_feedback: boolean;
-}
-
-interface AppNotifications {
-  app_new_order: boolean;
-  app_order_status: boolean;
-  app_inventory: boolean;
-}
 
 const NotificationSettings: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const [emailNotifications, setEmailNotifications] = useState<EmailNotifications>({
-    new_order: true,
-    low_stock: true,
-    daily_summary: true,
-    customer_feedback: false
-  });
-  
-  const [appNotifications, setAppNotifications] = useState<AppNotifications>({
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettingsType>({
+    email_new_order: true,
+    email_low_stock: true,
+    email_daily_summary: true,
+    email_customer_feedback: false,
     app_new_order: true,
     app_order_status: true,
     app_inventory: true
   });
-  
+
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         setLoading(true);
         
-        const notificationSettings = await getAllSettingsByCategory('notifications');
-        console.log('Fetched notification settings:', notificationSettings);
-        
-        if (notificationSettings) {
-          if (notificationSettings.email_notifications) {
-            setEmailNotifications(notificationSettings.email_notifications as EmailNotifications);
-          }
-          
-          if (notificationSettings.app_notifications) {
-            setAppNotifications(notificationSettings.app_notifications as AppNotifications);
-          }
+        const settings = await getNotificationSettings();
+        if (settings) {
+          setNotificationSettings(settings);
         }
       } catch (error) {
         console.error('Error fetching notification settings:', error);
@@ -72,54 +52,13 @@ const NotificationSettings: React.FC = () => {
     fetchSettings();
   }, []);
   
-  const handleSaveEmailNotifications = async () => {
-    console.log('Saving email notifications:', emailNotifications);
-    const success = await createOrUpdateSettings(
-      'notifications', 
-      'email_notifications', 
-      emailNotifications as unknown as SettingsValue
-    );
-    
-    if (success) {
-      toast.success('Email notification settings updated');
-    }
-  };
-  
-  const handleSaveAppNotifications = async () => {
-    console.log('Saving app notifications:', appNotifications);
-    const success = await createOrUpdateSettings(
-      'notifications', 
-      'app_notifications', 
-      appNotifications as unknown as SettingsValue
-    );
-    
-    if (success) {
-      toast.success('App notification settings updated');
-    }
-  };
-  
   const handleSaveAll = async () => {
-    console.log('Saving all notifications:', {
-      email: emailNotifications,
-      app: appNotifications
-    });
+    console.log('Saving notification settings:', notificationSettings);
     
-    const emailSuccess = await createOrUpdateSettings(
-      'notifications', 
-      'email_notifications', 
-      emailNotifications as unknown as SettingsValue
-    );
+    const success = await updateNotificationSettings(notificationSettings);
     
-    const appSuccess = await createOrUpdateSettings(
-      'notifications', 
-      'app_notifications', 
-      appNotifications as unknown as SettingsValue
-    );
-    
-    if (emailSuccess && appSuccess) {
-      toast.success('All notification preferences saved');
-    } else {
-      toast.error('Some settings could not be saved');
+    if (success) {
+      toast.success('Notification preferences saved');
     }
   };
   
@@ -148,18 +87,21 @@ const NotificationSettings: React.FC = () => {
             <h3 className="text-lg font-medium dark:text-white">Email Notifications</h3>
             <div className="space-y-2">
               {[
-                { id: 'new-order', key: 'new_order', label: 'New Order Notifications' },
-                { id: 'low-stock', key: 'low_stock', label: 'Low Stock Alerts' },
-                { id: 'daily-summary', key: 'daily_summary', label: 'Daily Sales Summary' },
-                { id: 'customer-feedback', key: 'customer_feedback', label: 'Customer Feedback' },
+                { id: 'new-order', key: 'email_new_order', label: 'New Order Notifications' },
+                { id: 'low-stock', key: 'email_low_stock', label: 'Low Stock Alerts' },
+                { id: 'daily-summary', key: 'email_daily_summary', label: 'Daily Sales Summary' },
+                { id: 'customer-feedback', key: 'email_customer_feedback', label: 'Customer Feedback' },
               ].map((item) => (
                 <div key={item.id} className="flex items-center justify-between py-2">
                   <Label htmlFor={item.id} className="flex-1 dark:text-gray-300">{item.label}</Label>
                   <Switch 
                     id={item.id} 
-                    checked={emailNotifications[item.key as keyof EmailNotifications]}
+                    checked={notificationSettings[item.key as keyof NotificationSettingsType]}
                     onCheckedChange={(checked) => {
-                      setEmailNotifications({ ...emailNotifications, [item.key]: checked });
+                      setNotificationSettings({ 
+                        ...notificationSettings, 
+                        [item.key]: checked 
+                      });
                     }}
                   />
                 </div>
@@ -181,9 +123,12 @@ const NotificationSettings: React.FC = () => {
                   <Label htmlFor={item.id} className="flex-1 dark:text-gray-300">{item.label}</Label>
                   <Switch 
                     id={item.id} 
-                    checked={appNotifications[item.key as keyof AppNotifications]}
+                    checked={notificationSettings[item.key as keyof NotificationSettingsType]}
                     onCheckedChange={(checked) => {
-                      setAppNotifications({ ...appNotifications, [item.key]: checked });
+                      setNotificationSettings({ 
+                        ...notificationSettings, 
+                        [item.key]: checked 
+                      });
                     }}
                   />
                 </div>

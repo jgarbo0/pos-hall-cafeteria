@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      appearance_settings: {
+        Row: {
+          animations: boolean | null
+          compact_mode: boolean | null
+          created_at: string
+          font_size: string | null
+          id: string
+          primary_color: string | null
+          theme: string | null
+          updated_at: string
+        }
+        Insert: {
+          animations?: boolean | null
+          compact_mode?: boolean | null
+          created_at?: string
+          font_size?: string | null
+          id?: string
+          primary_color?: string | null
+          theme?: string | null
+          updated_at?: string
+        }
+        Update: {
+          animations?: boolean | null
+          compact_mode?: boolean | null
+          created_at?: string
+          font_size?: string | null
+          id?: string
+          primary_color?: string | null
+          theme?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -111,6 +144,33 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          item_count: number | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_count?: number | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_count?: number | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       menu_items: {
         Row: {
           available: number
@@ -154,6 +214,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_settings: {
+        Row: {
+          app_inventory: boolean | null
+          app_new_order: boolean | null
+          app_order_status: boolean | null
+          created_at: string
+          email_customer_feedback: boolean | null
+          email_daily_summary: boolean | null
+          email_low_stock: boolean | null
+          email_new_order: boolean | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          app_inventory?: boolean | null
+          app_new_order?: boolean | null
+          app_order_status?: boolean | null
+          created_at?: string
+          email_customer_feedback?: boolean | null
+          email_daily_summary?: boolean | null
+          email_low_stock?: boolean | null
+          email_new_order?: boolean | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          app_inventory?: boolean | null
+          app_new_order?: boolean | null
+          app_order_status?: boolean | null
+          created_at?: string
+          email_customer_feedback?: boolean | null
+          email_daily_summary?: boolean | null
+          email_low_stock?: boolean | null
+          email_new_order?: boolean | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       order_items: {
         Row: {
@@ -263,6 +362,165 @@ export type Database = {
         }
         Relationships: []
       }
+      permissions: {
+        Row: {
+          actions: string[]
+          created_at: string
+          description: string | null
+          id: string
+          module: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          actions: string[]
+          created_at?: string
+          description?: string | null
+          id?: string
+          module: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          actions?: string[]
+          created_at?: string
+          description?: string | null
+          id?: string
+          module?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      receipt_settings: {
+        Row: {
+          address: string | null
+          created_at: string
+          footer: string | null
+          header: string | null
+          id: string
+          include_tip: boolean | null
+          show_logo: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          footer?: string | null
+          header?: string | null
+          id?: string
+          include_tip?: boolean | null
+          show_logo?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          footer?: string | null
+          header?: string | null
+          id?: string
+          include_tip?: boolean | null
+          show_logo?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      restaurant_info: {
+        Row: {
+          address: string | null
+          business_hours: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          business_hours?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          business_hours?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      roles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      roles_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission_id: string
+          role_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission_id: string
+          role_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission_id?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roles_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roles_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings: {
         Row: {
           category: string
@@ -287,6 +545,33 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: Json
+        }
+        Relationships: []
+      }
+      tax_settings: {
+        Row: {
+          created_at: string
+          id: string
+          include_tax_in_price: boolean | null
+          show_tax_on_receipt: boolean | null
+          tax_rate: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          include_tax_in_price?: boolean | null
+          show_tax_on_receipt?: boolean | null
+          tax_rate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          include_tax_in_price?: boolean | null
+          show_tax_on_receipt?: boolean | null
+          tax_rate?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
