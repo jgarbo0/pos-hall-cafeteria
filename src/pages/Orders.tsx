@@ -47,7 +47,6 @@ import {
 import { getOrders } from '@/services/SupabaseService';
 import { Card, CardContent } from '@/components/ui/card';
 import { updateOrderPaymentStatus } from '@/services/TablesService';
-import { DollarSign } from 'lucide-react';
 
 interface OrderFormData {
   tableNumber: number | null;
@@ -387,7 +386,7 @@ const Orders = () => {
     if (await updateOrderPaymentStatus(order.id, 'paid')) {
       const updatedOrders = orders.map(o => 
         o.id === order.id 
-          ? { ...o, paymentStatus: 'paid' }
+          ? { ...o, paymentStatus: 'paid' as 'paid' | 'pending' }
           : o
       );
       setOrders(updatedOrders);
