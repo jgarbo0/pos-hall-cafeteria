@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -55,6 +54,7 @@ interface OrderFormData {
   orderType: OrderType;
   items: number; 
   total: number;
+  discount?: number;
   status: "processing" | "completed" | "cancelled";
   customerName: string;
 }
@@ -78,13 +78,15 @@ const Orders = () => {
     paidOrders: 0,
     pendingOrders: 0,
     totalSales: 0,
-    todaySales: 0
+    todaySales: 0,
+    totalDiscounts: 0
   });
   const [formData, setFormData] = useState<OrderFormData>({
     tableNumber: null,
     orderType: "Dine In",
     items: 1,
     total: 0,
+    discount: 0,
     status: "completed",
     customerName: 'Walk-in Customer'
   });
@@ -94,7 +96,6 @@ const Orders = () => {
     fetchOrders();
   }, []);
   
-  // Memoize order summary calculation to prevent recomputation on every render
   useEffect(() => {
     const summary = calculateOrderSummary(orders);
     setOrderSummary(summary);
@@ -122,7 +123,6 @@ const Orders = () => {
     }
   }, []);
   
-  // Memoize the calculation function to avoid unnecessary recalculations
   const calculateOrderSummary = useCallback((ordersList: Order[]) => {
     const today = new Date();
     const todayString = format(today, 'yyyy-MM-dd');
@@ -136,16 +136,18 @@ const Orders = () => {
       .filter(order => format(new Date(order.timestamp), 'yyyy-MM-dd') === todayString)
       .reduce((sum, order) => sum + order.total, 0);
     
+    const totalDiscounts = ordersList.reduce((sum, order) => sum + (order.discount || 0), 0);
+    
     return {
       totalOrders,
       paidOrders,
       pendingOrders,
       totalSales,
-      todaySales
+      todaySales,
+      totalDiscounts
     };
   }, []);
   
-  // Memoize filtered orders to avoid recalculation on each render
   const filteredOrders = useMemo(() => {
     const today = new Date();
     
@@ -300,6 +302,7 @@ const Orders = () => {
       orderType: order.orderType,
       items: order.items.length,
       total: order.total,
+      discount: order.discount,
       status: order.status === "processing" ? "processing" : order.status,
       customerName: order.customerName || 'Walk-in Customer'
     });
@@ -317,6 +320,7 @@ const Orders = () => {
       orderType: "Dine In",
       items: 1,
       total: 0,
+      discount: 0,
       status: "processing",
       customerName: 'Walk-in Customer'
     });
@@ -366,7 +370,8 @@ const Orders = () => {
             orderType: formData.orderType,
             total: formData.total,
             status: formData.status,
-            customerName: formData.customerName
+            customerName: formData.customerName,
+            discount: formData.discount
           }
         : order
     ));
@@ -462,7 +467,7 @@ const Orders = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
             <Card>
               <CardContent className="p-4 flex flex-col justify-center items-center">
                 <div className="mb-2 mt-2 flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900">
@@ -510,6 +515,18 @@ const Orders = () => {
                 </div>
                 <div className="text-xl font-bold dark:text-white">${orderSummary.todaySales.toFixed(2)}</div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Today's Sales</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4 flex flex-col justify-center items-center">
+                <div className="mb-2 mt-2 flex items-center justify-center w-8 h-8 rounded-full bg-green-100 dark:bg-green-900">
+                  <DollarSign className="h-4 w-4 text-green-600 dark:text-green-300" />
+                </div>
+                <div className="text-xl font-bold text-green-600 dark:text-green-400">
+                  ${(orderSummary.totalDiscounts || 0).toFixed(2)}
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Discounts</p>
               </CardContent>
             </Card>
           </div>
@@ -566,6 +583,7 @@ const Orders = () => {
                     <TableHead className="dark:text-gray-300">Table</TableHead>
                     <TableHead className="dark:text-gray-300">Items</TableHead>
                     <TableHead className="dark:text-gray-300">Total</TableHead>
+                    <TableHead className="dark:text-gray-300">Discount</TableHead>
                     <TableHead className="dark:text-gray-300">Date</TableHead>
                     <TableHead className="dark:text-gray-300">Status</TableHead>
                     <TableHead className="dark:text-gray-300">Payment</TableHead>
@@ -575,7 +593,7 @@ const Orders = () => {
                 <TableBody>
                   {filteredOrders.length === 0 ? (
                     <TableRow className="dark:border-gray-700">
-                      <TableCell colSpan={10} className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <TableCell colSpan={11} className="text-center py-8 text-gray-500 dark:text-gray-400">
                         {searchTerm ? 'No matching orders found' : 'No orders found'}
                       </TableCell>
                     </TableRow>
@@ -590,12 +608,15 @@ const Orders = () => {
                         </TableCell>
                         <TableCell className="dark:text-gray-300">{order.items.length}</TableCell>
                         <TableCell className="dark:text-gray-300">${order.total.toFixed(2)}</TableCell>
+                        <TableCell className="dark:text-gray-300">
+                          {order.discount && order.discount > 0 
+                            ? <span className="text-green-600">${order.discount.toFixed(2)}</span> 
+                            : '$0.00'}
+                        </TableCell>
                         <TableCell className="dark:text-gray-300">{formatTimestamp(order.timestamp)}</TableCell>
                         <TableCell>
                           <div className={`flex items-center space-x-1 ${
-                            order.status === 'completed' ? 'text-green-600 dark:text-green-500' : 
-                            order.status === 'cancelled' ? 'text-red-600 dark:text-red-500' :
-                            'text-amber-500'
+                            order.status === 'completed' ? 'text-green-600 dark:text-green-500' : 'text-amber-500'
                           }`}>
                             {order.status === 'completed' ? (
                               <>
@@ -658,7 +679,6 @@ const Orders = () => {
         </div>
       </div>
 
-      {/* View Order Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -714,6 +734,14 @@ const Orders = () => {
                       {currentOrder.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
                     </p>
                   </div>
+                  {currentOrder.discount && currentOrder.discount > 0 && (
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Discount</p>
+                      <p className="font-medium text-green-600 dark:text-green-500">
+                        ${currentOrder.discount.toFixed(2)}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 
                 <div>
@@ -725,25 +753,38 @@ const Orders = () => {
                           <TableHead className="dark:text-gray-300">Item</TableHead>
                           <TableHead className="dark:text-gray-300">Price</TableHead>
                           <TableHead className="dark:text-gray-300">Qty</TableHead>
+                          <TableHead className="dark:text-gray-300">Discount</TableHead>
                           <TableHead className="dark:text-gray-300 text-right">Total</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {currentOrder.items.length === 0 ? (
                           <TableRow className="dark:border-gray-700">
-                            <TableCell colSpan={4} className="text-center py-4 text-gray-500 dark:text-gray-400">
+                            <TableCell colSpan={5} className="text-center py-4 text-gray-500 dark:text-gray-400">
                               No items
                             </TableCell>
                           </TableRow>
                         ) : (
-                          currentOrder.items.map((item, index) => (
-                            <TableRow key={index} className="dark:border-gray-700">
-                              <TableCell className="font-medium dark:text-white">{item.title}</TableCell>
-                              <TableCell className="dark:text-gray-300">${item.price.toFixed(2)}</TableCell>
-                              <TableCell className="dark:text-gray-300">{item.quantity}</TableCell>
-                              <TableCell className="dark:text-gray-300 text-right">${(item.price * item.quantity).toFixed(2)}</TableCell>
-                            </TableRow>
-                          ))
+                          currentOrder.items.map((item, index) => {
+                            const itemDiscount = item.discount ? (item.price * item.quantity * item.discount / 100) : 0;
+                            const totalAfterDiscount = (item.price * item.quantity) - itemDiscount;
+                            
+                            return (
+                              <TableRow key={index} className="dark:border-gray-700">
+                                <TableCell className="font-medium dark:text-white">{item.title}</TableCell>
+                                <TableCell className="dark:text-gray-300">${item.price.toFixed(2)}</TableCell>
+                                <TableCell className="dark:text-gray-300">{item.quantity}</TableCell>
+                                <TableCell className="dark:text-gray-300">
+                                  {item.discount ? (
+                                    <span className="text-green-600">${itemDiscount.toFixed(2)}</span>
+                                  ) : '$0.00'}
+                                </TableCell>
+                                <TableCell className="dark:text-gray-300 text-right">
+                                  ${totalAfterDiscount.toFixed(2)}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })
                         )}
                       </TableBody>
                     </Table>
@@ -754,6 +795,11 @@ const Orders = () => {
                   <div className="text-sm text-gray-500 dark:text-gray-400">
                     Subtotal: <span className="font-medium dark:text-white">${currentOrder.subtotal.toFixed(2)}</span>
                   </div>
+                  {currentOrder.discount && currentOrder.discount > 0 && (
+                    <div className="text-sm text-green-600 dark:text-green-500">
+                      Discount: <span className="font-medium">-${currentOrder.discount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="text-sm text-gray-500 dark:text-gray-400">
                     Tax: <span className="font-medium dark:text-white">${currentOrder.tax.toFixed(2)}</span>
                   </div>
@@ -774,7 +820,6 @@ const Orders = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Print Dialog */}
       <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -793,7 +838,6 @@ const Orders = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -858,6 +902,16 @@ const Orders = () => {
                 />
               </div>
               <div className="grid gap-2">
+                <label htmlFor="discount" className="text-sm dark:text-white">Discount</label>
+                <Input
+                  id="discount"
+                  name="discount"
+                  type="number"
+                  value={formData.discount || 0}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="grid gap-2">
                 <label htmlFor="status" className="text-sm dark:text-white">Status</label>
                 <Select 
                   value={formData.status} 
@@ -882,7 +936,6 @@ const Orders = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -899,7 +952,6 @@ const Orders = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -960,6 +1012,16 @@ const Orders = () => {
                   name="total"
                   type="number"
                   value={formData.total}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="discount" className="text-sm dark:text-white">Discount</label>
+                <Input
+                  id="discount"
+                  name="discount"
+                  type="number"
+                  value={formData.discount || 0}
                   onChange={handleInputChange}
                 />
               </div>

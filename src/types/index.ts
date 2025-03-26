@@ -1,3 +1,4 @@
+
 export interface MenuItem {
   id: string;
   title: string;
@@ -32,6 +33,7 @@ export interface Order {
   subtotal: number;
   tax: number;
   total: number;
+  discount?: number; // Total discount amount
   status: 'processing' | 'completed' | 'cancelled';
   paymentStatus?: 'paid' | 'pending';
   timestamp: string;

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { 
   MenuItem, 
@@ -146,13 +147,16 @@ export const createOrder = async (
   try {
     // Calculate totals with discounts
     let subtotal = 0;
+    let totalDiscount = 0;
     
     // Calculate each item's price after potential discount
     for (const item of cartItems) {
       let itemPrice = item.price * item.quantity;
       // Apply item discount if present
       if (item.discount && item.discount > 0) {
-        itemPrice = itemPrice * (1 - (item.discount / 100));
+        const itemDiscount = itemPrice * (item.discount / 100);
+        totalDiscount += itemDiscount;
+        itemPrice = itemPrice - itemDiscount;
       }
       subtotal += itemPrice;
     }
@@ -178,7 +182,8 @@ export const createOrder = async (
         order_number: orderNumber,
         order_type: orderType,
         table_number: tableNumber,
-        subtotal: subtotal,
+        subtotal: subtotal + totalDiscount, // Original subtotal before discount
+        discount: totalDiscount,
         tax: tax,
         total: total,
         status: 'completed',
@@ -221,6 +226,7 @@ export const createOrder = async (
       subtotal: orderData.subtotal,
       tax: orderData.tax,
       total: orderData.total,
+      discount: orderData.discount,
       status: orderData.status as 'processing' | 'completed' | 'cancelled',
       paymentStatus: orderData.payment_status as 'paid' | 'pending',
       timestamp: orderData.timestamp,
@@ -244,6 +250,7 @@ export const getOrders = async (): Promise<Order[]> => {
         subtotal,
         tax,
         total,
+        discount,
         status,
         timestamp,
         customer_name,
@@ -265,6 +272,7 @@ export const getOrders = async (): Promise<Order[]> => {
           price,
           notes,
           spicy_level,
+          discount,
           menu_items(id, title, price, image, description, category_id, available)
         `)
         .eq('order_id', order.id);
@@ -280,7 +288,8 @@ export const getOrders = async (): Promise<Order[]> => {
         category: item.menu_items.category_id,
         available: item.menu_items.available || 0,
         notes: item.notes,
-        spicyLevel: item.spicy_level
+        spicyLevel: item.spicy_level,
+        discount: item.discount
       }));
       
       orders.push({
@@ -292,6 +301,7 @@ export const getOrders = async (): Promise<Order[]> => {
         subtotal: order.subtotal,
         tax: order.tax,
         total: order.total,
+        discount: order.discount,
         status: order.status as 'processing' | 'completed' | 'cancelled',
         paymentStatus: order.payment_status as 'paid' | 'pending',
         timestamp: order.timestamp,

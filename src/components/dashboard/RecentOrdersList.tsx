@@ -12,6 +12,7 @@ interface RecentOrder {
   customerName: string;
   items: number;
   total: number;
+  discount?: number;
   status: string;
   time: string;
 }
@@ -48,6 +49,12 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({ orders }) => {
                   <p>{order.items} items</p>
                   <span className="mx-1">•</span>
                   <p>{order.time}</p>
+                  {order.discount && order.discount > 0 && (
+                    <>
+                      <span className="mx-1">•</span>
+                      <p className="text-green-600">Discount: ${order.discount.toFixed(2)}</p>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="text-right">
