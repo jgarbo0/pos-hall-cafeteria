@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -29,12 +30,14 @@ import {
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format, isToday, isThisMonth } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from "sonner";
 
 interface CafeteriaFinanceTabProps {
   transactions: Transaction[];
   isLoadingTransactions: boolean;
   onViewDetails: (id: string, title: string) => void;
-  onSearch: (term: string) => void;
+  onSearch: (term: string) => void; // Add missing prop
 }
 
 interface PopularMenuItem {
@@ -42,6 +45,15 @@ interface PopularMenuItem {
   quantity: number;
   amount: number;
   trend: number;
+}
+
+interface Order {
+  id: string;
+  orderNumber: string;
+  date: string;
+  customerName: string;
+  total: number;
+  paymentStatus: string;
 }
 
 const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
@@ -52,12 +64,59 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState<string>('all');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   
-  const totalSalesRevenue = transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-  const todaySales = transactions.filter(transaction => isToday(new Date(transaction.date)));
-  const todayRevenue = todaySales.reduce((sum, transaction) => sum + transaction.amount, 0);
+  // Get cafeteria-related transactions (expense only)
+  const cafeteriaExpenses = transactions.filter(
+    transaction => transaction.type === 'expense' && 
+    (transaction.category === 'Cafeteria' || transaction.category === 'Food & Beverage')
+  );
   
-  const averageSaleValue = transactions.length > 0 ? totalSalesRevenue / transactions.length : 0;
+  useEffect(() => {
+    // Fetch orders for income data
+    const fetchOrders = async () => {
+      try {
+        setIsLoadingOrders(true);
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .order('timestamp', { ascending: false });
+        
+        if (error) throw error;
+        
+        const formattedOrders = data.map(order => ({
+          id: order.id,
+          orderNumber: order.order_number,
+          date: order.timestamp,
+          customerName: order.customer_name || 'Walk-in Customer',
+          total: order.total,
+          paymentStatus: order.payment_status
+        }));
+        
+        setOrders(formattedOrders);
+        setIsLoadingOrders(false);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+        toast.error('Failed to load orders');
+        setIsLoadingOrders(false);
+      }
+    };
+    
+    fetchOrders();
+  }, []);
+  
+  // Calculate financial data
+  const totalOrderRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+  const totalExpenses = cafeteriaExpenses.reduce((sum, transaction) => sum + transaction.amount, 0);
+  const netProfit = totalOrderRevenue - totalExpenses;
+  
+  const todayOrders = orders.filter(order => isToday(new Date(order.date)));
+  const todayRevenue = todayOrders.reduce((sum, order) => sum + order.total, 0);
+  const todayExpenses = cafeteriaExpenses.filter(transaction => isToday(new Date(transaction.date)))
+    .reduce((sum, transaction) => sum + transaction.amount, 0);
+  
+  const averageOrderValue = orders.length > 0 ? totalOrderRevenue / orders.length : 0;
   
   const popularItems: PopularMenuItem[] = [
     { name: "Spicy Chicken Burger", quantity: 145, amount: 1740, trend: 15 },
@@ -66,24 +125,43 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
     { name: "Chocolate Cake", quantity: 90, amount: 990, trend: -5 }
   ];
   
-  const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
+  // Combined income (orders) and expenses (transactions) for display
+  const combinedFinancialData = [
+    ...orders.map(order => ({
+      id: order.id,
+      date: order.date,
+      description: `Order #${order.orderNumber} - ${order.customerName}`,
+      amount: order.total,
+      type: 'income' as const,
+      category: 'Food Sales',
+      paymentMethod: order.paymentStatus === 'paid' ? 'Cash' : 'Pending'
+    })),
+    ...cafeteriaExpenses
+  ];
+  
+  const filteredFinancialData = combinedFinancialData.filter(item => {
+    const matchesSearch = item.description.toLowerCase().includes(searchTerm.toLowerCase());
     
     let matchesDate = true;
-    const transactionDate = new Date(transaction.date);
+    const itemDate = new Date(item.date);
     
     if (dateFilter === 'today') {
-      matchesDate = isToday(transactionDate);
+      matchesDate = isToday(itemDate);
     } else if (dateFilter === 'week') {
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      matchesDate = transactionDate >= oneWeekAgo;
+      matchesDate = itemDate >= oneWeekAgo;
     } else if (dateFilter === 'month') {
-      matchesDate = isThisMonth(transactionDate);
+      matchesDate = isThisMonth(itemDate);
     }
     
     return matchesSearch && matchesDate;
-  });
+  }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    onSearch(value);
+  };
 
   const generateChartData = () => {
     const data = [];
@@ -92,12 +170,16 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
       date.setDate(date.getDate() - i);
       const dateStr = format(date, 'yyyy-MM-dd');
       
-      const dayTransactions = transactions.filter(transaction => 
+      const dayOrders = orders.filter(order => 
+        order.date.toString().substring(0, 10) === dateStr
+      );
+      
+      const dayExpenses = cafeteriaExpenses.filter(transaction => 
         transaction.date.toString().substring(0, 10) === dateStr
       );
       
-      const income = dayTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-      const expense = income * 0.4;
+      const income = dayOrders.reduce((sum, order) => sum + order.total, 0);
+      const expense = dayExpenses.reduce((sum, transaction) => sum + transaction.amount, 0);
       
       data.push({
         name: format(date, 'dd MMM'),
@@ -119,7 +201,7 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
               <div>
                 <p className="text-sm font-medium text-amber-600 dark:text-amber-300">Total Revenue</p>
                 <h3 className="text-2xl font-bold text-amber-700 dark:text-amber-200 mt-1">
-                  {formatCurrency(totalSalesRevenue)}
+                  {formatCurrency(totalOrderRevenue)}
                 </h3>
                 <p className="text-xs text-amber-500 dark:text-amber-400 mt-1">All time cafeteria sales</p>
               </div>
@@ -134,16 +216,16 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-600 dark:text-green-300">Today's Revenue</p>
+                <p className="text-sm font-medium text-green-600 dark:text-green-300">Net Profit</p>
                 <h3 className="text-2xl font-bold text-green-700 dark:text-green-200 mt-1">
-                  {formatCurrency(todayRevenue)}
+                  {formatCurrency(netProfit)}
                 </h3>
                 <p className="text-xs text-green-500 dark:text-green-400 mt-1">
-                  {todaySales.length} sales today
+                  Revenue minus expenses
                 </p>
               </div>
               <div className="h-12 w-12 bg-green-200 dark:bg-green-700 rounded-full flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-green-600 dark:text-green-200" />
+                <DollarSign className="h-6 w-6 text-green-600 dark:text-green-200" />
               </div>
             </div>
           </CardContent>
@@ -155,10 +237,10 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
               <div>
                 <p className="text-sm font-medium text-blue-600 dark:text-blue-300">Average Sale</p>
                 <h3 className="text-2xl font-bold text-blue-700 dark:text-blue-200 mt-1">
-                  {formatCurrency(averageSaleValue)}
+                  {formatCurrency(averageOrderValue)}
                 </h3>
                 <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">
-                  Per transaction
+                  Per order
                 </p>
               </div>
               <div className="h-12 w-12 bg-blue-200 dark:bg-blue-700 rounded-full flex items-center justify-center">
@@ -172,12 +254,12 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-medium">Revenue Overview</CardTitle>
+            <CardTitle className="text-lg font-medium">Revenue & Expenses</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <div className="flex items-center justify-center h-full text-muted-foreground">
-                Cafeteria Sales Chart
+                Cafeteria Sales & Expenses Chart
               </div>
             </div>
           </CardContent>
@@ -216,15 +298,15 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
 
       <Card className="shadow-sm mb-6">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg font-medium">Cafeteria Sales</CardTitle>
+          <CardTitle className="text-lg font-medium">Cafeteria Financial Activity</CardTitle>
           <div className="flex items-center space-x-2">
             <div className="relative flex items-center">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search sales..."
+                placeholder="Search..."
                 className="pl-8 h-9"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -247,13 +329,13 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
           </div>
         </CardHeader>
         <CardContent>
-          {isLoadingTransactions ? (
+          {isLoadingOrders || isLoadingTransactions ? (
             <div className="flex justify-center items-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          ) : filteredTransactions.length === 0 ? (
+          ) : filteredFinancialData.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No cafeteria sales found matching your criteria
+              No financial activity found matching your criteria
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -262,24 +344,38 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
                   <TableRow className="dark:border-gray-700">
                     <TableHead className="dark:text-gray-400">Date</TableHead>
                     <TableHead className="dark:text-gray-400">Description</TableHead>
+                    <TableHead className="dark:text-gray-400">Type</TableHead>
                     <TableHead className="dark:text-gray-400">Payment Method</TableHead>
                     <TableHead className="dark:text-gray-400 text-right">Amount</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTransactions.map((transaction) => (
+                  {filteredFinancialData.map((item) => (
                     <TableRow 
-                      key={transaction.id} 
+                      key={item.id} 
                       className="dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                      onClick={() => onViewDetails(transaction.id, transaction.description)}
+                      onClick={() => onViewDetails(item.id, item.description)}
                     >
                       <TableCell className="font-medium dark:text-gray-300">
-                        {format(new Date(transaction.date), 'dd MMM yyyy')}
+                        {format(new Date(item.date), 'dd MMM yyyy')}
                       </TableCell>
-                      <TableCell className="dark:text-gray-300">{transaction.description}</TableCell>
-                      <TableCell className="dark:text-gray-300">{transaction.paymentMethod || 'Cash'}</TableCell>
-                      <TableCell className="dark:text-gray-300 text-right font-medium text-green-600 dark:text-green-400">
-                        {formatCurrency(transaction.amount)}
+                      <TableCell className="dark:text-gray-300">{item.description}</TableCell>
+                      <TableCell className="dark:text-gray-300">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          item.type === 'income' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                        }`}>
+                          {item.type === 'income' ? 'Income' : 'Expense'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="dark:text-gray-300">{item.paymentMethod || 'Cash'}</TableCell>
+                      <TableCell className={`dark:text-gray-300 text-right font-medium ${
+                        item.type === 'income' 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {item.type === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -289,6 +385,52 @@ const CafeteriaFinanceTab: React.FC<CafeteriaFinanceTabProps> = ({
           )}
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Today's Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Sales Revenue</span>
+                <span className="text-sm font-medium text-green-600">{formatCurrency(todayRevenue)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Expenses</span>
+                <span className="text-sm font-medium text-red-600">{formatCurrency(todayExpenses)}</span>
+              </div>
+              <div className="flex items-center justify-between border-t pt-2">
+                <span className="text-sm font-medium">Net Profit</span>
+                <span className="text-sm font-bold">{formatCurrency(todayRevenue - todayExpenses)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Orders Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Total Orders</span>
+                <span className="text-sm font-medium">{orders.length}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Today's Orders</span>
+                <span className="text-sm font-medium">{todayOrders.length}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Average Order Value</span>
+                <span className="text-sm font-medium">{formatCurrency(averageOrderValue)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

@@ -455,7 +455,7 @@ const Finance = () => {
             
             <TabsContent value="cafeteria">
               <CafeteriaFinanceTab
-                transactions={cafeteriaTransactions}
+                transactions={transactions}
                 isLoadingTransactions={isLoadingTransactions}
                 onViewDetails={handleViewTransactionDetails}
                 onSearch={handleSearch}
@@ -494,3 +494,4 @@ const Finance = () => {
 };
 
 export default Finance;
+
