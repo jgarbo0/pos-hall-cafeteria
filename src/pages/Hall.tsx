@@ -3,6 +3,7 @@ import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
 import HallBookingForm from '@/components/HallBookingForm';
 import HallBookingCalendar from '@/components/HallBookingCalendar';
+import HallBookingsList from '@/components/HallBookingsList';
 import HallEditForm from '@/components/HallEditForm';
 import PackageManagement from '@/components/PackageManagement';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -382,6 +383,7 @@ const Hall = () => {
             <TabsList className="mb-4 dark:bg-gray-800">
               <TabsTrigger value="calendar" className="dark:data-[state=active]:bg-gray-700">Calendar View</TabsTrigger>
               <TabsTrigger value="new" className="dark:data-[state=active]:bg-gray-700">New Booking</TabsTrigger>
+              <TabsTrigger value="bookings" className="dark:data-[state=active]:bg-gray-700">All Bookings</TabsTrigger>
               <TabsTrigger value="packages" className="dark:data-[state=active]:bg-gray-700">Packages</TabsTrigger>
               {editingHall && <TabsTrigger value="edit" className="dark:data-[state=active]:bg-gray-700">Edit Hall</TabsTrigger>}
             </TabsList>
@@ -409,6 +411,13 @@ const Hall = () => {
               />
             </TabsContent>
 
+            <TabsContent value="bookings">
+              <HallBookingsList
+                onSelectBooking={handleSelectBooking}
+                hallId={selectedHall}
+              />
+            </TabsContent>
+            
             <TabsContent value="packages">
               <PackageManagement />
             </TabsContent>
