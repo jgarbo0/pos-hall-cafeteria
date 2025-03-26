@@ -1,24 +1,29 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ServicePackage } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash, Edit, Check, X } from 'lucide-react';
+import { Plus, Trash, Edit, Check, X, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { getPackages, createPackage, updatePackage, deletePackage } from '@/services/PackageService';
+import { useToast } from '@/components/ui/use-toast';
 
 interface PackageManagementProps {
-  packages: ServicePackage[];
-  onSave: (packages: ServicePackage[]) => void;
+  onSave?: (packages: ServicePackage[]) => void;
 }
 
-const PackageManagement: React.FC<PackageManagementProps> = ({ packages: initialPackages, onSave }) => {
-  const [packages, setPackages] = useState<ServicePackage[]>(initialPackages);
+const PackageManagement: React.FC<PackageManagementProps> = ({ onSave }) => {
+  const [packages, setPackages] = useState<ServicePackage[]>([]);
   const [editingPackage, setEditingPackage] = useState<ServicePackage | null>(null);
   const [newPackage, setNewPackage] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  const { toast } = useToast();
 
   const [formData, setFormData] = useState<Partial<ServicePackage>>({
     name: '',
@@ -29,9 +34,25 @@ const PackageManagement: React.FC<PackageManagementProps> = ({ packages: initial
   
   const [newItem, setNewItem] = useState<string>('');
 
+  // Fetch packages on component mount
+  useEffect(() => {
+    fetchPackages();
+  }, []);
+
+  const fetchPackages = async () => {
+    setIsLoading(true);
+    try {
+      const data = await getPackages();
+      setPackages(data);
+    } catch (error) {
+      console.error('Error fetching packages:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleStartNewPackage = () => {
     setFormData({
-      id: `pkg${Date.now()}`,
       name: '',
       description: '',
       price: 0,
@@ -47,8 +68,13 @@ const PackageManagement: React.FC<PackageManagementProps> = ({ packages: initial
     setNewPackage(false);
   };
 
-  const handleDeletePackage = (id: string) => {
-    setPackages(prev => prev.filter(pkg => pkg.id !== id));
+  const handleDeletePackage = async (id: string, name: string) => {
+    try {
+      await deletePackage(id, name);
+      setPackages(prev => prev.filter(pkg => pkg.id !== id));
+    } catch (error) {
+      console.error('Error deleting package:', error);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -76,26 +102,35 @@ const PackageManagement: React.FC<PackageManagementProps> = ({ packages: initial
     }));
   };
 
-  const handleSavePackage = () => {
-    if (!formData.name || formData.price === undefined) return;
-    
-    const updatedPackage: ServicePackage = {
-      id: formData.id || `pkg${Date.now()}`,
-      name: formData.name,
-      description: formData.description || '',
-      price: formData.price,
-      items: formData.items || []
-    };
-
-    if (editingPackage) {
-      setPackages(prev => prev.map(pkg => pkg.id === updatedPackage.id ? updatedPackage : pkg));
-    } else {
-      setPackages(prev => [...prev, updatedPackage]);
+  const handleSavePackage = async () => {
+    if (!formData.name || formData.price === undefined) {
+      toast({
+        title: "Missing information",
+        description: "Please provide a name and price for the package",
+        variant: "destructive"
+      });
+      return;
     }
+    
+    setIsSaving(true);
+    
+    try {
+      if (editingPackage) {
+        await updatePackage(editingPackage.id, formData as ServicePackage);
+        setPackages(prev => prev.map(pkg => pkg.id === editingPackage.id ? {...pkg, ...formData} : pkg));
+      } else {
+        const newPkg = await createPackage(formData as Omit<ServicePackage, 'id'>);
+        setPackages(prev => [...prev, newPkg]);
+      }
 
-    setEditingPackage(null);
-    setNewPackage(false);
-    setFormData({});
+      setEditingPackage(null);
+      setNewPackage(false);
+      setFormData({});
+    } catch (error) {
+      console.error('Error saving package:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -105,7 +140,9 @@ const PackageManagement: React.FC<PackageManagementProps> = ({ packages: initial
   };
 
   const handleSaveAll = () => {
-    onSave(packages);
+    if (onSave) {
+      onSave(packages);
+    }
   };
 
   return (
@@ -115,10 +152,17 @@ const PackageManagement: React.FC<PackageManagementProps> = ({ packages: initial
           <h2 className="text-xl font-semibold">Manage Packages</h2>
           <p className="text-sm text-muted-foreground">Create and edit service packages for hall bookings</p>
         </div>
-        <Button onClick={handleStartNewPackage} disabled={newPackage || editingPackage !== null}>
+        <Button onClick={handleStartNewPackage} disabled={newPackage || editingPackage !== null || isLoading}>
           <Plus className="mr-2 h-4 w-4" /> Add Package
         </Button>
       </div>
+
+      {isLoading && (
+        <div className="flex justify-center items-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Loading packages...</span>
+        </div>
+      )}
 
       {(newPackage || editingPackage) && (
         <Card>
@@ -193,8 +237,11 @@ const PackageManagement: React.FC<PackageManagementProps> = ({ packages: initial
             </div>
           </CardContent>
           <CardFooter className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-            <Button onClick={handleSavePackage}>Save Package</Button>
+            <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>Cancel</Button>
+            <Button onClick={handleSavePackage} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Package
+            </Button>
           </CardFooter>
         </Card>
       )}
@@ -233,7 +280,7 @@ const PackageManagement: React.FC<PackageManagementProps> = ({ packages: initial
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleDeletePackage(pkg.id)}>
+                    <AlertDialogAction onClick={() => handleDeletePackage(pkg.id, pkg.name)}>
                       Delete
                     </AlertDialogAction>
                   </AlertDialogFooter>
@@ -252,9 +299,11 @@ const PackageManagement: React.FC<PackageManagementProps> = ({ packages: initial
         ))}
       </div>
 
-      <div className="flex justify-end">
-        <Button onClick={handleSaveAll}>Save All Changes</Button>
-      </div>
+      {packages.length > 0 && (
+        <div className="flex justify-end">
+          <Button onClick={handleSaveAll}>Save All Changes</Button>
+        </div>
+      )}
     </div>
   );
 };

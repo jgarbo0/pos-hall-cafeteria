@@ -521,6 +521,36 @@ export type Database = {
           },
         ]
       }
+      service_packages: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          items: string[]
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          items?: string[]
+          name: string
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          items?: string[]
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       settings: {
         Row: {
           category: string

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
@@ -15,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useLanguage } from '@/context/LanguageContext';
 import { supabase } from "@/integrations/supabase/client";
+import { getPackages } from '@/services/PackageService';
 
 const mockTables: TableItem[] = [
   { id: 1, name: 'Table 1', seats: 4, status: 'available' },
@@ -91,9 +91,10 @@ const Hall = () => {
   const [activeTab, setActiveTab] = useState<string>('calendar');
   const [bookingData, setBookingData] = useState<HallBooking[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [packages, setPackages] = useState<ServicePackage[]>([]);
+  const [packagesLoading, setPackagesLoading] = useState(false);
   const { t } = useLanguage();
   
-  // Fetch bookings from Supabase when the component mounts or hall selection changes
   useEffect(() => {
     const fetchBookings = async () => {
       setIsLoading(true);
@@ -108,7 +109,6 @@ const Hall = () => {
         }
         
         if (data) {
-          // Convert database records to HallBooking type
           const formattedBookings: HallBooking[] = data.map(item => ({
             id: item.id,
             date: item.date,
@@ -137,6 +137,23 @@ const Hall = () => {
 
     fetchBookings();
   }, [selectedHall]);
+  
+  useEffect(() => {
+    const fetchPackages = async () => {
+      setPackagesLoading(true);
+      try {
+        const data = await getPackages();
+        setPackages(data);
+      } catch (error) {
+        console.error('Error fetching packages:', error);
+        toast.error('Failed to load packages');
+      } finally {
+        setPackagesLoading(false);
+      }
+    };
+
+    fetchPackages();
+  }, []);
   
   useEffect(() => {
     const storedDate = localStorage.getItem('selectedBookingDate');
@@ -173,13 +190,11 @@ const Hall = () => {
     const storedTime = localStorage.getItem('selectedBookingTime');
     
     if (selectedBooking && !selectedBooking.startsWith('new-')) {
-      // If this is an existing booking from the database
       const foundBooking = bookingData.find(b => b.id === selectedBooking);
       if (foundBooking) {
         return foundBooking;
       }
       
-      // Fallback to mock data if needed
       const mockBooking = fullBookings.find(b => b.id === selectedBooking);
       if (mockBooking) {
         return mockBooking;
@@ -187,7 +202,6 @@ const Hall = () => {
     }
     
     if (selectedBooking?.startsWith('new-') && storedDate && storedTime) {
-      // This is a new booking with date and time selected from the calendar
       const newBooking: HallBooking = {
         id: selectedBooking,
         customerName: '',
@@ -220,12 +234,9 @@ const Hall = () => {
   
   const handleSubmitBooking = async (booking: HallBooking) => {
     try {
-      // If this is a new booking (from calendar selection)
       if (booking.id.startsWith('new-')) {
-        // Remove the temporary ID
         const { id, ...bookingWithoutId } = booking;
         
-        // Convert to snake_case for Supabase
         const bookingData = {
           customer_name: booking.customerName,
           customer_phone: booking.customerPhone,
@@ -242,7 +253,6 @@ const Hall = () => {
           package_id: booking.packageId
         };
         
-        // Insert into Supabase
         const { data, error } = await supabase
           .from('hall_bookings')
           .insert(bookingData)
@@ -252,7 +262,6 @@ const Hall = () => {
         
         toast.success('Booking saved successfully!');
       } else {
-        // This is an update to an existing booking
         const bookingData = {
           customer_name: booking.customerName,
           customer_phone: booking.customerPhone,
@@ -279,14 +288,11 @@ const Hall = () => {
         toast.success('Booking updated successfully!');
       }
       
-      // Clean up localStorage
       localStorage.removeItem('selectedBookingDate');
       localStorage.removeItem('selectedBookingTime');
       
-      // Return to calendar view
       setActiveTab('calendar');
       
-      // Refetch bookings to update the list
       const { data, error } = await supabase
         .from('hall_bookings')
         .select('*')
@@ -295,7 +301,6 @@ const Hall = () => {
       if (error) throw error;
       
       if (data) {
-        // Convert database records to HallBooking type
         const formattedBookings: HallBooking[] = data.map(item => ({
           id: item.id,
           date: item.date,
@@ -397,7 +402,7 @@ const Hall = () => {
                   localStorage.removeItem('selectedBookingTime');
                 }}
                 tables={mockTables}
-                packages={mockPackages}
+                packages={packages}
                 hallId={selectedHall}
                 halls={hallsData}
                 onSubmit={handleSubmitBooking}
@@ -405,13 +410,7 @@ const Hall = () => {
             </TabsContent>
 
             <TabsContent value="packages">
-              <PackageManagement 
-                packages={mockPackages}
-                onSave={(updatedPackages) => {
-                  console.log('Packages updated:', updatedPackages);
-                  toast.success('Packages updated successfully!');
-                }}
-              />
+              <PackageManagement />
             </TabsContent>
             
             {editingHall && (
