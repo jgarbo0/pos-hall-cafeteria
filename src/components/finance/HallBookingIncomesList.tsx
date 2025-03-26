@@ -6,7 +6,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 import { Building, CalendarIcon, Users, Percent, DollarSign } from 'lucide-react';
-import { HallBookingIncome } from '@/types/finance';
+
+interface HallBookingIncome {
+  id: string;
+  date: string | Date;
+  customerName: string;
+  purpose: string;
+  attendees: number;
+  amount: number;
+  discount?: number;
+  discountType?: 'percentage' | 'fixed';
+}
 
 interface HallBookingIncomesListProps {
   bookings: HallBookingIncome[];
@@ -15,7 +25,7 @@ interface HallBookingIncomesListProps {
 }
 
 const HallBookingIncomesList: React.FC<HallBookingIncomesListProps> = ({
-  bookings = [], // Provide a default empty array to prevent undefined errors
+  bookings,
   onViewDetails,
   isLoading = false
 }) => {
