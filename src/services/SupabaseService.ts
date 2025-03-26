@@ -157,7 +157,18 @@ export const createOrder = async (
       subtotal += itemPrice;
     }
     
-    const tax = subtotal * 0.1; // 10% tax
+    // Get tax rate from tax_settings
+    const { data: taxData, error: taxError } = await supabase
+      .from('tax_settings')
+      .select('tax_rate')
+      .single();
+    
+    let taxRate = 10; // Default 10%
+    if (!taxError && taxData && taxData.tax_rate !== null) {
+      taxRate = Number(taxData.tax_rate);
+    }
+    
+    const tax = subtotal * (taxRate / 100);
     const total = subtotal + tax;
     
     // Insert order

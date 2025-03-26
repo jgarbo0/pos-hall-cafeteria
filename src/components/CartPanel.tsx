@@ -54,6 +54,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
   const [globalDiscount, setGlobalDiscount] = useState<number>(0);
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   const [itemDiscounts, setItemDiscounts] = useState<Record<string, number>>({});
+  const [taxRate, setTaxRate] = useState<number>(10);
 
   const rawSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   
@@ -73,7 +74,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
   const discountAmount = calculateDiscount() + itemDiscountTotal;
   
   const subtotal = rawSubtotal - discountAmount;
-  const tax = subtotal * 0.1;
+  const tax = subtotal * (taxRate / 100);
   const total = subtotal + tax;
 
   const isWalkInCustomer = selectedCustomer === 'Walk-in Customer';
@@ -89,6 +90,28 @@ const CartPanel: React.FC<CartPanelProps> = ({
       fetchAvailableTables();
     }
   }, [orderType]);
+
+  useEffect(() => {
+    fetchTaxRate();
+  }, []);
+
+  const fetchTaxRate = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tax_settings')
+        .select('tax_rate')
+        .single();
+      
+      if (error) throw error;
+      
+      if (data && data.tax_rate !== null) {
+        setTaxRate(Number(data.tax_rate));
+      }
+    } catch (error) {
+      console.error('Error fetching tax rate:', error);
+      // Keep default tax rate if there's an error
+    }
+  };
 
   const fetchRecentOrders = async () => {
     try {
@@ -357,117 +380,53 @@ const CartPanel: React.FC<CartPanelProps> = ({
                 </RadioGroup>
               </div>
 
-              {orderType === 'Dine In' && (
+              <div className="grid grid-cols-2 gap-4">
+                {orderType === 'Dine In' && (
+                  <div>
+                    <Label htmlFor="table-select" className="text-sm font-medium mb-1 block">
+                      Table
+                    </Label>
+                    <Select 
+                      value={tableNumber.toString()} 
+                      onValueChange={(value) => onTableChange(parseInt(value))}
+                    >
+                      <SelectTrigger id="table-select" className="w-full">
+                        <SelectValue placeholder="Select a table" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableTables.map(table => (
+                          <SelectItem 
+                            key={table.id} 
+                            value={table.name.replace('Table ', '')}
+                            disabled={table.status === 'occupied' || table.status === 'reserved'}
+                          >
+                            {table.name} ({table.seats} seats) - {table.location || 'Main Area'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                
                 <div>
-                  <Label htmlFor="table-select" className="text-sm font-medium mb-1 block">
-                    Table
+                  <Label htmlFor="customer-select" className="text-sm font-medium mb-1 block">
+                    Customer
                   </Label>
-                  <Select 
-                    value={tableNumber.toString()} 
-                    onValueChange={(value) => onTableChange(parseInt(value))}
-                  >
-                    <SelectTrigger id="table-select" className="w-full">
-                      <SelectValue placeholder="Select a table" />
+                  <Select value={selectedCustomer} onValueChange={onCustomerChange}>
+                    <SelectTrigger id="customer-select" className="w-full">
+                      <SelectValue placeholder="Select a customer" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableTables.map(table => (
-                        <SelectItem 
-                          key={table.id} 
-                          value={table.name.replace('Table ', '')}
-                          disabled={table.status === 'occupied' || table.status === 'reserved'}
-                        >
-                          {table.name} ({table.seats} seats) - {table.location || 'Main Area'}
+                      <SelectItem value="Walk-in Customer">Walk-in Customer</SelectItem>
+                      {customers.map(customer => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              )}
-              
-              <div>
-                <Label htmlFor="customer-select" className="text-sm font-medium mb-1 block">
-                  Customer
-                </Label>
-                <Select value={selectedCustomer} onValueChange={onCustomerChange}>
-                  <SelectTrigger id="customer-select" className="w-full">
-                    <SelectValue placeholder="Select a customer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Walk-in Customer">Walk-in Customer</SelectItem>
-                    {customers.map(customer => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
-
-              {items.length > 0 && (
-                <div className="space-y-2 border-t pt-3 mt-3 dark:border-gray-700">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="discount-type" className="text-sm font-medium">
-                      Discount Type
-                    </Label>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroup 
-                        id="discount-type" 
-                        className="flex gap-4" 
-                        value={discountType} 
-                        onValueChange={(value) => setDiscountType(value as 'percentage' | 'fixed')}
-                      >
-                        <div className="flex items-center space-x-1">
-                          <RadioGroupItem value="percentage" id="percentage" />
-                          <Label htmlFor="percentage" className="cursor-pointer text-xs">Percentage</Label>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <RadioGroupItem value="fixed" id="fixed" />
-                          <Label htmlFor="fixed" className="cursor-pointer text-xs">Fixed</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="discount" className="text-sm font-medium mb-1 block">
-                      Global Discount {discountType === 'percentage' ? '(%)' : '($)'}
-                    </Label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Input 
-                          id="discount"
-                          type="number" 
-                          value={globalDiscount.toString()}
-                          onChange={(e) => {
-                            const value = parseFloat(e.target.value);
-                            if (!isNaN(value)) {
-                              setGlobalDiscount(value);
-                            } else {
-                              setGlobalDiscount(0);
-                            }
-                          }}
-                          min="0"
-                          max={discountType === 'percentage' ? "100" : undefined}
-                          step="0.01"
-                          placeholder={discountType === 'percentage' ? "0-100" : "0.00"}
-                          className="pr-8"
-                        />
-                        <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                          {discountType === 'percentage' ? '%' : '$'}
-                        </div>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setGlobalDiscount(0)}
-                        size="sm"
-                        className="text-xs"
-                      >
-                        Clear
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
           
@@ -575,6 +534,56 @@ const CartPanel: React.FC<CartPanelProps> = ({
               </div>
             )}
           </div>
+
+          {items.length > 0 && (
+            <div className="px-4 py-3 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="discount-type" className="text-sm font-medium">
+                    Discount:
+                  </Label>
+                  <RadioGroup 
+                    id="discount-type" 
+                    className="flex gap-4" 
+                    value={discountType} 
+                    onValueChange={(value) => setDiscountType(value as 'percentage' | 'fixed')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="percentage" id="percentage" />
+                      <Label htmlFor="percentage" className="cursor-pointer text-xs">%</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <RadioGroupItem value="fixed" id="fixed" />
+                      <Label htmlFor="fixed" className="cursor-pointer text-xs">$</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="relative w-24">
+                  <Input 
+                    id="discount"
+                    type="number" 
+                    value={globalDiscount.toString()}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value);
+                      if (!isNaN(value)) {
+                        setGlobalDiscount(value);
+                      } else {
+                        setGlobalDiscount(0);
+                      }
+                    }}
+                    min="0"
+                    max={discountType === 'percentage' ? "100" : undefined}
+                    step="0.01"
+                    placeholder={discountType === 'percentage' ? "0-100" : "0.00"}
+                    className="h-8 text-xs pr-8"
+                  />
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                    {discountType === 'percentage' ? '%' : '$'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           
           <div className="p-4 border-t dark:border-gray-700">
             <div className="space-y-2 mb-4">
@@ -593,7 +602,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
               )}
               
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400">Tax (10%)</span>
+                <span className="text-gray-500 dark:text-gray-400">Tax ({taxRate}%)</span>
                 <span className="dark:text-white">${tax.toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-semibold">
@@ -712,3 +721,4 @@ const CartPanel: React.FC<CartPanelProps> = ({
 };
 
 export default CartPanel;
+
