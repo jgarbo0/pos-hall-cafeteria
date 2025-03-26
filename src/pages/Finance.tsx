@@ -441,48 +441,6 @@ const Finance = () => {
                   </Card>
                 </div>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="shadow-sm">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-lg font-medium">
-                      Recent Hall Bookings
-                    </CardTitle>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-8 text-xs dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
-                      onClick={() => setActiveTab('hall-bookings')}
-                    >
-                      View All
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <HallBookingIncomesList 
-                      bookings={hallBookingIncomes.slice(0, 5)}
-                      onViewDetails={handleViewHallBookingDetails}
-                      isLoading={isLoadingHallData}
-                    />
-                  </CardContent>
-                </Card>
-                
-                <Card className="shadow-sm">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-lg font-medium">
-                      Finance Analytics
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <HallBookingFinanceWidget 
-                      data={chartData}
-                      totalIncome={totalIncome}
-                      totalExpense={totalExpense}
-                      onViewReport={() => handleViewReport('finance-analytics', 'Finance Analytics')}
-                      isLoading={isLoadingTransactions}
-                    />
-                  </CardContent>
-                </Card>
-              </div>
             </TabsContent>
             
             <TabsContent value="hall-bookings">
