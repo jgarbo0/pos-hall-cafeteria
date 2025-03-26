@@ -96,7 +96,7 @@ const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
   
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/40 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -161,7 +161,8 @@ const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      {/* Layout changed to flex side-by-side on larger screens */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
         <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-medium">Revenue Overview</CardTitle>
@@ -259,88 +260,49 @@ const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
         </Card>
       </div>
 
-      <Card className="shadow-sm mb-6">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg font-medium">Hall Booking Incomes</CardTitle>
-          <div className="flex items-center space-x-2">
-            <div className="relative flex items-center">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search bookings..."
-                className="pl-8 h-9"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+      {/* Booking incomes section with fixed height and scrollable */}
+      <div className="mt-10">
+        {/* Added search and filter controls to the header for better organization */}
+        <Card className="shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-medium">Hall Booking Incomes</CardTitle>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex items-center">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search bookings..."
+                  className="pl-8 h-9"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select
+                  value={hallFilter}
+                  onValueChange={setHallFilter}
+                >
+                  <SelectTrigger className="w-40 h-9">
+                    <SelectValue placeholder="All Halls" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Halls</SelectItem>
+                    <SelectItem value="hall1">Hall 1</SelectItem>
+                    <SelectItem value="hall2">Hall 2</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select
-                value={hallFilter}
-                onValueChange={setHallFilter}
-              >
-                <SelectTrigger className="w-40 h-9">
-                  <SelectValue placeholder="All Halls" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Halls</SelectItem>
-                  <SelectItem value="hall1">Hall 1</SelectItem>
-                  <SelectItem value="hall2">Hall 2</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoadingHallData ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : filteredBookings.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No hall bookings found matching your criteria
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="dark:border-gray-700">
-                    <TableHead className="dark:text-gray-400">Date</TableHead>
-                    <TableHead className="dark:text-gray-400">Hall</TableHead>
-                    <TableHead className="dark:text-gray-400">Customer</TableHead>
-                    <TableHead className="dark:text-gray-400">Purpose</TableHead>
-                    <TableHead className="dark:text-gray-400 text-right">Attendees</TableHead>
-                    <TableHead className="dark:text-gray-400 text-right">Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredBookings.map((booking) => (
-                    <TableRow 
-                      key={booking.id} 
-                      className="dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                      onClick={() => onViewDetails(booking.id)}
-                    >
-                      <TableCell className="font-medium dark:text-gray-300">
-                        {format(new Date(booking.date), 'dd MMM yyyy')}
-                      </TableCell>
-                      <TableCell className="dark:text-gray-300">
-                        {booking.hallId === 1 
-                          ? <span className="text-blue-600 dark:text-blue-400 font-medium">Hall 1</span> 
-                          : <span className="text-purple-600 dark:text-purple-400 font-medium">Hall 2</span>}
-                      </TableCell>
-                      <TableCell className="dark:text-gray-300">{booking.customerName}</TableCell>
-                      <TableCell className="dark:text-gray-300">{booking.purpose}</TableCell>
-                      <TableCell className="dark:text-gray-300 text-right">{booking.attendees}</TableCell>
-                      <TableCell className="dark:text-gray-300 text-right font-medium text-green-600 dark:text-green-400">
-                        {formatCurrency(booking.amount)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            <HallBookingIncomesList
+              bookings={filteredBookings}
+              onViewDetails={onViewDetails}
+              isLoading={isLoadingHallData}
+            />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

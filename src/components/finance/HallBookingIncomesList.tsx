@@ -25,19 +25,13 @@ interface HallBookingIncomesListProps {
 }
 
 const HallBookingIncomesList: React.FC<HallBookingIncomesListProps> = ({
-  bookings,
+  bookings = [], // Added default empty array to prevent undefined errors
   onViewDetails,
   isLoading = false
 }) => {
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-medium">Hall Booking Incomes</CardTitle>
-        <Button variant="outline" size="sm" onClick={() => onViewDetails('all')}>
-          View All
-        </Button>
-      </CardHeader>
-      <CardContent>
+    <div className="overflow-hidden">
+      <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="dark:border-gray-700">
@@ -115,8 +109,8 @@ const HallBookingIncomesList: React.FC<HallBookingIncomesListProps> = ({
             )}
           </TableBody>
         </Table>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
