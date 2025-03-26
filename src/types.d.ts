@@ -1,3 +1,4 @@
+
 export interface MenuItem {
   id: string;
   title: string;
@@ -83,6 +84,7 @@ export interface HallBooking {
   notes?: string;
   hallId?: number;
   packageId?: string;
+  tableId?: string | number;
   discount?: number;
   discountType?: 'percentage' | 'fixed';
   guests?: {
