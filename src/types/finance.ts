@@ -19,6 +19,8 @@ export interface HallBookingIncome {
   attendees: number;
   amount: number;
   hallId?: number;
+  discount?: number;
+  discountType?: 'percentage' | 'fixed';
 }
 
 export interface ExpenseCategory {
@@ -58,4 +60,26 @@ export interface Permission {
   description: string;
   module: string;
   actions: string[];
+}
+
+export interface FinanceWidgetData {
+  name: string;
+  income: number;
+  expense: number;
+}
+
+export interface CafeteriaSale {
+  id: string;
+  date: string;
+  customerName: string;
+  items: number;
+  amount: number;
+  paymentMethod: string;
+}
+
+export interface PopularMenuItem {
+  name: string;
+  quantity: number;
+  amount: number;
+  trend: number;
 }

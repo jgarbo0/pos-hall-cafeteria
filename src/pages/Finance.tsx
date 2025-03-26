@@ -1,16 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '@/components/SidebarNavigation';
 import Header from '@/components/Header';
-import { Card, CardTitle, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  PiggyBank, Car, Home, Laptop, 
-  Music, Youtube, Navigation,
-  TrendingUp, TrendingDown, PieChart,
-  LucideIcon, Building
+  Building, Coffee, LineChart
 } from 'lucide-react';
-import { format, subDays, eachDayOfInterval, isToday, isThisWeek, isThisMonth } from 'date-fns';
-import { toast } from 'sonner';
 
 import FinanceHeader from '@/components/finance/FinanceHeader';
 import FinanceSummaryCards from '@/components/finance/FinanceSummaryCards';
@@ -567,192 +561,229 @@ const Finance = () => {
             onAddTransactionClick={() => setIsAddTransactionOpen(true)}
           />
           
-          <FinanceSummaryCards 
-            totalIncome={totalIncome}
-            totalExpense={totalExpense}
-            chartData={weeklyChartData}
-            onViewReport={openDetailDialog}
-          />
-          
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-6">
-            <Card className="md:col-span-3 dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
-                  Monthly Expense
-                </CardTitle>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="h-8 text-xs dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
-                  onClick={() => openDetailDialog('monthly-expense', 'Monthly Expense vs Previous Month')}
-                >
-                  View Report
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xs text-muted-foreground dark:text-gray-400 mt-1">
-                  vs Previous Month
-                </div>
-                <div className="text-2xl font-bold dark:text-white mt-4">
-                  ${monthlyFinancials.thisMonth.toFixed(2)}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  ${monthlyFinancials.lastMonth.toFixed(2)} last month
-                </div>
-                <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden mt-4 dark:bg-gray-700">
-                  <div 
-                    className="h-full bg-green-500 rounded-full dark:bg-green-400"
-                    style={{ width: `${monthlyFinancials.lastMonth ? (monthlyFinancials.thisMonth/monthlyFinancials.lastMonth)*100 : 0}%` }}
-                  ></div>
-                </div>
-                <div className="flex items-center text-xs text-green-500 dark:text-green-400 mt-2">
-                  {monthlyFinancials.percentChange < 0 ? (
-                    <>
-                      <TrendingDown size={12} className="mr-1" />
-                      <span>{Math.abs(monthlyFinancials.percentChange).toFixed(1)}% decrease from last month</span>
-                    </>
-                  ) : (
-                    <>
-                      <TrendingUp size={12} className="mr-1" />
-                      <span>{monthlyFinancials.percentChange.toFixed(1)}% increase from last month</span>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+          <Tabs defaultValue="dashboard" className="w-full mt-4">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="dashboard" className="flex items-center gap-2">
+                <LineChart className="h-4 w-4" />
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="hall-bookings" className="flex items-center gap-2">
+                <Building className="h-4 w-4" />
+                Hall Bookings
+              </TabsTrigger>
+              <TabsTrigger value="cafeteria" className="flex items-center gap-2">
+                <Coffee className="h-4 w-4" />
+                Cafeteria
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="dashboard">
+              <FinanceSummaryCards 
+                totalIncome={totalIncome}
+                totalExpense={totalExpense}
+                chartData={weeklyChartData}
+                onViewReport={openDetailDialog}
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-6">
+                <Card className="md:col-span-3 dark:bg-gray-800 dark:border-gray-700">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
+                      Monthly Expense
+                    </CardTitle>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 text-xs dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
+                      onClick={() => openDetailDialog('monthly-expense', 'Monthly Expense vs Previous Month')}
+                    >
+                      View Report
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs text-muted-foreground dark:text-gray-400 mt-1">
+                      vs Previous Month
+                    </div>
+                    <div className="text-2xl font-bold dark:text-white mt-4">
+                      ${monthlyFinancials.thisMonth.toFixed(2)}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      ${monthlyFinancials.lastMonth.toFixed(2)} last month
+                    </div>
+                    <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden mt-4 dark:bg-gray-700">
+                      <div 
+                        className="h-full bg-green-500 rounded-full dark:bg-green-400"
+                        style={{ width: `${monthlyFinancials.lastMonth ? (monthlyFinancials.thisMonth/monthlyFinancials.lastMonth)*100 : 0}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex items-center text-xs text-green-500 dark:text-green-400 mt-2">
+                      {monthlyFinancials.percentChange < 0 ? (
+                        <>
+                          <TrendingDown size={12} className="mr-1" />
+                          <span>{Math.abs(monthlyFinancials.percentChange).toFixed(1)}% decrease from last month</span>
+                        </>
+                      ) : (
+                        <>
+                          <TrendingUp size={12} className="mr-1" />
+                          <span>{monthlyFinancials.percentChange.toFixed(1)}% increase from last month</span>
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <div className="md:col-span-3 space-y-4">
-              {subscriptions.map(subscription => {
-                const SubscriptionIcon = subscription.icon;
-                return (
-                  <Card 
-                    key={subscription.id} 
-                    className="dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    onClick={() => openDetailDialog(
-                      subscription.id === '1' ? 'most-sales' : 'most-rented', 
-                      subscription.name
-                    )}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-4">
-                        <div 
-                          className="p-2 rounded-full" 
-                          style={{ backgroundColor: `${subscription.color}20` }}
-                        >
-                          <SubscriptionIcon 
-                            size={20}
-                            color={subscription.color}
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium dark:text-white">{subscription.name}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">{subscription.date}</div>
-                        </div>
-                        <div className="text-sm font-medium dark:text-white">
-                          ${subscription.amount.toFixed(2)}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            <div className="md:col-span-6 grid grid-cols-2 gap-4">
-              {savingGoals.slice(1).map(goal => {
-                const GoalIcon = goal.icon;
-                return (
-                  <Card 
-                    key={goal.id} 
-                    className="dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    onClick={() => openDetailDialog(goal.name.toLowerCase().replace(/\s+/g, '-'), goal.name)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-4 mb-3">
-                        <div 
-                          className="p-2 rounded-full" 
-                          style={{ backgroundColor: `${goal.color}20` }}
-                        >
-                          <GoalIcon 
-                            size={20}
-                            color={goal.color}
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium dark:text-white">{goal.name}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            ${goal.currentAmount.toLocaleString()} of ${goal.targetAmount.toLocaleString()}
+                <div className="md:col-span-3 space-y-4">
+                  {subscriptions.map(subscription => {
+                    const SubscriptionIcon = subscription.icon;
+                    return (
+                      <Card 
+                        key={subscription.id} 
+                        className="dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => openDetailDialog(
+                          subscription.id === '1' ? 'most-sales' : 'most-rented', 
+                          subscription.name
+                        )}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-4">
+                            <div 
+                              className="p-2 rounded-full" 
+                              style={{ backgroundColor: `${subscription.color}20` }}
+                            >
+                              <SubscriptionIcon 
+                                size={20}
+                                color={subscription.color}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-medium dark:text-white">{subscription.name}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">{subscription.date}</div>
+                            </div>
+                            <div className="text-sm font-medium dark:text-white">
+                              ${subscription.amount.toFixed(2)}
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full rounded-full" 
-                          style={{ 
-                            width: `${(goal.currentAmount/goal.targetAmount)*100}%`,
-                            backgroundColor: goal.color 
-                          }}
-                        ></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <Card className="dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
-                  Daily Expense
-                </CardTitle>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="h-8 text-xs dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
-                  onClick={() => openDetailDialog('daily-expense', 'Daily Expense Breakdown')}
-                >
-                  View Report
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <HallBookingFinanceWidget 
-                  data={hallBookingFinanceData}
-                  totalIncome={totalHallIncome}
-                  totalExpense={totalHallExpense}
-                  onViewReport={() => handleViewHallBookingDetails('all')}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                <div className="md:col-span-6 grid grid-cols-2 gap-4">
+                  {savingGoals.slice(1).map(goal => {
+                    const GoalIcon = goal.icon;
+                    return (
+                      <Card 
+                        key={goal.id} 
+                        className="dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => openDetailDialog(goal.name.toLowerCase().replace(/\s+/g, '-'), goal.name)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-4 mb-3">
+                            <div 
+                              className="p-2 rounded-full" 
+                              style={{ backgroundColor: `${goal.color}20` }}
+                            >
+                              <GoalIcon 
+                                size={20}
+                                color={goal.color}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-medium dark:text-white">{goal.name}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                ${goal.currentAmount.toLocaleString()} of ${goal.targetAmount.toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full rounded-full" 
+                              style={{ 
+                                width: `${(goal.currentAmount/goal.targetAmount)*100}%`,
+                                backgroundColor: goal.color 
+                              }}
+                            ></div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <Card className="dark:bg-gray-800 dark:border-gray-700">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
+                      Daily Expense
+                    </CardTitle>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 text-xs dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
+                      onClick={() => openDetailDialog('daily-expense', 'Daily Expense Breakdown')}
+                    >
+                      View Report
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <HallBookingFinanceWidget 
+                      data={hallBookingFinanceData}
+                      totalIncome={totalHallIncome}
+                      totalExpense={totalHallExpense}
+                      onViewReport={() => handleViewHallBookingDetails('all')}
+                      isLoading={isLoadingHallData}
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card className="dark:bg-gray-800 dark:border-gray-700">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
+                      Recent Transactions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <TransactionsTable 
+                      transactions={filteredTransactions}
+                      transactionType={transactionType}
+                      onTransactionTypeChange={setTransactionType}
+                      onViewDetails={(id, title) => openDetailDialog('transaction-detail', title)}
+                      onViewAll={() => openDetailDialog('transactions', 'All Transactions')}
+                      isLoading={isLoadingTransactions}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="mb-6">
+                <HallBookingIncomesList
+                  bookings={hallBookingIncomes}
+                  onViewDetails={handleViewHallBookingDetails}
                   isLoading={isLoadingHallData}
                 />
-              </CardContent>
-            </Card>
-
-            <Card className="dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
-                  Recent Transactions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <TransactionsTable 
-                  transactions={filteredTransactions}
-                  transactionType={transactionType}
-                  onTransactionTypeChange={setTransactionType}
-                  onViewDetails={(id, title) => openDetailDialog('transaction-detail', title)}
-                  onViewAll={() => openDetailDialog('transactions', 'All Transactions')}
-                  isLoading={isLoadingTransactions}
-                />
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="mb-6">
-            <HallBookingIncomesList
-              bookings={hallBookingIncomes}
-              onViewDetails={handleViewHallBookingDetails}
-              isLoading={isLoadingHallData}
-            />
-          </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="hall-bookings">
+              <HallBookingsFinanceTab 
+                hallBookings={hallBookingIncomes}
+                hall1Bookings={hall1Bookings}
+                hall2Bookings={hall2Bookings}
+                isLoadingHallData={isLoadingHallData}
+                onViewDetails={handleViewHallBookingDetails}
+              />
+            </TabsContent>
+            
+            <TabsContent value="cafeteria">
+              <CafeteriaFinanceTab 
+                transactions={transactions.filter(t => t.category === 'Food Sales')}
+                isLoadingTransactions={isLoadingTransactions}
+                onViewDetails={(id, title) => openDetailDialog('transaction-detail', title)}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
 
@@ -788,4 +819,3 @@ const Finance = () => {
 };
 
 export default Finance;
-
