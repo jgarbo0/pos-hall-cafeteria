@@ -23,7 +23,7 @@ import HallBookingIncomesList from '@/components/finance/HallBookingIncomesList'
 import { formatCurrency } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Transaction, ExpenseCategory, SavingGoal, Subscription, HallBookingIncome } from '@/types/finance';
-import { getTransactions, addTransaction, getHallBookingIncomes, getPaymentMethods } from '@/services/FinanceService';
+import { getTransactions, addTransaction, getHallBookingIncomes, getPaymentMethods, getHallBookingsByHallId } from '@/services/FinanceService';
 
 const COLORS = {
   purple: '#9b87f5',
@@ -81,7 +81,9 @@ const Finance = () => {
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
   const [expenseCategories, setExpenseCategories] = useState<ExpenseCategoryWithIcon[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<{id: string, name: string}[]>([]);
-
+  const [hall1Bookings, setHall1Bookings] = useState<HallBookingIncome[]>([]);
+  const [hall2Bookings, setHall2Bookings] = useState<HallBookingIncome[]>([]);
+  
   const generateDailyExpenseData = (transactionsData: Transaction[]) => {
     const today = new Date();
     const startDate = subDays(today, 6);
@@ -266,9 +268,26 @@ const Finance = () => {
     }
   };
 
+  const fetchHallBookingsById = async () => {
+    try {
+      // Hall 1 data
+      const hall1Data = await getHallBookingsByHallId(1);
+      setHall1Bookings(hall1Data);
+      
+      // Hall 2 data
+      const hall2Data = await getHallBookingsByHallId(2);
+      setHall2Bookings(hall2Data);
+      
+    } catch (error) {
+      console.error('Error loading hall bookings by id:', error);
+      toast.error('Failed to load hall data by id');
+    }
+  };
+
   const refreshData = () => {
     fetchTransactions();
     fetchHallBookings();
+    fetchHallBookingsById();
     fetchPaymentMethods();
   };
 
@@ -449,16 +468,16 @@ const Finance = () => {
   const subscriptions: SubscriptionWithIcon[] = [
     { 
       id: '1', 
-      name: topIncomeCategories[0]?.name || 'Most Sales Item', 
-      amount: topIncomeCategories[0]?.total || 0, 
+      name: 'Hall 1 Revenue', 
+      amount: hall1TotalIncome, 
       date: format(new Date(), 'MMM dd, yyyy'), 
       icon: Music, 
       color: '#1DB954' 
     },
     { 
       id: '2', 
-      name: topIncomeCategories[1]?.name || 'Most Rented Hall', 
-      amount: topIncomeCategories[1]?.total || 0, 
+      name: 'Hall 2 Revenue', 
+      amount: hall2TotalIncome, 
       date: format(new Date(), 'MMM dd, yyyy'), 
       icon: Youtube, 
       color: '#FF0000' 
@@ -475,13 +494,13 @@ const Finance = () => {
       icon: PiggyBank
     };
     
-    const leastSellingItem = {
+    const hall2Revenue = {
       id: '2',
-      name: 'Least Selling Item',
-      currentAmount: expenseCategories.length > 0 ? expenseCategories[expenseCategories.length - 1].value : 0,
+      name: 'Hall 2 Revenue',
+      currentAmount: hall2TotalIncome,
       targetAmount: 83000,
       color: COLORS.purple,
-      icon: Car
+      icon: Building
     };
     
     const mostRecurringExpense = {
@@ -493,13 +512,13 @@ const Finance = () => {
       icon: Home
     };
     
-    const favoriteItem = {
+    const hall1Revenue = {
       id: '4',
-      name: 'Favorite Item',
-      currentAmount: topIncomeCategories[1]?.total || 0,
+      name: 'Hall 1 Revenue',
+      currentAmount: hall1TotalIncome,
       targetAmount: 325000,
       color: COLORS.pink,
-      icon: Laptop
+      icon: Building
     };
     
     const dhaweeye = {
@@ -513,7 +532,7 @@ const Finance = () => {
       icon: Navigation
     };
     
-    return [netIncome, leastSellingItem, mostRecurringExpense, favoriteItem, dhaweeye];
+    return [netIncome, hall2Revenue, mostRecurringExpense, hall1Revenue, dhaweeye];
   };
 
   const savingGoals: SavingGoalWithIcon[] = calculateInsights();

@@ -76,7 +76,31 @@ export const getHallBookingIncomes = async (): Promise<HallBookingIncome[]> => {
     customerName: booking.customer_name,
     purpose: booking.purpose,
     attendees: booking.attendees,
-    amount: booking.total_amount
+    amount: booking.total_amount,
+    hallId: booking.hall_id
+  }));
+};
+
+export const getHallBookingsByHallId = async (hallId: number): Promise<HallBookingIncome[]> => {
+  const { data, error } = await supabase
+    .from('hall_bookings')
+    .select('*')
+    .eq('hall_id', hallId)
+    .order('date', { ascending: false });
+
+  if (error) {
+    console.error(`Error fetching hall bookings for hall ${hallId}:`, error);
+    throw error;
+  }
+
+  return data.map(booking => ({
+    id: booking.id,
+    date: booking.date,
+    customerName: booking.customer_name,
+    purpose: booking.purpose,
+    attendees: booking.attendees,
+    amount: booking.total_amount,
+    hallId: booking.hall_id
   }));
 };
 
