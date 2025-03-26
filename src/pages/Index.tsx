@@ -146,6 +146,10 @@ const Index = () => {
     setSelectedCustomer(customerId);
   };
   
+  const handleTableChange = (newTableNumber: number) => {
+    setTableNumber(newTableNumber);
+  };
+  
   const handlePlaceOrder = async (paymentStatus: 'paid' | 'pending') => {
     if (cartItems.length === 0) {
       toast.error("Your cart is empty!");
@@ -237,6 +241,7 @@ const Index = () => {
         onPlaceOrder={handlePlaceOrder}
         orderNumber={orderNumber}
         tableNumber={tableNumber}
+        onTableChange={handleTableChange}
         customers={customers}
         selectedCustomer={selectedCustomer}
         onCustomerChange={handleCustomerChange}

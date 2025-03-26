@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +12,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { RestaurantTable, getRestaurantTables } from '@/services/TablesService';
 
 interface CartPanelProps {
   items: CartItem[];
@@ -27,6 +27,7 @@ interface CartPanelProps {
   onCustomerChange?: (customerId: string) => void;
   orderType?: 'Dine In' | 'Take Away';
   onOrderTypeChange?: (type: 'Dine In' | 'Take Away') => void;
+  onTableChange?: (tableNumber: number) => void;
 }
 
 const CartPanel: React.FC<CartPanelProps> = ({
@@ -42,12 +43,14 @@ const CartPanel: React.FC<CartPanelProps> = ({
   onCustomerChange = () => {},
   orderType = 'Dine In',
   onOrderTypeChange = () => {},
+  onTableChange = () => {}
 }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState("cart");
-  
+  const [availableTables, setAvailableTables] = useState<RestaurantTable[]>([]);
+
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const tax = subtotal * 0.1; // 10% tax
   const total = subtotal + tax;
@@ -55,11 +58,16 @@ const CartPanel: React.FC<CartPanelProps> = ({
   const isWalkInCustomer = selectedCustomer === 'Walk-in Customer';
 
   useEffect(() => {
-    // Fetch recent orders when the component mounts or when the tab changes to orders
     if (activeTab === "orders") {
       fetchRecentOrders();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (orderType === 'Dine In') {
+      fetchAvailableTables();
+    }
+  }, [orderType]);
 
   const fetchRecentOrders = async () => {
     try {
@@ -72,7 +80,6 @@ const CartPanel: React.FC<CartPanelProps> = ({
       if (error) throw error;
       
       if (data) {
-        // Transform the data to match the Order interface
         const transformedOrders: Order[] = data.map(order => ({
           id: order.id,
           items: [], // We don't fetch items here for performance reasons
@@ -96,6 +103,16 @@ const CartPanel: React.FC<CartPanelProps> = ({
     }
   };
 
+  const fetchAvailableTables = async () => {
+    try {
+      const tables = await getRestaurantTables();
+      setAvailableTables(tables);
+    } catch (error) {
+      console.error('Error fetching tables:', error);
+      toast.error('Failed to load tables');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
@@ -109,7 +126,6 @@ const CartPanel: React.FC<CartPanelProps> = ({
   const handleCompleteOrder = (paymentStatus: 'paid' | 'pending') => {
     onPlaceOrder(paymentStatus);
     
-    // Show success message with option to view order
     toast.success(
       `Order #${orderNumber} completed successfully!`,
       {
@@ -120,11 +136,9 @@ const CartPanel: React.FC<CartPanelProps> = ({
       }
     );
     
-    // Switch to orders tab to show the new order
     setActiveTab("orders");
     fetchRecentOrders();
     
-    // Option to print receipt
     const printReceipt = window.confirm("Do you want to print a receipt?");
     if (printReceipt) {
       handlePrintReceipt();
@@ -132,14 +146,12 @@ const CartPanel: React.FC<CartPanelProps> = ({
   };
 
   const handlePrintReceipt = () => {
-    // Generate print content
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       toast.error('Pop-up blocked. Please allow pop-ups for this site.');
       return;
     }
     
-    // Get customer name
     let customerName = 'Walk-in Customer';
     if (selectedCustomer !== 'Walk-in Customer') {
       const selectedCustomerObj = customers.find(c => c.id === selectedCustomer);
@@ -148,7 +160,6 @@ const CartPanel: React.FC<CartPanelProps> = ({
       }
     }
     
-    // Generate HTML content for printing
     printWindow.document.write(`
       <html>
         <head>
@@ -223,21 +234,17 @@ const CartPanel: React.FC<CartPanelProps> = ({
     
     printWindow.document.close();
     
-    // Auto trigger print dialog
     setTimeout(() => {
       printWindow.print();
     }, 500);
   };
 
-  // This function ensures we display the actual customer name or 'Walk-in Customer' as a fallback
   const getCustomerName = (customerId: string) => {
     if (customerId === 'Walk-in Customer') return 'Walk-in Customer';
     const customer = customers.find(c => c.id === customerId);
     return customer ? customer.name : 'Walk-in Customer';
   };
 
-  // This function ensures we display the customer name from the database 
-  // for recent orders, falling back to "Walk-in Customer" only if needed
   const displayOrderCustomerName = (customerName?: string): string => {
     return customerName && customerName.trim() !== '' ? customerName : 'Walk-in Customer';
   };
@@ -298,9 +305,29 @@ const CartPanel: React.FC<CartPanelProps> = ({
               </div>
 
               {orderType === 'Dine In' && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Table #:</span>
-                  <span className="font-medium dark:text-white">{tableNumber}</span>
+                <div>
+                  <Label htmlFor="table-select" className="text-sm font-medium mb-1 block">
+                    Table
+                  </Label>
+                  <Select 
+                    value={tableNumber.toString()} 
+                    onValueChange={(value) => onTableChange(parseInt(value))}
+                  >
+                    <SelectTrigger id="table-select" className="w-full">
+                      <SelectValue placeholder="Select a table" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTables.map(table => (
+                        <SelectItem 
+                          key={table.id} 
+                          value={table.name.replace('Table ', '')}
+                          disabled={table.status === 'occupied' || table.status === 'reserved'}
+                        >
+                          {table.name} ({table.seats} seats) - {table.location || 'Main Area'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
               
