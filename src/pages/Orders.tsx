@@ -610,7 +610,7 @@ const Orders = () => {
                         <TableCell className="dark:text-gray-300">${order.total.toFixed(2)}</TableCell>
                         <TableCell className="dark:text-gray-300">
                           {order.discount && order.discount > 0 
-                            ? <span className="text-green-600">${order.discount.toFixed(2)}</span> 
+                            ? <span className="text-green-600">${Number(order.discount).toFixed(2)}</span> 
                             : '$0.00'}
                         </TableCell>
                         <TableCell className="dark:text-gray-300">{formatTimestamp(order.timestamp)}</TableCell>
@@ -738,7 +738,7 @@ const Orders = () => {
                     <div>
                       <p className="text-sm text-gray-500 dark:text-gray-400">Discount</p>
                       <p className="font-medium text-green-600 dark:text-green-500">
-                        ${currentOrder.discount.toFixed(2)}
+                        ${Number(currentOrder.discount).toFixed(2)}
                       </p>
                     </div>
                   )}
@@ -797,7 +797,7 @@ const Orders = () => {
                   </div>
                   {currentOrder.discount && currentOrder.discount > 0 && (
                     <div className="text-sm text-green-600 dark:text-green-500">
-                      Discount: <span className="font-medium">-${currentOrder.discount.toFixed(2)}</span>
+                      Discount: <span className="font-medium">-${Number(currentOrder.discount).toFixed(2)}</span>
                     </div>
                   )}
                   <div className="text-sm text-gray-500 dark:text-gray-400">

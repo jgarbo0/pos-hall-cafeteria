@@ -59,8 +59,8 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({ orders }) => {
                           <Percent className="h-3 w-3 mr-0.5" /> : 
                           <DollarSign className="h-3 w-3 mr-0.5" />} 
                         {order.discountType === 'percentage' ? 
-                          `${order.discount.toFixed(0)}%` : 
-                          `$${order.discount.toFixed(2)}`}
+                          `${Number(order.discount).toFixed(0)}%` : 
+                          `$${Number(order.discount).toFixed(2)}`}
                       </p>
                     </>
                   )}
