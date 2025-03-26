@@ -7,7 +7,7 @@ import {
   PiggyBank, Car, Home, Laptop, 
   Music, Youtube, Navigation,
   TrendingUp, TrendingDown, PieChart,
-  LucideIcon
+  LucideIcon, Building
 } from 'lucide-react';
 import { format, subDays, eachDayOfInterval, isToday, isThisWeek, isThisMonth } from 'date-fns';
 import { toast } from 'sonner';
@@ -392,6 +392,20 @@ const Finance = () => {
     setHallDetailModalOpen(true);
   };
 
+  const calculateHallTotalIncomes = () => {
+    const hall1Total = hall1Bookings.reduce((sum, booking) => sum + Number(booking.amount), 0);
+    const hall2Total = hall2Bookings.reduce((sum, booking) => sum + Number(booking.amount), 0);
+    
+    return {
+      hall1: hall1Total,
+      hall2: hall2Total
+    };
+  };
+
+  const { hall1: hall1TotalIncome, hall2: hall2TotalIncome } = React.useMemo(() => {
+    return calculateHallTotalIncomes();
+  }, [hall1Bookings, hall2Bookings]);
+
   const totalHallIncome = hallBookingIncomes.reduce((sum, booking) => sum + Number(booking.amount), 0);
   const totalHallExpense = totalHallIncome * 0.3;
 
@@ -774,3 +788,4 @@ const Finance = () => {
 };
 
 export default Finance;
+

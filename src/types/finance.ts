@@ -42,3 +42,20 @@ export interface Subscription {
   date: string;
   color: string;
 }
+
+// Adding the missing Role and Permission interfaces
+export interface Role {
+  id: string;
+  name: string;
+  description: string;
+  permissions: string[];
+  isDefault?: boolean;
+}
+
+export interface Permission {
+  id: string;
+  name: string;
+  description: string;
+  module: string;
+  actions: string[];
+}
