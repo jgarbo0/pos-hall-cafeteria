@@ -548,6 +548,33 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_users: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          role: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+          role: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          role?: string
+        }
+        Relationships: []
+      }
       tax_settings: {
         Row: {
           created_at: string
@@ -608,33 +635,6 @@ export type Database = {
           payment_method?: string | null
           reference?: string | null
           type?: string
-        }
-        Relationships: []
-      }
-      users: {
-        Row: {
-          active: boolean | null
-          created_at: string | null
-          email: string
-          id: string
-          name: string
-          role: string
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string | null
-          email: string
-          id?: string
-          name: string
-          role: string
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string | null
-          email?: string
-          id?: string
-          name?: string
-          role?: string
         }
         Relationships: []
       }
