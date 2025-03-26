@@ -1,4 +1,3 @@
-
 export interface MenuItem {
   id: string;
   title: string;
@@ -133,4 +132,13 @@ export interface Customer {
     date: string;
     description: string;
   }[];
+}
+
+export interface StaffUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  active?: boolean;
+  created_at?: string;
 }

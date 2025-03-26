@@ -23,7 +23,8 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { UserPlus, Edit, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { StaffUser, getStaffUsers, createStaffUser, updateStaffUser, deleteStaffUser } from '@/services/SupabaseService';
+import { StaffUser } from '@/types';
+import { getStaffUsers, createStaffUser, updateStaffUser, deleteStaffUser } from '@/services/SupabaseService';
 
 const UserManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);

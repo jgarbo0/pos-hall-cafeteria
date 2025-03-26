@@ -611,6 +611,33 @@ export type Database = {
         }
         Relationships: []
       }
+      users: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          role: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+          role: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          role?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
