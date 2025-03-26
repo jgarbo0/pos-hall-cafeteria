@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -310,7 +309,7 @@ const HallBookingForm = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">{initialData ? 'Edit Booking' : 'New Hall Booking'}</h2>
-          <p className="text-sm text-gray-500">{initialData ? 'Update booking details' : 'Create a new booking for the hall'}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{initialData ? 'Update booking details' : 'Create a new booking for the hall'}</p>
         </div>
         {initialData && (
           <Button variant="outline" onClick={handleClearSelection}>
@@ -677,10 +676,10 @@ const HallBookingForm = ({
               )}
             />
             
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
               <div className="flex justify-between items-center">
-                <span className="font-semibold">Total Amount:</span>
-                <span className="font-bold text-lg">${totalAmount.toFixed(2)}</span>
+                <span className="font-semibold dark:text-gray-200">Total Amount:</span>
+                <span className="font-bold text-lg text-blue-600 dark:text-blue-400">${totalAmount.toFixed(2)}</span>
               </div>
             </div>
           </div>
