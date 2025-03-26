@@ -33,19 +33,24 @@ const HallBookingsFinanceTab: React.FC<HallBookingsFinanceTabProps> = ({
   }));
   
   return (
-    <div>
-      <HallBookingFinanceWidget
-        data={chartData}
-        totalIncome={totalIncome}
-        totalExpense={totalExpense}
-        onViewReport={() => onViewDetails('all')}
-        isLoading={isLoadingHallData}
-      />
-      <HallBookingIncomesList
-        bookings={hallBookings}
-        isLoading={isLoadingHallData}
-        onViewDetails={onViewDetails}
-      />
+    <div className="space-y-6">
+      <div className="mb-6">
+        <HallBookingFinanceWidget
+          data={chartData}
+          totalIncome={totalIncome}
+          totalExpense={totalExpense}
+          onViewReport={() => onViewDetails('all')}
+          isLoading={isLoadingHallData}
+        />
+      </div>
+      
+      <div>
+        <HallBookingIncomesList
+          bookings={hallBookings}
+          isLoading={isLoadingHallData}
+          onViewDetails={onViewDetails}
+        />
+      </div>
     </div>
   );
 };
