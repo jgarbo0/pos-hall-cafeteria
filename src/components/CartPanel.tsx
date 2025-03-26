@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Plus, Minus, ShoppingBag, CreditCard, Clock, Printer, ClipboardList, Percent } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, CreditCard, Clock, Printer, ClipboardList, Percent, DollarSign } from 'lucide-react';
 import { CartItem, Customer, Order } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -603,7 +603,10 @@ const CartPanel: React.FC<CartPanelProps> = ({
               {discountAmount > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-green-500 flex items-center">
-                    <Percent size={14} className="mr-1" /> Discount
+                    {discountType === 'percentage' ? 
+                      <Percent size={14} className="mr-1" /> : 
+                      <DollarSign size={14} className="mr-1" />} 
+                    Discount
                   </span>
                   <span className="text-green-500">-${discountAmount.toFixed(2)}</span>
                 </div>

@@ -170,12 +170,11 @@ export const createOrder = async (
     
     // Apply global discount if present
     if (globalDiscount > 0) {
-      if (discountType === 'percentage') {
-        const discountAmount = subtotal * (globalDiscount / 100);
-        totalDiscount += discountAmount;
-      } else {
-        totalDiscount += globalDiscount;
-      }
+      const discountAmount = discountType === 'percentage' 
+        ? subtotal * (globalDiscount / 100) 
+        : globalDiscount;
+      
+      totalDiscount += discountAmount;
     }
     
     // Get tax rate from tax_settings
@@ -190,10 +189,7 @@ export const createOrder = async (
     }
     
     // Calculate total after discount is applied
-    const discountedSubtotal = subtotal - (discountType === 'percentage' ? 
-      (subtotal * (globalDiscount / 100)) : 
-      globalDiscount);
-    
+    const discountedSubtotal = subtotal - totalDiscount;
     const tax = discountedSubtotal * (taxRate / 100);
     const total = discountedSubtotal + tax;
     
@@ -818,3 +814,4 @@ export default {
   updateStaffUser,
   deleteStaffUser
 };
+
