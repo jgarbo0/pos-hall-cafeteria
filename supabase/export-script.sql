@@ -1,5 +1,5 @@
 
--- This script prepares SQL commands to export your database
+-- This script prepares SQL commands to export your entire Supabase database
 -- You can run this directly in the Supabase SQL Editor
 -- Or use it as guidance for commands to run locally
 
@@ -7,130 +7,135 @@
 -- Note: This is meant to be run locally with pg_dump installed:
 -- pg_dump -h [host] -p [port] -U [username] -d [database] -f database_export.sql
 
--- For selective table exports, you can run these queries:
+-- Get a list of all tables in the public schema
+SELECT 'Available tables in public schema:' as info;
+SELECT table_name FROM information_schema.tables 
+WHERE table_schema = 'public' 
+ORDER BY table_name;
 
--- 1. Export categories schema and data
-SELECT '-- Categories Table Schema and Data' AS description,
-       COUNT(*) AS row_count FROM categories;
+-- For each table in the database, generate export commands
+-- This dynamic SQL approach will export all tables in the public schema
 
-COPY (
-  SELECT 'CREATE TABLE IF NOT EXISTS public.categories (' ||
-         'id UUID PRIMARY KEY DEFAULT gen_random_uuid(),' ||
-         'name TEXT NOT NULL,' ||
-         'created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL' ||
-         ');'
-) TO STDOUT;
-
-COPY (
-  SELECT 'INSERT INTO public.categories (id, name, created_at) VALUES ' ||
-  string_agg(
-    '(''' || id || ''', ''' || REPLACE(name, '''', '''''') || ''', ''' || created_at || ''')',
-    ', '
+-- First, create a function to help with generating export SQL for any table
+CREATE OR REPLACE FUNCTION generate_table_export(tablename text) 
+RETURNS text AS $$
+DECLARE
+  columns_info text;
+  insert_statement text;
+BEGIN
+  -- Get column list for the table
+  SELECT string_agg(column_name, ', ') 
+  INTO columns_info
+  FROM information_schema.columns
+  WHERE table_schema = 'public' AND table_name = tablename
+  ORDER BY ordinal_position;
+  
+  -- Generate the INSERT statement
+  insert_statement := 'SELECT ''INSERT INTO public.' || tablename || ' (' || columns_info || ') VALUES '' || string_agg(''('' || ';
+  
+  -- Build the value part of the statement
+  SELECT string_agg(
+    CASE 
+      WHEN is_nullable = 'NO' AND data_type NOT IN ('integer', 'bigint', 'numeric', 'real', 'double precision', 'boolean') 
+        THEN '||' || '''' || '''''' || ''' || REPLACE(COALESCE(' || column_name || '::text, ''''), '''''''', '''''''''''') || ''' || '''''' || ''' || '
+      WHEN is_nullable = 'YES' AND data_type NOT IN ('integer', 'bigint', 'numeric', 'real', 'double precision', 'boolean')
+        THEN '|| CASE WHEN ' || column_name || ' IS NULL THEN ''NULL'' ELSE '''' || '''''' || ''' || REPLACE(COALESCE(' || column_name || '::text, ''''), '''''''', '''''''''''') || ''' || '''''' || '''' END || '
+      WHEN data_type IN ('integer', 'bigint', 'numeric', 'real', 'double precision') 
+        THEN '|| COALESCE(' || column_name || '::text, ''NULL'') || '
+      WHEN data_type = 'boolean'
+        THEN '|| CASE WHEN ' || column_name || ' IS NULL THEN ''NULL'' ELSE ' || column_name || '::text END || '
+      ELSE '|| ''NULL'' || '
+    END, 
+    ' || '', '' || '
   )
-  FROM categories
-) TO STDOUT;
+  INTO insert_statement
+  FROM information_schema.columns
+  WHERE table_schema = 'public' AND table_name = tablename
+  ORDER BY ordinal_position;
+  
+  -- Complete the statement
+  insert_statement := insert_statement || ' || '')'', '', '') FROM ' || tablename || ';';
+  
+  RETURN insert_statement;
+END;
+$$ LANGUAGE plpgsql;
 
--- 2. Export inventory_items schema and data
-SELECT '-- Inventory Items Table Schema and Data' AS description,
-       COUNT(*) AS row_count FROM inventory_items;
+-- Generate and execute the export SQL for each table
+DO $$
+DECLARE
+  tables RECORD;
+  export_sql text;
+BEGIN
+  FOR tables IN 
+    SELECT table_name 
+    FROM information_schema.tables 
+    WHERE table_schema = 'public' 
+    ORDER BY table_name
+  LOOP
+    -- Show table information
+    RAISE NOTICE '-- Table: %', tables.table_name;
+    
+    -- Generate schema
+    EXECUTE 'SELECT ''-- Schema for ' || tables.table_name || ' Table'' AS description;';
+    
+    -- Get column definitions
+    EXECUTE 'SELECT ''CREATE TABLE IF NOT EXISTS public.' || tables.table_name || ' ('' || 
+      string_agg(
+        column_name || '' '' || 
+        data_type || 
+        CASE 
+          WHEN character_maximum_length IS NOT NULL THEN ''('' || character_maximum_length || '')'' 
+          ELSE '''' 
+        END || 
+        CASE 
+          WHEN is_nullable = ''NO'' THEN '' NOT NULL'' 
+          ELSE '''' 
+        END ||
+        CASE 
+          WHEN column_default IS NOT NULL THEN '' DEFAULT '' || column_default 
+          ELSE '''' 
+        END,
+        '', ''
+      ) || 
+      CASE 
+        WHEN (SELECT constraint_name FROM information_schema.table_constraints 
+              WHERE table_schema = ''public'' AND table_name = ''' || tables.table_name || ''' 
+              AND constraint_type = ''PRIMARY KEY'' LIMIT 1) IS NOT NULL 
+        THEN '', '' || 
+             (SELECT ''PRIMARY KEY ('' || string_agg(column_name, '', '') || '')'' 
+              FROM information_schema.key_column_usage 
+              WHERE table_schema = ''public'' AND table_name = ''' || tables.table_name || ''' 
+              AND constraint_name = (SELECT constraint_name FROM information_schema.table_constraints 
+                                    WHERE table_schema = ''public'' AND table_name = ''' || tables.table_name || ''' 
+                                    AND constraint_type = ''PRIMARY KEY'' LIMIT 1))
+        ELSE '''' 
+      END ||
+      '');''
+    FROM information_schema.columns 
+    WHERE table_schema = ''public'' AND table_name = ''' || tables.table_name || '''
+    ORDER BY ordinal_position;';
+    
+    -- Get data export
+    EXECUTE 'SELECT ''-- Data for ' || tables.table_name || ' Table'' AS description;';
+    
+    -- Generate data INSERT statements
+    export_sql := (SELECT generate_table_export(tables.table_name));
+    EXECUTE export_sql;
+    
+    -- Add a separator
+    EXECUTE 'SELECT ''-- End of ' || tables.table_name || ' export'' AS separator;';
+  END LOOP;
+END $$;
 
-COPY (
-  SELECT 'CREATE TABLE IF NOT EXISTS public.inventory_items (' ||
-         'id UUID PRIMARY KEY DEFAULT gen_random_uuid(),' ||
-         'name TEXT NOT NULL,' ||
-         'category TEXT NOT NULL,' ||
-         'quantity NUMERIC DEFAULT 0 NOT NULL,' ||
-         'unit TEXT NOT NULL,' ||
-         'min_stock_level NUMERIC DEFAULT 10,' ||
-         'purchase_price NUMERIC NOT NULL,' ||
-         'supplier TEXT,' ||
-         'expiry_date DATE,' ||
-         'created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,' ||
-         'updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL' ||
-         ');'
-) TO STDOUT;
-
-COPY (
-  SELECT 'INSERT INTO public.inventory_items (id, name, category, quantity, unit, min_stock_level, purchase_price, supplier, expiry_date, created_at, updated_at) VALUES ' ||
-  string_agg(
-    '(''' || id || ''', ''' || 
-    REPLACE(name, '''', '''''') || ''', ''' || 
-    REPLACE(category, '''', '''''') || ''', ' || 
-    quantity || ', ''' || 
-    REPLACE(unit, '''', '''''') || ''', ' || 
-    COALESCE(min_stock_level::text, 'NULL') || ', ' || 
-    purchase_price || ', ' || 
-    CASE WHEN supplier IS NULL THEN 'NULL' ELSE '''' || REPLACE(supplier, '''', '''''') || '''' END || ', ' ||
-    CASE WHEN expiry_date IS NULL THEN 'NULL' ELSE '''' || expiry_date || '''' END || ', ''' ||
-    created_at || ''', ''' ||
-    updated_at || ''')',
-    ', '
-  )
-  FROM inventory_items
-) TO STDOUT;
-
--- 3. Export inventory_transactions schema and data
-SELECT '-- Inventory Transactions Table Schema and Data' AS description,
-       COUNT(*) AS row_count FROM inventory_transactions;
-
-COPY (
-  SELECT 'CREATE TABLE IF NOT EXISTS public.inventory_transactions (' ||
-         'id UUID PRIMARY KEY DEFAULT gen_random_uuid(),' ||
-         'inventory_item_id UUID NOT NULL REFERENCES public.inventory_items(id),' ||
-         'transaction_type TEXT NOT NULL,' ||
-         'quantity NUMERIC NOT NULL,' ||
-         'unit_price NUMERIC,' ||
-         'total_price NUMERIC,' ||
-         'transaction_date TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,' ||
-         'notes TEXT,' ||
-         'created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL' ||
-         ');'
-) TO STDOUT;
-
-COPY (
-  SELECT 'INSERT INTO public.inventory_transactions (id, inventory_item_id, transaction_type, quantity, unit_price, total_price, transaction_date, notes, created_at) VALUES ' ||
-  string_agg(
-    '(''' || id || ''', ''' || 
-    inventory_item_id || ''', ''' || 
-    REPLACE(transaction_type, '''', '''''') || ''', ' || 
-    quantity || ', ' || 
-    COALESCE(unit_price::text, 'NULL') || ', ' || 
-    COALESCE(total_price::text, 'NULL') || ', ''' || 
-    transaction_date || ''', ' ||
-    CASE WHEN notes IS NULL THEN 'NULL' ELSE '''' || REPLACE(notes, '''', '''''') || '''' END || ', ''' ||
-    created_at || ''')',
-    ', '
-  )
-  FROM inventory_transactions
-) TO STDOUT;
-
--- 4. Export timestamping trigger
-COPY (
-  SELECT 
-    'CREATE OR REPLACE FUNCTION update_timestamp_column() ' ||
-    'RETURNS TRIGGER AS $$ ' ||
-    'BEGIN ' ||
-    '  NEW.updated_at = now(); ' ||
-    '  RETURN NEW; ' ||
-    'END; ' ||
-    '$$ LANGUAGE plpgsql;'
-) TO STDOUT;
-
-COPY (
-  SELECT 
-    'CREATE TRIGGER update_inventory_items_timestamp ' ||
-    'BEFORE UPDATE ON inventory_items ' ||
-    'FOR EACH ROW ' ||
-    'EXECUTE FUNCTION update_timestamp_column();'
-) TO STDOUT;
+-- Drop the temporary function
+DROP FUNCTION IF EXISTS generate_table_export(text);
 
 -- Instructions for Full Database Export via CLI
-COPY (
-  SELECT 
-    '-- To export the full database from a terminal with pg_dump:' || E'\n' ||
-    '-- 1. Install PostgreSQL client tools' || E'\n' ||
-    '-- 2. Run this command (replace values in brackets):' || E'\n' ||
-    '-- pg_dump -h hxjozccwmckdmqygvljq.supabase.co -p 5432 -U postgres -d postgres -f database_export.sql' || E'\n' ||
-    '-- 3. Enter your database password when prompted' || E'\n' ||
-    '-- 4. The export will be saved to database_export.sql'
-) TO STDOUT;
+SELECT 
+  '-- To export the full database from a terminal with pg_dump:' || E'\n' ||
+  '-- 1. Install PostgreSQL client tools' || E'\n' ||
+  '-- 2. Run this command (replace values in brackets):' || E'\n' ||
+  '-- pg_dump -h hxjozccwmckdmqygvljq.supabase.co -p 5432 -U postgres -d postgres -F c -f full_database_export.dump' || E'\n' ||
+  '-- 3. Enter your database password when prompted' || E'\n' ||
+  '-- 4. The export will be saved to full_database_export.dump'
+AS export_instructions;

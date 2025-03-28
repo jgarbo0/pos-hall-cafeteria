@@ -1,7 +1,7 @@
 
 # Supabase Database Export
 
-This directory contains scripts and information to help you export your Supabase database.
+This directory contains scripts and information to help you export your complete Supabase database.
 
 ## Option 1: Supabase CLI (Recommended)
 
@@ -14,22 +14,30 @@ The Supabase CLI is the best way to perform database exports:
    ```
 3. Export the database:
    ```
-   supabase db dump -p hxjozccwmckdmqygvljq --file=database_export.sql
+   supabase db dump -p hxjozccwmckdmqygvljq --file=full_database_export.sql
    ```
 
 ## Option 2: Using pg_dump
 
-If you have PostgreSQL client tools installed locally:
+For a complete database backup using PostgreSQL client tools:
 
-1. Use pg_dump to export the database:
+1. Use pg_dump to export the entire database:
    ```
-   pg_dump -h hxjozccwmckdmqygvljq.supabase.co -p 5432 -U postgres -d postgres -f database_export.sql
+   pg_dump -h hxjozccwmckdmqygvljq.supabase.co -p 5432 -U postgres -d postgres -F c -f full_database_export.dump
    ```
+   
+   The `-F c` flag creates a custom-format archive suitable for input into pg_restore.
+   
 2. You'll need to enter your database password when prompted
+
+3. To restore from this dump file:
+   ```
+   pg_restore -h [host] -p [port] -U [username] -d [database] full_database_export.dump
+   ```
 
 ## Option 3: Supabase Dashboard
 
-For a simple export:
+For exporting table definitions and data via SQL:
 
 1. Go to the Supabase dashboard: https://app.supabase.com/project/hxjozccwmckdmqygvljq
 2. Navigate to the SQL Editor
@@ -38,23 +46,36 @@ For a simple export:
 
 ## Database Tables
 
-The main inventory-related tables in your database are:
+Your database contains the following primary tables:
 
-1. `categories` - Stores inventory categories
-2. `inventory_items` - Stores inventory item details (name, quantity, price, etc.)
-3. `inventory_transactions` - Records all inventory transactions (purchases, usage, adjustments)
+1. `categories` - Inventory categories
+2. `inventory_items` - Inventory item details 
+3. `inventory_transactions` - Inventory transaction records
+4. `customers` - Customer information
+5. `hall_bookings` - Hall booking details
+6. `menu_items` - Restaurant menu items
+7. `menu_categories` - Restaurant menu categories
+8. `orders` - Order information
+9. `order_items` - Items in each order
+10. `restaurant_tables` - Restaurant table management
+11. `service_packages` - Service package details
+12. `staff_users` - Staff user accounts
+13. `transactions` - Financial transactions
+14. Various settings tables (tax_settings, appearance_settings, etc.)
 
 ## Re-importing Data
 
 To restore your data:
 
 1. Create a new Supabase project if needed
-2. Go to the SQL Editor
-3. Paste and run the SQL commands from your export file
-4. Verify that your data has been successfully imported
+2. Use one of these methods to restore:
+   - For SQL output: Run the generated SQL commands in the SQL Editor
+   - For pg_dump output: Use pg_restore as described above
+   - For Supabase CLI: Use `supabase db restore`
 
 ## Notes
 
-- Make sure to regularly backup your database
-- Consider automating backups for production environments
-- The export scripts in this directory create SQL commands that can be run to recreate your tables and data
+- For production environments, schedule regular backups
+- The custom-format dump (-F c) is more flexible for restoration than plain SQL
+- If you only need a subset of tables, modify the export script accordingly
+- For large databases, consider exporting directly to a file instead of through the SQL Editor
