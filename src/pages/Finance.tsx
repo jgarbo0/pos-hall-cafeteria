@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   subDays, 
@@ -263,7 +262,7 @@ const Finance = () => {
       <SidebarNavigation />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header onSearch={handleSearch} />
+        <Header />
         
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <FinanceHeader 
@@ -446,9 +445,9 @@ const Finance = () => {
             
             <TabsContent value="hall-bookings">
               <HallBookingsFinanceTab
-                hallBookings={hallBookingIncomes}
-                hall1Bookings={hall1Bookings}
-                hall2Bookings={hall2Bookings}
+                hallBookings={hallBookings}
+                hall1Bookings={hallBookingsHall1}
+                hall2Bookings={hallBookingsHall2}
                 isLoadingHallData={isLoadingHallData}
                 onViewDetails={handleViewHallBookingDetails}
                 onSearch={handleSearch}
